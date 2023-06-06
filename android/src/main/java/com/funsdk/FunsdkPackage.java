@@ -11,12 +11,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.funsdk.register.FunSDKRegisterModule;
+import com.funsdk.core.FunSDKCoreModule;
+
 public class FunsdkPackage implements ReactPackage {
   @NonNull
   @Override
   public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
     List<NativeModule> modules = new ArrayList<>();
-    modules.add(new FunsdkModule(reactContext));
+    // modules.add(new FunsdkModule(reactContext));
+    modules.add(new FunSDKCoreModule(reactContext));
+    modules.add(new FunSDKRegisterModule(reactContext));
     return modules;
   }
 
