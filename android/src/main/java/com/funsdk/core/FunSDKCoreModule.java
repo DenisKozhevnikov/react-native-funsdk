@@ -91,7 +91,7 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
     //  * Low-power devices: including doorbells, door locks, etc., you need to call this method,
     //  * otherwise you may not be able to log in to the device, and other devices do not need to call
     //  */
-    // FunSDK.SetFunIntAttr(EFUN_ATTR.SUP_RPS_VIDEO_DEFAULT, SDKCONST.Switch.Open);
+    FunSDK.SetFunIntAttr(EFUN_ATTR.SUP_RPS_VIDEO_DEFAULT, SDKCONST.Switch.Open);
   }
 
 

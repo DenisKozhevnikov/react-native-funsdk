@@ -1,4 +1,4 @@
-package com.tuya.smart.rnsdk.utils;
+package com.funsdk.utils;
 
 import com.facebook.react.bridge.ReadableMap;
 
