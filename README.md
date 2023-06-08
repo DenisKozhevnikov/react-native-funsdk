@@ -1,6 +1,6 @@
 # react-native-funsdk
 
-funsdk
+🚧 in process 🚧
 
 ## Installation
 
@@ -9,14 +9,6 @@ npm install react-native-funsdk
 ```
 
 ## Usage
-
-```js
-import { multiply } from 'react-native-funsdk';
-
-// ...
-
-const result = await multiply(3, 7);
-```
 
 ## Contributing
 

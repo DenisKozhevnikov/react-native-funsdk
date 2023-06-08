@@ -11,8 +11,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.funsdk.register.FunSDKRegisterModule;
 import com.funsdk.core.FunSDKCoreModule;
+import com.funsdk.user.register.FunSDKRegisterModule;
+import com.funsdk.user.modify.FunSDKModifyModule;
+import com.funsdk.user.login.FunSDKLoginModule;
+import com.funsdk.user.info.FunSDKInfoModule;
+import com.funsdk.user.forget.FunSDKForgetModule;
+import com.funsdk.user.device.add.ap.FunSDKDevApConnectModule;
+import com.funsdk.user.device.add.list.FunSDKDevListConnectModule;
+import com.funsdk.user.device.add.sn.FunSDKDevSnConnectModule;
 
 public class FunsdkPackage implements ReactPackage {
   @NonNull
@@ -22,6 +29,13 @@ public class FunsdkPackage implements ReactPackage {
     // modules.add(new FunsdkModule(reactContext));
     modules.add(new FunSDKCoreModule(reactContext));
     modules.add(new FunSDKRegisterModule(reactContext));
+    modules.add(new FunSDKModifyModule(reactContext));
+    modules.add(new FunSDKLoginModule(reactContext));
+    modules.add(new FunSDKInfoModule(reactContext));
+    modules.add(new FunSDKForgetModule(reactContext));
+    modules.add(new FunSDKDevApConnectModule(reactContext));
+    modules.add(new FunSDKDevListConnectModule(reactContext));
+    modules.add(new FunSDKDevSnConnectModule(reactContext));
     return modules;
   }
 
