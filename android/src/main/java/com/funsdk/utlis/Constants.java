@@ -15,9 +15,14 @@ public class Constants {
     public static final String VERIFY_CODE = "verifyCode";
     public static final String CURRENT_PASSWORD = "currentPassword";
     public static final String NEW_PASSWORD = "newPassword";
-    
+
     public static final String DEVICE_ID = "deviceId";
     public static final String DEVICE_TYPE = "deviceType";
+
+    public static final String APP_UUID = "uuid";
+    public static final String APP_KEY = "key";
+    public static final String APP_SECRET = "secret";
+    public static final String APP_MOVEDCARD = "movedCard";
 
     public static BaseAccountManager.OnAccountManagerListener getResultCallback(Promise promise) {
         return new BaseAccountManager.OnAccountManagerListener() {
@@ -25,12 +30,12 @@ public class Constants {
             public void onSuccess(int msgId) {
                 promise.resolve(msgId);
             }
-            
+
             @Override
             public void onFailed(int msgId, int errorId) {
                 promise.reject(msgId + " " + errorId);
             }
-            
+
             @Override
             public void onFunSDKResult(Message message, MsgContent msgContent) {
             }

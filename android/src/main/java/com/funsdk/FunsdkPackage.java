@@ -21,6 +21,8 @@ import com.funsdk.user.device.add.ap.FunSDKDevApConnectModule;
 import com.funsdk.user.device.add.list.FunSDKDevListConnectModule;
 import com.funsdk.user.device.add.sn.FunSDKDevSnConnectModule;
 
+import com.funsdk.player.FunSDKVideoPlayerManager;
+
 public class FunsdkPackage implements ReactPackage {
   @NonNull
   @Override
@@ -36,12 +38,18 @@ public class FunsdkPackage implements ReactPackage {
     modules.add(new FunSDKDevApConnectModule(reactContext));
     modules.add(new FunSDKDevListConnectModule(reactContext));
     modules.add(new FunSDKDevSnConnectModule(reactContext));
+
     return modules;
   }
 
   @NonNull
   @Override
   public List<ViewManager> createViewManagers(@NonNull ReactApplicationContext reactContext) {
-    return Collections.emptyList();
+    // return Collections.emptyList();
+    List<ViewManager> viewManagers = new ArrayList<>();
+
+    viewManagers.add(new FunSDKVideoPlayerManager(reactContext));
+
+    return viewManagers;
   }
 }

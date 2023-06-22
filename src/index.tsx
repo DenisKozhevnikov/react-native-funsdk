@@ -21,9 +21,13 @@
 //   return Funsdk.multiply(a, b);
 // }
 
+export * from './core';
 export * from './register';
 export * from './forget';
 export * from './info';
 export * from './login';
 export * from './modify';
 export * from './device/add';
+
+// views
+export * from './monitor';

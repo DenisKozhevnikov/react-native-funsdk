@@ -7,6 +7,10 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.bridge.WritableNativeMap;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.File;
@@ -25,7 +29,7 @@ public class FunSDKDevListConnectModule extends ReactContextBaseJavaModule {
 
   @Override
   public String getName() {
-      return "FunSDKDevListConnectModule";
+    return "FunSDKDevListConnectModule";
   }
 
   /**
@@ -33,8 +37,22 @@ public class FunSDKDevListConnectModule extends ReactContextBaseJavaModule {
    */
   @ReactMethod
   public void getDevList(Promise promise) {
+    try {
+      WritableArray writableArray = new WritableNativeArray();
+
+      for (String item : AccountManager.getInstance().getDevList()) {
+        writableArray.pushString(item);
+      }
+
+      WritableMap writableMap = new WritableNativeMap();
+      writableMap.putArray("deviceList", writableArray);
+
+      promise.resolve(writableMap);
+    } catch (Exception e) {
+      promise.reject("CONVERSION_ERROR", e.getMessage());
+    }
     // TODO кажется, тут что-то не так
-    promise.resolve(AccountManager.getInstance().getDevList());
+    // promise.resolve(AccountManager.getInstance().getDevList());
   }
 
   /**
@@ -42,7 +60,7 @@ public class FunSDKDevListConnectModule extends ReactContextBaseJavaModule {
    */
   @ReactMethod
   public void getDevState(ReadableMap params, Promise promise) {
-    if (ReactParamsCheck.checkParams(new String[]{Constants.DEVICE_ID}, params)) {
+    if (ReactParamsCheck.checkParams(new String[] { Constants.DEVICE_ID }, params)) {
       promise.resolve(AccountManager.getInstance().getDevState(params.getString(Constants.DEVICE_ID)));
     }
   }

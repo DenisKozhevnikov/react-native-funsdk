@@ -28,34 +28,35 @@ public class FunSDKDevSnConnectModule extends ReactContextBaseJavaModule {
 
   @Override
   public String getName() {
-      return "FunSDKDevSnConnectModule";
+    return "FunSDKDevSnConnectModule";
   }
 
   /**
    * Add device
    *
-   * @param DEVICE_ID    serial number
-   * @param USERNAME login userName
-   * @param PASSWORD      login password
-   * @param DEVICE_TYPE  device Type
+   * @param DEVICE_ID   serial number
+   * @param USERNAME    login userName
+   * @param PASSWORD    login password
+   * @param DEVICE_TYPE device Type
    */
   @ReactMethod
   public void addDev(ReadableMap params, Promise promise) {
-    if (ReactParamsCheck.checkParams(new String[]{Constants.DEVICE_ID, Constants.PASSWORD, Constants.USERNAME, Constants.DEVICE_TYPE}, params)) {
+    if (ReactParamsCheck.checkParams(
+        new String[] { Constants.DEVICE_ID, Constants.PASSWORD, Constants.USERNAME, Constants.DEVICE_TYPE }, params)) {
       SDBDeviceInfo deviceInfo = new SDBDeviceInfo();
 
       G.SetValue(deviceInfo.st_0_Devmac, params.getString(Constants.DEVICE_ID));
       G.SetValue(deviceInfo.st_5_loginPsw, params.getString(Constants.PASSWORD));
       G.SetValue(deviceInfo.st_4_loginName, params.getString(Constants.USERNAME));
-      G.SetValue(deviceInfo.st_1_Devname, params.getString(Constants.DEVICE_ID));
+      // G.SetValue(deviceInfo.st_1_Devname, params.getString(Constants.DEVICE_ID));
 
-      deviceInfo.st_7_nType = params.getInt(Constants.DEVICE_TYPE);
+      // deviceInfo.st_7_nType = params.getInt(Constants.DEVICE_TYPE);
 
       XMDevInfo xmDevInfo = new XMDevInfo();
       xmDevInfo.sdbDevInfoToXMDevInfo(deviceInfo);
       // XMAccountManager.getInstance().checkPwd(
-      //   params.getString(Constants.EMAIL),
-      //   Constants.getResultCallback(promise)
+      // params.getString(Constants.EMAIL),
+      // Constants.getResultCallback(promise)
       // );
 
       AccountManager.getInstance().addDev(xmDevInfo, Constants.getResultCallback(promise));
