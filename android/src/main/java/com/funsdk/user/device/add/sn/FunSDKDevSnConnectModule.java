@@ -42,13 +42,15 @@ public class FunSDKDevSnConnectModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void addDev(ReadableMap params, Promise promise) {
     if (ReactParamsCheck.checkParams(
-        new String[] { Constants.DEVICE_ID, Constants.PASSWORD, Constants.USERNAME, Constants.DEVICE_TYPE }, params)) {
+        new String[] { Constants.DEVICE_ID, Constants.PASSWORD, Constants.USERNAME, Constants.DEVICE_TYPE,
+            Constants.DEVICE_NAME },
+        params)) {
       SDBDeviceInfo deviceInfo = new SDBDeviceInfo();
 
       G.SetValue(deviceInfo.st_0_Devmac, params.getString(Constants.DEVICE_ID));
       G.SetValue(deviceInfo.st_5_loginPsw, params.getString(Constants.PASSWORD));
       G.SetValue(deviceInfo.st_4_loginName, params.getString(Constants.USERNAME));
-      // G.SetValue(deviceInfo.st_1_Devname, params.getString(Constants.DEVICE_ID));
+      G.SetValue(deviceInfo.st_1_Devname, params.getString(Constants.DEVICE_NAME));
 
       // deviceInfo.st_7_nType = params.getInt(Constants.DEVICE_TYPE);
 

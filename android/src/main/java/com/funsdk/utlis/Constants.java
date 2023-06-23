@@ -18,6 +18,7 @@ public class Constants {
 
     public static final String DEVICE_ID = "deviceId";
     public static final String DEVICE_TYPE = "deviceType";
+    public static final String DEVICE_NAME = "deviceName";
 
     public static final String APP_UUID = "uuid";
     public static final String APP_KEY = "key";
