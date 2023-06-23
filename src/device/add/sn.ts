@@ -6,6 +6,7 @@ export type AddDeviceParams = {
   deviceId: string;
   username: string;
   password: string;
+  deviceName: string;
   deviceType: string;
 };
 
