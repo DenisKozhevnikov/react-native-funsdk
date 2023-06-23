@@ -29,12 +29,19 @@ public class FunSDKInfoModule extends ReactContextBaseJavaModule {
 
   @Override
   public String getName() {
-      return "FunSDKInfoModule";
+    return "FunSDKInfoModule";
   }
 
   @ReactMethod
   public void logout() {
     XMAccountManager.getInstance().logout();
+  }
+
+  @ReactMethod
+  public void hasLogin(Promise promise) {
+    boolean isLogin = XMAccountManager.getInstance().hasLogin();
+
+    promise.resolve(isLogin);
   }
 
   @ReactMethod

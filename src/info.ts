@@ -21,3 +21,7 @@ export function getEmail(): Promise<any> {
 export function getPhoneNo(): Promise<any> {
   return funsdk.getPhoneNo();
 }
+
+export function hasLogin(): Promise<boolean> {
+  return funsdk.hasLogin();
+}
