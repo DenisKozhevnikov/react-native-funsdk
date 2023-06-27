@@ -64,4 +64,12 @@ public class FunSDKDevSnConnectModule extends ReactContextBaseJavaModule {
       AccountManager.getInstance().addDev(xmDevInfo, Constants.getResultCallback(promise));
     }
   }
+
+  @ReactMethod
+  public void deleteDev(ReadableMap params, Promise promise) {
+    if (ReactParamsCheck.checkParams(new String[] { Constants.DEVICE_ID }, params)) {
+      AccountManager.getInstance().deleteDev(params.getString(Constants.DEVICE_ID),
+          Constants.getResultCallback(promise));
+    }
+  }
 }

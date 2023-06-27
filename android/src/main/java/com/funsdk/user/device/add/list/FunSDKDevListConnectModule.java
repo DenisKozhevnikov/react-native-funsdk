@@ -18,6 +18,9 @@ import java.io.File;
 import android.util.Log;
 
 import com.manager.account.AccountManager;
+import com.manager.account.BaseAccountManager;
+import com.manager.db.DevDataCenter;
+import com.manager.db.XMDevInfo;
 
 import com.funsdk.utils.Constants;
 import com.funsdk.utils.ReactParamsCheck;
@@ -64,4 +67,56 @@ public class FunSDKDevListConnectModule extends ReactContextBaseJavaModule {
       promise.resolve(AccountManager.getInstance().getDevState(params.getString(Constants.DEVICE_ID)));
     }
   }
+
+  @ReactMethod
+  public void getDetailDeviceList(Promise promise) {
+    try {
+      WritableArray writableArray = new WritableNativeArray();
+
+      for (String devId : AccountManager.getInstance().getDevList()) {
+        XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
+
+        WritableMap writableMap = new WritableNativeMap();
+        writableMap.putString("devId", devId);
+        writableMap.putInt("devState", AccountManager.getInstance().getDevState(devId));
+        writableMap.putString("devName", xmDevInfo.getDevName());
+        writableMap.putString("devIp", xmDevInfo.getDevIp());
+        writableMap.putInt("devPort", xmDevInfo.getDevPort());
+        writableMap.putInt("devType", xmDevInfo.getDevType());
+        writableMap.putString("devIpPort", xmDevInfo.getIpPort());
+        writableMap.putString("devPid", xmDevInfo.getPid());
+        writableMap.putString("devMac", xmDevInfo.getMac());
+        writableMap.putString("devToken", xmDevInfo.getDevToken());
+
+        writableArray.pushMap(writableMap);
+      }
+
+      promise.resolve(writableArray);
+    } catch (Exception e) {
+      promise.reject("CONVERSION_ERROR", e.getMessage());
+    }
+  }
+
+  @ReactMethod
+  public void updateAllDevStateFromServer(Promise promise) {
+    AccountManager.getInstance().updateAllDevStateFromServer(AccountManager.getInstance().getDevList(),
+        getResultUpdateDevStateCallback(promise));
+  }
+
+  public static BaseAccountManager.OnDevStateListener getResultUpdateDevStateCallback(Promise promise) {
+    return new BaseAccountManager.OnDevStateListener() {
+      @Override
+      public void onUpdateDevState(String devId) {
+        // Single device status callback
+      }
+
+      @Override
+      public void onUpdateCompleted() {
+        // Get the end callback of all device status
+        promise.resolve("updated");
+      }
+
+    };
+  }
+
 }

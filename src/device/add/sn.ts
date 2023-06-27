@@ -19,3 +19,11 @@ export type AddDeviceParams = {
 export function addDevice(params: AddDeviceParams): Promise<any> {
   return funsdk.addDev(params);
 }
+
+export type DeleteDeviceParams = {
+  deviceId: string;
+};
+
+export function deleteDevice(params: DeleteDeviceParams): Promise<any> {
+  return funsdk.deleteDev(params);
+}
