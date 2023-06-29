@@ -44,6 +44,13 @@ public class FunSDKVideoView extends LinearLayout {
     this.setOrientation(LinearLayout.VERTICAL);
   }
 
+  @Override
+  protected void onDetachedFromWindow() {
+    super.onDetachedFromWindow();
+    destroyMonitor();
+    System.out.println("onDetachedFromWindow FunSDKVideoView");
+  }
+
   protected DeviceManager getManager() {
     return DeviceManager.getInstance();
   }
@@ -65,6 +72,18 @@ public class FunSDKVideoView extends LinearLayout {
       mediaManager.setHardDecode(false);
       mediaManager.setVideoFullScreen(false);
       mediaManager.startMonitor();
+    }
+  }
+
+  public void destroyMonitor() {
+    // public void destroyMonitor(int chnId) {
+    // if (!monitorManagers.containsKey(chnId)) {
+    // return;
+    // }
+
+    // MonitorManager mediaManager = monitorManagers.get(chnId);
+    if (mediaManager != null) {
+      mediaManager.destroyPlay();
     }
   }
 
