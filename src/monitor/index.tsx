@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 
 const Commands = {
-  setVideoFlip: 'setVideoFlip',
+  // setVideoFlip: 'setVideoFlip',
   startMonitor: 'startMonitor',
   pauseMonitor: 'pauseMonitor',
   replayMonitor: 'replayMonitor',
@@ -18,7 +18,8 @@ const Commands = {
   stopVideoRecord: 'stopVideoRecord',
   openVoice: 'openVoice',
   closeVoice: 'closeVoice',
-  setSpeakerType: 'setSpeakerType',
+  // depreceated
+  // setSpeakerType: 'setSpeakerType',
   startSingleIntercomAndSpeak: 'startSingleIntercomAndSpeak',
   stopSingleIntercomAndSpeak: 'stopSingleIntercomAndSpeak',
   startDoubleIntercom: 'startDoubleIntercom',
@@ -54,15 +55,15 @@ export class Monitor extends React.Component<MonitorProps, any> {
     this.myRef = React.createRef();
   }
 
-  flipVideo() {
-    const viewId = findNodeHandle(this.myRef.current);
+  // flipVideo() {
+  //   const viewId = findNodeHandle(this.myRef.current);
 
-    if (typeof viewId !== 'number') {
-      return;
-    }
+  //   if (typeof viewId !== 'number') {
+  //     return;
+  //   }
 
-    dispatchCommand(viewId, Commands.setVideoFlip);
-  }
+  //   dispatchCommand(viewId, Commands.setVideoFlip);
+  // }
 
   playVideo() {
     const viewId = findNodeHandle(this.myRef.current);
@@ -164,19 +165,20 @@ export class Monitor extends React.Component<MonitorProps, any> {
     dispatchCommand(viewId, Commands.closeVoice);
   }
 
+  // depreceated
   /**
    * set voice changer
    * 0 normal, 1 male ,2 female
    */
-  setSpeakerType(type: 0 | 1 | 2) {
-    const viewId = findNodeHandle(this.myRef.current);
+  // setSpeakerType(type: 0 | 1 | 2) {
+  //   const viewId = findNodeHandle(this.myRef.current);
 
-    if (typeof viewId !== 'number') {
-      return;
-    }
+  //   if (typeof viewId !== 'number') {
+  //     return;
+  //   }
 
-    dispatchCommand(viewId, Commands.setSpeakerType, [type]);
-  }
+  //   dispatchCommand(viewId, Commands.setSpeakerType, [type]);
+  // }
 
   startSingleIntercomAndSpeak() {
     const viewId = findNodeHandle(this.myRef.current);

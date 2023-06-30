@@ -15,8 +15,8 @@ import javax.annotation.Nullable;
 public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView> {
 
   public static final String REACT_CLASS = "RCTMonitor";
-  private static final String COMMAND_SET_VIDEO_FLIP = "setVideoFlip";
-  private static final int COMMAND_SET_VIDEO_FLIP_ID = 1;
+  // private static final String COMMAND_SET_VIDEO_FLIP = "setVideoFlip";
+  // private static final int COMMAND_SET_VIDEO_FLIP_ID = 1;
   private static final String COMMAND_START_MONITOR = "startMonitor";
   private static final int COMMAND_START_MONITOR_ID = 2;
   private static final String COMMAND_PAUSE_MONITOR = "pauseMonitor";
@@ -37,8 +37,8 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
   private static final int COMMAND_OPEN_VOICE_ID = 9;
   private static final String COMMAND_CLOSE_VOICE = "closeVoice";
   private static final int COMMAND_CLOSE_VOICE_ID = 10;
-  private static final String COMMAND_SET_SPEAKER_TYPE = "setSpeakerType";
-  private static final int COMMAND_SET_SPEAKER_TYPE_ID = 11;
+  // private static final String COMMAND_SET_SPEAKER_TYPE = "setSpeakerType";
+  // private static final int COMMAND_SET_SPEAKER_TYPE_ID = 11;
   private static final String COMMAND_START_SINGLE_INTERCOM_AND_SPEAK = "startSingleIntercomAndSpeak";
   private static final int COMMAND_START_SINGLE_INTERCOM_AND_SPEAK_ID = 12;
   private static final String COMMAND_STOP_SINGLE_INTERCOM_AND_SPEAK = "stopSingleIntercomAndSpeak";
@@ -74,7 +74,7 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
   @Override
   public Map<String, Integer> getCommandsMap() {
     Map<String, Integer> commandsMap = new HashMap<>();
-    commandsMap.put(COMMAND_SET_VIDEO_FLIP, COMMAND_SET_VIDEO_FLIP_ID);
+    // commandsMap.put(COMMAND_SET_VIDEO_FLIP, COMMAND_SET_VIDEO_FLIP_ID);
     commandsMap.put(COMMAND_START_MONITOR, COMMAND_START_MONITOR_ID);
     commandsMap.put(COMMAND_PAUSE_MONITOR, COMMAND_PAUSE_MONITOR_ID);
     commandsMap.put(COMMAND_REPLAY_MONITOR, COMMAND_REPLAY_MONITOR_ID);
@@ -85,7 +85,7 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     commandsMap.put(COMMAND_STOP_VIDEO_RECORD, COMMAND_STOP_VIDEO_RECORD_ID);
     commandsMap.put(COMMAND_OPEN_VOICE, COMMAND_OPEN_VOICE_ID);
     commandsMap.put(COMMAND_CLOSE_VOICE, COMMAND_CLOSE_VOICE_ID);
-    commandsMap.put(COMMAND_SET_SPEAKER_TYPE, COMMAND_SET_SPEAKER_TYPE_ID);
+    // commandsMap.put(COMMAND_SET_SPEAKER_TYPE, COMMAND_SET_SPEAKER_TYPE_ID);
     commandsMap.put(COMMAND_START_SINGLE_INTERCOM_AND_SPEAK, COMMAND_START_SINGLE_INTERCOM_AND_SPEAK_ID);
     commandsMap.put(COMMAND_STOP_SINGLE_INTERCOM_AND_SPEAK, COMMAND_STOP_SINGLE_INTERCOM_AND_SPEAK_ID);
     commandsMap.put(COMMAND_START_DOUBLE_INTERCOM, COMMAND_START_DOUBLE_INTERCOM_ID);
@@ -99,9 +99,9 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
 
   @Override
   public void receiveCommand(FunSDKVideoView view, int commandId, ReadableArray args) {
-    if (commandId == COMMAND_SET_VIDEO_FLIP_ID) {
-      view.setVideoFlip();
-    }
+    // if (commandId == COMMAND_SET_VIDEO_FLIP_ID) {
+    // view.setVideoFlip();
+    // }
     if (commandId == COMMAND_START_MONITOR_ID) {
       view.PlayVideo();
     }
@@ -134,10 +134,10 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     if (commandId == COMMAND_CLOSE_VOICE_ID) {
       view.closeVoice();
     }
-    if (commandId == COMMAND_SET_SPEAKER_TYPE_ID) {
-      int speakerType = args.getInt(0);
-      view.setSpeakerType(speakerType);
-    }
+    // if (commandId == COMMAND_SET_SPEAKER_TYPE_ID) {
+    // int speakerType = args.getInt(0);
+    // view.setSpeakerType(speakerType);
+    // }
     if (commandId == COMMAND_START_SINGLE_INTERCOM_AND_SPEAK_ID) {
       view.startSingleIntercomAndSpeak();
     }

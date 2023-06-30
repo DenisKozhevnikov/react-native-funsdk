@@ -26,11 +26,12 @@ public class FunSDKVideoView extends LinearLayout {
    * 旋转类型：0 不旋转 1 旋转90度 2 旋转180度 3 旋转270度
    */
   private int videoFlip;
+
   /**
    * 对讲变声类型：0 正常 1 男 2 女
    * 0 normal, 1 male ,2 female
    */
-  private int speakerType = 0;
+  // private int speakerType = 0;
 
   // public FunSDKVideoView(ThemedReactContext context) {
   public FunSDKVideoView(ThemedReactContext context) {
@@ -156,19 +157,21 @@ public class FunSDKVideoView extends LinearLayout {
     }
   }
 
-  public void setSpeakerType(int speakerType) {// Set the type of sound change
-    if (mediaManager != null) {
-      TalkManager talkManager = mediaManager.getTalkManager();
-      if (talkManager != null) {
-        talkManager.setSpeakerType(speakerType);
-      }
-    }
-  }
+  // depreceated (no method found in 2.4 version)
+  // https://libraries.io/maven/io.github.xmcamera:libxmfunsdk
+  // public void setSpeakerType(int speakerType) {// Set the type of sound change
+  // if (mediaManager != null) {
+  // TalkManager talkManager = mediaManager.getTalkManager();
+  // if (talkManager != null) {
+  // talkManager.setSpeakerType(speakerType);
+  // }
+  // }
+  // }
 
   public void startSingleIntercomAndSpeak() {
     if (mediaManager != null) {
       mediaManager.startTalkByHalfDuplex(this.activity);
-      mediaManager.getTalkManager().setSpeakerType(speakerType);
+      // mediaManager.getTalkManager().setSpeakerType(speakerType);
       // необходимо срабатывание ивента onSingleIntercome
     }
   }
@@ -183,7 +186,7 @@ public class FunSDKVideoView extends LinearLayout {
   public void startDoubleIntercom() {
     if (mediaManager != null) {
       mediaManager.startTalkByDoubleDirection(this.activity, true);
-      mediaManager.getTalkManager().setSpeakerType(speakerType);
+      // mediaManager.getTalkManager().setSpeakerType(speakerType);
       // необходимо срабатывание ивента onDoubleIntercome
     }
   }
@@ -230,11 +233,13 @@ public class FunSDKVideoView extends LinearLayout {
     }
   }
 
-  public void setVideoFlip() {
-    if (mediaManager != null) {
-      videoFlip++;
-      videoFlip %= 3;// 旋转类型：0 不旋转 1 旋转90度 2 旋转180度 3 旋转270度
-      mediaManager.setVideoFlip(videoFlip);
-    }
-  }
+  // depreceated (no method found in 2.4 version)
+  // https://libraries.io/maven/io.github.xmcamera:libxmfunsdk
+  // public void setVideoFlip() {
+  // if (mediaManager != null) {
+  // videoFlip++;
+  // videoFlip %= 3;// 旋转类型：0 不旋转 1 旋转90度 2 旋转180度 3 旋转270度
+  // mediaManager.setVideoFlip(videoFlip);
+  // }
+  // }
 }

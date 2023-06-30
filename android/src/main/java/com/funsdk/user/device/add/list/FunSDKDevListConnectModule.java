@@ -84,9 +84,10 @@ public class FunSDKDevListConnectModule extends ReactContextBaseJavaModule {
         writableMap.putInt("devPort", xmDevInfo.getDevPort());
         writableMap.putInt("devType", xmDevInfo.getDevType());
         writableMap.putString("devIpPort", xmDevInfo.getIpPort());
-        writableMap.putString("devPid", xmDevInfo.getPid());
-        writableMap.putString("devMac", xmDevInfo.getMac());
-        writableMap.putString("devToken", xmDevInfo.getDevToken());
+        // depreceated
+        // writableMap.putString("devPid", xmDevInfo.getPid());
+        // writableMap.putString("devMac", xmDevInfo.getMac());
+        // writableMap.putString("devToken", xmDevInfo.getDevToken());
 
         writableArray.pushMap(writableMap);
       }

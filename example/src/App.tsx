@@ -47,18 +47,13 @@ import {
 // }
 
 export default function App() {
-  const [showMonitor, setShowMonitor] = React.useState(true);
+  const [showMonitor, setShowMonitor] = React.useState(false);
   const [result] = React.useState<number | undefined>(0);
   const [isInit, setIsInit] = React.useState(false);
   const monitorRef = React.useRef<Monitor>(null);
 
   React.useEffect(() => {
-    funSDKInit({
-      uuid: '',
-      key: '',
-      secret: '',
-      movedCard: 2,
-    });
+    funSDKInit();
 
     const someFuncs = async () => {
       try {
