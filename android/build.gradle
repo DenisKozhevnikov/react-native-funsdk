@@ -73,35 +73,8 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
 
-    // https://gitlab.xmcloud.io/demo/FunSDKDemo_Android/-/blob/master/app/build.gradle
-  // implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
   implementation 'io.github.xmcamera:libxmfunsdk:2.4'
   implementation 'io.github.xmcamera:uilibrary:1.0'
-  // implementation 'androidx.recyclerview:recyclerview:1.1.0'
-  // implementation 'androidx.appcompat:appcompat:1.2.0'
-  // implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-  // implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
-  // implementation files('libs\\pinyin4j-2.5.0.jar')
-  // testImplementation 'junit:junit:4.12'
-  // androidTestImplementation 'androidx.test:runner:1.1.0'
-  // androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
-  // implementation 'com.github.sd6352051:NiftyDialogEffects:v1.0.3'
-  // implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
-  // implementation 'com.squareup.retrofit2:retrofit:2.6.0'
-  // implementation 'androidx.multidex:multidex:2.0.1'
-  // implementation 'com.jakewharton:butterknife:10.0.0'
-  // implementation 'com.alibaba:fastjson:1.1.72.android'
-  // implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.7'
-  // annotationProcessor 'com.jakewharton:butterknife-compiler:10.0.0'
-  // implementation "com.github.permissions-dispatcher:permissionsdispatcher:4.8.0"
-  // annotationProcessor "com.github.permissions-dispatcher:permissionsdispatcher-processor:4.8.0"
-  //    //低功耗唤醒及来电通知需要继承Eventbus
-  // implementation 'org.greenrobot:eventbus:3.2.0'
-  // implementation 'com.blankj:utilcodex:1.31.0'
-  // implementation "com.squareup.okhttp3:logging-interceptor:4.9.2"
-  // implementation 'com.squareup.okhttp3:okhttp:4.9.2'
-  // implementation 'com.squareup.retrofit2:converter-gson:2.7.2'
-  // implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 }
 
 if (isNewArchitectureEnabled()) {
