@@ -12,6 +12,11 @@ import com.lib.SDKCONST;
 import com.manager.device.DeviceManager;
 import com.manager.device.media.TalkManager;
 import com.manager.device.media.monitor.MonitorManager;
+import com.manager.ScreenOrientationManager;
+
+import com.manager.device.media.playback.RecordManager;
+import com.lib.FunSDK;
+import java.util.Calendar;
 
 import java.util.HashMap;
 
@@ -22,10 +27,13 @@ public class FunSDKVideoView extends LinearLayout {
   private HashMap<Integer, MonitorManager> monitorManagers;
   protected DeviceManager manager = this.getManager();
   private MonitorManager mediaManager;
+  private RecordManager recordManager;
+  private ScreenOrientationManager screenOrientationManager;// Screen rotation manager
   /**
    * 旋转类型：0 不旋转 1 旋转90度 2 旋转180度 3 旋转270度
    */
-  private int videoFlip;
+  // depreceated. Отсутствует в последней версии
+  // private int videoFlip;
 
   /**
    * 对讲变声类型：0 正常 1 男 2 女
@@ -71,7 +79,7 @@ public class FunSDKVideoView extends LinearLayout {
 
       mediaManager = manager.createMonitorPlayer(this, getDevId());
       mediaManager.setHardDecode(false);
-      mediaManager.setVideoFullScreen(false);
+      // mediaManager.setVideoFullScreen(false);
       mediaManager.startMonitor();
     }
   }
@@ -104,9 +112,17 @@ public class FunSDKVideoView extends LinearLayout {
     }
   }
 
+  public void getStreamType() {
+    if (mediaManager != null) {
+      int answer = mediaManager.getStreamType();
+      System.out.println("getStreamType: " + answer);
+    }
+  }
+
   public void PauseVideo() {
     if (mediaManager != null) {
       mediaManager.pausePlay();
+
     }
   }
 
@@ -125,7 +141,8 @@ public class FunSDKVideoView extends LinearLayout {
   public void captureImage(String path) {
     if (mediaManager != null) {
       System.out.println("Capture image path: " + path);
-      mediaManager.capture(path);
+      String answer = mediaManager.capture(path);
+      System.out.println("answer: " + answer);
     }
   }
 
@@ -146,13 +163,15 @@ public class FunSDKVideoView extends LinearLayout {
   public void openVoice() {
     if (mediaManager != null) {
       mediaManager.openVoiceBySound();
+
       // необходимо срабатывание ивента onVoice
     }
   }
 
   public void closeVoice() {
     if (mediaManager != null) {
-      mediaManager.openVoiceBySound();
+      mediaManager.closeVoiceBySound();
+
       // необходимо срабатывание ивента onVoice
     }
   }
@@ -185,6 +204,7 @@ public class FunSDKVideoView extends LinearLayout {
 
   public void startDoubleIntercom() {
     if (mediaManager != null) {
+      System.out.println("startTalkByDoubleDirection: " + this.activity);
       mediaManager.startTalkByDoubleDirection(this.activity, true);
       // mediaManager.getTalkManager().setSpeakerType(speakerType);
       // необходимо срабатывание ивента onDoubleIntercome
@@ -193,12 +213,13 @@ public class FunSDKVideoView extends LinearLayout {
 
   public void stopDoubleIntercom() {
     if (mediaManager != null) {
+      mediaManager.stopTalkByDoubleDirection();
       mediaManager.destroyTalk();
       // необходимо срабатывание ивента onDoubleIntercome
     }
   }
 
-  public void SwitchStreamType() {
+  public void switchStreamTypeMonitor() {
     if (mediaManager != null) {
       mediaManager.setStreamType(mediaManager.getStreamType() == SDKCONST.StreamType.Extra ? SDKCONST.StreamType.Main
           : SDKCONST.StreamType.Extra);
@@ -209,11 +230,23 @@ public class FunSDKVideoView extends LinearLayout {
   }
 
   public void setVideoFullScreen(boolean isFullScreen) {
-    if (mediaManager != null) {
-      mediaManager.setVideoFullScreen(isFullScreen);
-      // необходимо срабатывание ивента onVideoFullScreen
-      // mediaManager.isVideoFullScreen()
-    }
+    /*
+     * if(mediaManager.getStreamType() == SDKCONST.StreamType.Main) {
+     * System.out.println("StreamType.Main: ");
+     * mediaManager.setStreamType(mediaManager.getStreamType() ==
+     * SDKCONST.StreamType.Extra ? SDKCONST.StreamType.Main
+     * : SDKCONST.StreamType.Extra);
+     * mediaManager.stopPlay();
+     * mediaManager.startMonitor();
+     * }
+     */
+    screenOrientationManager = ScreenOrientationManager.getInstance();
+    System.out.println("VideoFullScreen: " + isFullScreen);
+    if (isFullScreen)
+      screenOrientationManager.landscapeScreen(this.activity, true);
+    else
+      screenOrientationManager.portraitScreen(this.activity, true);
+
   }
 
   public void capturePicFromDevAndSave() {
@@ -231,6 +264,22 @@ public class FunSDKVideoView extends LinearLayout {
         }
       });
     }
+  }
+
+  public void seekToTime() {
+    int times = 150;
+    Calendar searchTime = Calendar.getInstance();
+    System.out.println("searchTime123: " + searchTime.get(Calendar.YEAR));
+    // if (recordManager != null) {
+    int[] time = { searchTime.get(Calendar.YEAR), searchTime.get(Calendar.MONTH) + 1,
+        searchTime.get(Calendar.DAY_OF_MONTH), 0, 0, 0 };
+    System.out.println("time: " + time);
+    int absTime = FunSDK.ToTimeType(time) + times;
+    System.out.println("absTime: " + absTime);
+
+    recordManager.seekToTime(times, absTime);
+    // необходимо срабатывание ивента seekToTime
+    // }
   }
 
   // depreceated (no method found in 2.4 version)

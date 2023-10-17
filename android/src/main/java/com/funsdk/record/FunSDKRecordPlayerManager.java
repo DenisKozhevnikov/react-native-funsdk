@@ -1,4 +1,4 @@
-package com.funsdk.player;
+package com.funsdk.record;
 
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.HashMap;
 import javax.annotation.Nullable;
 
-public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView> {
+public class FunSDKRecordPlayerManager extends SimpleViewManager<FunSDKRecordView> {
 
-  public static final String REACT_CLASS = "RCTMonitor";
+  public static final String REACT_CLASS = "RCTRecord";
   // private static final String COMMAND_SET_VIDEO_FLIP = "setVideoFlip";
   // private static final int COMMAND_SET_VIDEO_FLIP_ID = 1;
   private static final String COMMAND_START_MONITOR = "startMonitor";
@@ -57,10 +57,12 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
   private static final int COMMAND_GET_STREAM_TYPE_ID = 18;
   private static final String COMMAND_SEEK_TO_TIME = "seekToTime";
   private static final int COMMAND_SEEK_TO_TIME_ID = 19;
+  private static final String COMMAND_GET_LIST_RECORDS = "getListRecords";
+  private static final int COMMAND_GET_LIST_RECORDS_ID = 21;
 
   ReactApplicationContext mCallerContext;
 
-  public FunSDKVideoPlayerManager(ReactApplicationContext reactContext) {
+  public FunSDKRecordPlayerManager(ReactApplicationContext reactContext) {
     mCallerContext = reactContext;
   }
 
@@ -70,8 +72,8 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
   }
 
   @Override
-  public FunSDKVideoView createViewInstance(ThemedReactContext context) {
-    return new FunSDKVideoView(context);
+  public FunSDKRecordView createViewInstance(ThemedReactContext context) {
+    return new FunSDKRecordView(context);
   }
 
   // region Direct manipulation with ref
@@ -99,13 +101,17 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     commandsMap.put(COMMAND_SWTICH_STREAM_TYPE_MONITOR, COMMAND_SWTICH_STREAM_TYPE_MONITOR_ID);
     commandsMap.put(COMMAND_SET_VIDEO_FULLSCREEN, COMMAND_SET_VIDEO_FULLSCREEN_ID);
     commandsMap.put(COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE, COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE_ID);
+    commandsMap.put(COMMAND_GET_LIST_RECORDS, COMMAND_GET_LIST_RECORDS_ID);
 
     return commandsMap;
   }
 
   @Override
-  public void receiveCommand(FunSDKVideoView view, int commandId, ReadableArray args) {
-    // if (commandId == COMMAND_SET_VIDEO_FLIP_ID) {
+  public void receiveCommand(FunSDKRecordView view, int commandId, ReadableArray args) {
+    if (commandId == COMMAND_GET_LIST_RECORDS_ID) {
+      view.getListRecords();
+    }
+    /*// if (commandId == COMMAND_SET_VIDEO_FLIP_ID) {
     // view.setVideoFlip();
     // }
     if (commandId == COMMAND_START_MONITOR_ID) {
@@ -138,7 +144,7 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
       view.getStreamType();
     }
     if (commandId == COMMAND_SEEK_TO_TIME_ID) {
-      // view.seekToTime();
+      //view.seekToTime();
     }
     if (commandId == COMMAND_OPEN_VOICE_ID) {
       view.openVoice();
@@ -171,11 +177,11 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     }
     if (commandId == COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE_ID) {
       view.capturePicFromDevAndSave();
-    }
+    }*/
   }
 
   @ReactProp(name = "devId")
-  public void setDeviceId(FunSDKVideoView view, String devId) {
+  public void setDeviceId(FunSDKRecordView view, String devId) {
     view.setDevId(devId);
   }
 }

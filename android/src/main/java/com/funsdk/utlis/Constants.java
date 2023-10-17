@@ -19,6 +19,15 @@ public class Constants {
     public static final String DEVICE_ID = "deviceId";
     public static final String DEVICE_TYPE = "deviceType";
     public static final String DEVICE_NAME = "deviceName";
+    public static final String DEVICE_LOGIN = "deviceLogin";
+    public static final String DEVICE_PASSWORD = "devicePassword";
+    public static final String DEVICE_NEW_PASSWORD = "deviceNewPassword";
+    public static final String DEVICE_CHANNEL = "deviceChannel";
+
+    public static final String JSON_AS_STRING = "jsonAsString";
+    public static final String COMMAND = "command";
+    public static final String B_STOP = "bStop";
+    public static final String TOKEN = "token";
 
     public static final String APP_UUID = "uuid";
     public static final String APP_KEY = "key";

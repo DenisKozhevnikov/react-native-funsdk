@@ -14,6 +14,7 @@ const Commands = {
   stopMonitor: 'stopMonitor',
   destroyMonitor: 'destroyMonitor',
   captureImage: 'captureImage',
+  getStreamType: 'getStreamType',
   startVideoRecord: 'startVideoRecord',
   stopVideoRecord: 'stopVideoRecord',
   openVoice: 'openVoice',
@@ -27,11 +28,12 @@ const Commands = {
   switchStreamTypeMonitor: 'switchStreamTypeMonitor',
   setVideoFullScreen: 'setVideoFullScreen',
   capturePicFromDevAndSave: 'capturePicFromDevAndSave',
+  seekToTime: 'seekToTime',
 } as const;
 
 export const MonitorView = requireNativeComponent('RCTMonitor');
 
-const dispatchCommand = (viewId: number, command: string, args: any[] = []) =>
+const dispatchCommand = (viewId: number, command: string, args: any[] = []) => {
   UIManager.dispatchViewManagerCommand(
     viewId,
     // we are calling the 'setVideoFlip' command
@@ -40,6 +42,7 @@ const dispatchCommand = (viewId: number, command: string, args: any[] = []) =>
     UIManager.getViewManagerConfig('RCTMonitor').Commands[command] || '',
     args
   );
+};
 
 type MonitorProps = ViewProps & {
   devId: string;
@@ -115,9 +118,18 @@ export class Monitor extends React.Component<MonitorProps, any> {
     dispatchCommand(viewId, Commands.destroyMonitor);
   }
 
-  captureImage(path: string) {
+  getStreamType() {
     const viewId = findNodeHandle(this.myRef.current);
 
+    if (typeof viewId !== 'number') {
+      return;
+    }
+
+    dispatchCommand(viewId, Commands.getStreamType);
+  }
+
+  captureImage(path: string) {
+    const viewId = findNodeHandle(this.myRef.current);
     if (typeof viewId !== 'number' || typeof path !== 'string') {
       return;
     }
@@ -220,7 +232,7 @@ export class Monitor extends React.Component<MonitorProps, any> {
     dispatchCommand(viewId, Commands.stopDoubleIntercom);
   }
 
-  swtichStream() {
+  switchStreamTypeMonitor() {
     const viewId = findNodeHandle(this.myRef.current);
 
     if (typeof viewId !== 'number') {
@@ -248,6 +260,15 @@ export class Monitor extends React.Component<MonitorProps, any> {
     }
 
     dispatchCommand(viewId, Commands.capturePicFromDevAndSave);
+  }
+
+  seekToTime() {
+    const viewId = findNodeHandle(this.myRef.current);
+    if (typeof viewId !== 'number') {
+      return;
+    }
+
+    dispatchCommand(viewId, Commands.seekToTime);
   }
 
   render() {

@@ -19,6 +19,7 @@ import android.util.Log;
 
 import com.manager.account.AccountManager;
 import com.manager.account.BaseAccountManager;
+import com.manager.device.DeviceManager;
 import com.manager.db.DevDataCenter;
 import com.manager.db.XMDevInfo;
 
@@ -97,6 +98,39 @@ public class FunSDKDevListConnectModule extends ReactContextBaseJavaModule {
       promise.reject("CONVERSION_ERROR", e.getMessage());
     }
   }
+
+  // @ReactMethod
+  // public void loginDevice(ReadableMap params, Promise promise) {
+  // // To reference the pop-up password input box below, if you don't want to
+  // // participate in the pop-up dialog, you can follow the steps below:
+  // // Step 1: Ask the user to enter the correct password. Once you have the
+  // correct
+  // // password, directly call FunSDK.DevSetLocalPwd(devId, userName, passWord),
+  // // where devId is the device serial number, userName is the device login name
+  // // (default is admin), and passWord is the correct password you want to pass.
+  // // Step 2: Call presenter.loginDev() again.
+  // try {
+  // DeviceManager.getInstance().loginDev(params.getString(Constants.DEVICE_ID),
+  // params.getString(Constants.DEVICE_LOGIN),
+  // params.getString(Constants.DEVICE_PASSWORD),
+  // new DeviceManager.OnDevManagerListener() {
+  // @Override
+  // public void onSuccess(String s, int i, Object abilityKey) {
+  // promise.resolve("success");
+
+  // }
+
+  // @Override
+  // public void onFailed(String s, int i, String s1, int errorId) {
+  // // promise.reject("failed");
+  // promise.reject(s + " " + i + " " + s1 + " " + errorId);
+  // }
+  // });
+
+  // } catch (Exception e) {
+  // promise.reject("CONVERSION_ERROR", e.getMessage());
+  // }
+  // }
 
   @ReactMethod
   public void updateAllDevStateFromServer(Promise promise) {

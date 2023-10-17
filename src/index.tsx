@@ -27,7 +27,8 @@ export * from './forget';
 export * from './info';
 export * from './login';
 export * from './modify';
-export * from './device/add';
+export * from './device';
 
 // views
 export * from './monitor';
+export * from './record';
