@@ -24,10 +24,17 @@ public class Constants {
     public static final String DEVICE_NEW_PASSWORD = "deviceNewPassword";
     public static final String DEVICE_CHANNEL = "deviceChannel";
 
+    public static final String RECORD_FILE_DATA = "recordFileData";
+
     public static final String JSON_AS_STRING = "jsonAsString";
     public static final String COMMAND = "command";
     public static final String B_STOP = "bStop";
     public static final String TOKEN = "token";
+    public static final String PATH = "path";
+    public static final String FUNCTION_NAME = "functionName";
+    public static final String FUNCTION_COMMAND_STR = "functionCommandStr";
+    public static final String METHOD_NAME = "methodName";
+    public static final String SPEED = "speed";
 
     public static final String APP_UUID = "uuid";
     public static final String APP_KEY = "key";

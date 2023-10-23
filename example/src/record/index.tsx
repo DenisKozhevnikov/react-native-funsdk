@@ -36,12 +36,15 @@ export const RecordPage = () => {
   >(null);
 
   React.useEffect(() => {
+    if (isInit) {
+      return;
+    }
     funSDKInit();
     const someFuncs = async () => {
       try {
         // const res = await loginByAccount({
-        //   username: 'vefego4406@onlcool.com',
-        //   password: 'qwerty123',
+        //   username: '',
+        //   password: '',
         // });
         console.log('start somefunc');
         const res = await loginByAccount({
@@ -49,8 +52,8 @@ export const RecordPage = () => {
           password: USER_PASSWORD,
         });
         // const res = await registerByNotBind({
-        //   username: 'randomuser123',
-        //   password: 'password',
+        //   username: '',
+        //   password: '',
         // });
         console.log('res somefunc: ', res);
         await someInfos();
@@ -100,7 +103,7 @@ export const RecordPage = () => {
     setTimeout(() => {
       someFuncs();
     }, 2000);
-  }, []);
+  }, [isInit]);
 
   if (!isInit) {
     return null;

@@ -1,30 +1,38 @@
 package com.funsdk.player;
 
 import android.app.Activity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.bridge.ReactContext;
-
-import com.lib.SDKCONST;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
 
 import com.manager.device.DeviceManager;
 import com.manager.device.media.TalkManager;
+import com.manager.device.media.MediaManager;
+import com.manager.device.media.attribute.PlayerAttribute;
 import com.manager.device.media.monitor.MonitorManager;
 import com.manager.ScreenOrientationManager;
 
 import com.manager.device.media.playback.RecordManager;
 import com.lib.FunSDK;
+import com.lib.SDKCONST;
+import com.lib.MsgContent;
 import java.util.Calendar;
 
 import java.util.HashMap;
 
-public class FunSDKVideoView extends LinearLayout {
+public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMediaManagerListener {
   private String devId;
+  private int channelId;
   private final ThemedReactContext themedReactContext;
   private Activity activity = null;
-  private HashMap<Integer, MonitorManager> monitorManagers;
+  private final FunSDKVideoEventEmitter eventEmitter;
+
+  // private HashMap<Integer, MonitorManager> monitorManagers;
   protected DeviceManager manager = this.getManager();
   private MonitorManager mediaManager;
   private RecordManager recordManager;
@@ -44,13 +52,46 @@ public class FunSDKVideoView extends LinearLayout {
   // public FunSDKVideoView(ThemedReactContext context) {
   public FunSDKVideoView(ThemedReactContext context) {
     super(context);
+    this.eventEmitter = new FunSDKVideoEventEmitter(context);
     this.themedReactContext = context;
     this.activity = ((ReactContext) getContext()).getCurrentActivity();
 
     // super(context.getCurrentActivity());
-    monitorManagers = new HashMap<>();
+    // monitorManagers = new HashMap<>();
     // Устанавливаем ориентацию LinearLayout
     this.setOrientation(LinearLayout.VERTICAL);
+  }
+
+  // используется для того чтобы видеопроигрыватель смог использовать размеры
+  // экрана
+  @Override
+  public void requestLayout() {
+    super.requestLayout();
+
+    // The spinner relies on a measure + layout pass happening after it calls
+    // requestLayout().
+    // Without this, the widget never actually changes the selection and doesn't
+    // call the
+    // appropriate listeners. Since we override onLayout in our ViewGroups, a layout
+    // pass never
+    // happens after a call to requestLayout, so we simulate one here.
+    post(measureAndLayout);
+  }
+
+  private final Runnable measureAndLayout = new Runnable() {
+    @Override
+    public void run() {
+      measure(
+          MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
+          MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY));
+      layout(getLeft(), getTop(), getRight(), getBottom());
+    }
+  };
+
+  // @Override
+  public void setId(int id) {
+    super.setId(id);
+    eventEmitter.setViewId(id);
   }
 
   @Override
@@ -70,16 +111,28 @@ public class FunSDKVideoView extends LinearLayout {
 
   public void setDevId(String devId) {
     this.devId = devId;
-    initMonitor();
+    // initMonitor();
+  }
+
+  public int getChannelId() {
+    return this.channelId;
+  }
+
+  public void setChannelId(int channelId) {
+    this.channelId = channelId;
   }
 
   public void initMonitor() {
+
     if (mediaManager != null) {
     } else {
-
+      WritableMap map = Arguments.createMap();
+      eventEmitter.sendEvent(map, FunSDKVideoEventEmitter.EVENT_START_INIT);
       mediaManager = manager.createMonitorPlayer(this, getDevId());
       mediaManager.setHardDecode(false);
-      // mediaManager.setVideoFullScreen(false);
+      mediaManager.setOnMediaManagerListener(this);
+      mediaManager.setChnId(getChannelId());
+      mediaManager.setVideoFullScreen(false);
       mediaManager.startMonitor();
     }
   }
@@ -98,11 +151,10 @@ public class FunSDKVideoView extends LinearLayout {
 
   public void PlayVideo() {
     if (mediaManager != null) {
-      mediaManager.rePlay();
-      // mediaManager.startMonitor();
+      // mediaManager.rePlay();
+      mediaManager.startMonitor();
     } else {
-
-      // initMonitor();
+      initMonitor();
     }
   }
 
@@ -291,4 +343,108 @@ public class FunSDKVideoView extends LinearLayout {
   // mediaManager.setVideoFlip(videoFlip);
   // }
   // }
+
+  /**
+   * Обратные вызовы для состояний воспроизведения
+   * public static final int E_STATE_UNINIT = -1; // Не инициализировано
+   * public static final int E_STATE_PlAY = 0; // Воспроизведение
+   * public static final int E_STATE_PAUSE = 1; // Пауза
+   * public static final int E_STATE_BUFFER = 2; // Получение данных
+   * public static final int E_STATE_REFRESH = 3; // Обновление
+   * public static final int E_STATE_STOP = 4; // Остановка
+   * public static final int E_STATE_RESUME = 5; // Возобновление
+   * public static final int E_STATE_CANNOT_PLAY = 6; // Невозможно воспроизвести
+   * public static final int E_STATE_READY_PLAY = 7; // Готово к воспроизведению
+   * public static final int E_STATE_MEDIA_DISCONNECT = 8; // Разрыв
+   * медиасоединения
+   * public static final int E_STATE_MEDIA_SOUND_ON = 9; // Звук включен
+   * public static final int E_STATE_MEDIA_SOUND_OFF = 10; // Звук выключен
+   * public static final int E_STATE_RECONNECT = 11; // Повторное соединение
+   * public static final int E_STATE_CHANGE_VR_MODE = 12; // Режим виртуальной
+   * реальности
+   * public static final int E_HARDDECODER_FAILURE = -5; // Сбой аппаратной
+   * декодирования
+   * public static final int E_OPEN_FAILED = 13; // Ошибка подключения,
+   * пожалуйста, обновите (используется в xmeye)
+   * public static final int E_NO_VIDEO = 14; // Видео отсутствует (используется в
+   * xmeye)
+   * public static final int E_STATE_SET_PLAY_VIEW = 15; // Обратный вызов для
+   * настройки воспроизведения
+   * public static final int E_STATE_PLAY_COMPLETED = 16; // Воспроизведение
+   * завершено, обычно используется для воспроизведения записей
+   * public static final int E_STATE_PLAY_SEEK = 17; // Поиск при воспроизведении
+   * записей
+   * public static final int E_STATE_SAVE_RECORD_FILE_S = 18; // Сохранение записи
+   * успешно
+   * public static final int E_STATE_SAVE_PIC_FILE_S = 19; // Сохранение
+   * изображения успешно
+   *
+   * Получайте константы из import static
+   * com.manager.device.media.attribute.PlayerAttribute.E_STATE_CANNOT_PLAY;
+   *
+   * @param attribute
+   * @param state
+   */
+  @Override
+  public void onMediaPlayState(PlayerAttribute attribute, int state) {
+    WritableMap map = Arguments.createMap();
+    map.putInt("state", state);
+    eventEmitter.sendEvent(map, FunSDKVideoEventEmitter.EVENT_MEDIA_PLAY_STATE);
+  }
+
+  public void onFailed(PlayerAttribute attribute, int msgId, int errorId) {
+    // в фансдк демо тут TODO и ничего нет
+    WritableMap map = Arguments.createMap();
+    map.putInt("msgId", msgId);
+    map.putInt("errorId", errorId);
+    eventEmitter.sendEvent(map, FunSDKVideoEventEmitter.EVENT_FAILED);
+  }
+
+  /**
+   * Показывает битрейт и временную метку
+   *
+   * @param attribute
+   * @param isShowTime
+   * @param time
+   * @param rate
+   */
+  @Override
+  public void onShowRateAndTime(PlayerAttribute attribute, boolean isShowTime,
+      String time, String rate) {
+
+    WritableMap map = Arguments.createMap();
+    // map.putBoolean("isShowTime", isShowTime);
+    map.putString("time", time);
+    map.putString("rate", rate);
+    eventEmitter.sendEvent(map, FunSDKVideoEventEmitter.EVENT_SHOW_RATE_AND_TIME);
+  }
+
+  /**
+   * Обратный вызов завершения буферизации видео
+   *
+   * @param attribute
+   * @param ex
+   */
+  @Override
+  public void onVideoBufferEnd(PlayerAttribute attribute, MsgContent ex) {
+    WritableMap map = Arguments.createMap();
+    map.putBoolean("isBufferEnd", true);
+    eventEmitter.sendEvent(map, FunSDKVideoEventEmitter.EVENT_VIDEO_BUFFER_END);
+  }
+
+  public void onPlayStateClick(View view) {
+    // в библиотеке тут пусто
+  }
+
+  public interface OnMediaManagerListener {
+    void onMediaPlayState(PlayerAttribute var1, int var2);
+
+    void onFailed(PlayerAttribute var1, int var2, int var3);
+
+    void onShowRateAndTime(PlayerAttribute var1, boolean var2, String var3, String var4);
+
+    void onVideoBufferEnd(PlayerAttribute var1, MsgContent var2);
+
+    void onPlayStateClick(View var1);
+  }
 }

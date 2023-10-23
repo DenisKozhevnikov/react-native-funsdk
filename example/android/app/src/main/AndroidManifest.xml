@@ -2,6 +2,11 @@
 
   <uses-permission android:name="android.permission.INTERNET" />
 
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
   <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme">
     <meta-data android:name="APP_UUID" android:value="e0534f3240274897821a126be19b6d46" />
     <meta-data android:name="APP_KEY" android:value="0621ef206a1d4cafbe0c5545c3882ea8" />
@@ -12,6 +17,7 @@
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
+        <action android:name="android.intent.action.DOWNLOAD_COMPLETE"/>
       </intent-filter>
     </activity>
   </application>

@@ -74,6 +74,15 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     return new FunSDKVideoView(context);
   }
 
+  @Override
+  public @Nullable Map<String, Object> getExportedCustomDirectEventTypeConstants() {
+    MapBuilder.Builder<String, Object> builder = MapBuilder.builder();
+    for (String event : FunSDKVideoEventEmitter.Events) {
+      builder.put(event, MapBuilder.of("registrationName", event));
+    }
+    return builder.build();
+  }
+
   // region Direct manipulation with ref
   @Override
   public Map<String, Integer> getCommandsMap() {
@@ -177,5 +186,10 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
   @ReactProp(name = "devId")
   public void setDeviceId(FunSDKVideoView view, String devId) {
     view.setDevId(devId);
+  }
+
+  @ReactProp(name = "channelId")
+  public void setDeviceId(FunSDKVideoView view, int channelId) {
+    view.setChannelId(channelId);
   }
 }

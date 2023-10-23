@@ -60,6 +60,8 @@ export type SearcResultRecordFile = {
   alarmExFileInfo: string;
   fileTimeLong: number;
   streamType: number;
+
+  startTimestamp: string;
 };
 
 export type RecordViewNativeProps = ViewProps & {

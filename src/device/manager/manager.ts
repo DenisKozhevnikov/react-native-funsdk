@@ -1,21 +1,12 @@
 import { NativeModules } from 'react-native';
+import type {
+  DeviceCredentialParams,
+  DeviceIdParams,
+  DeviceManagerPromiseSuccessType,
+  EPTZCMD,
+} from './types';
 
 const funsdk = NativeModules.FunSDKDevStatusModule;
-
-export type DeviceManagerPromiseSuccessType = {
-  s: string;
-  i: number;
-};
-
-export type DeviceIdParams = {
-  deviceId: string;
-};
-
-export type DeviceCredentialParams = {
-  deviceId: string;
-  deviceLogin: string;
-  devicePassword: string;
-};
 
 export function loginDevice(
   params: DeviceCredentialParams
@@ -99,15 +90,21 @@ export function modifyDeviceName(
 
 export type DevicePTZControlParams = {
   deviceId: string;
-  command: number;
+  command: EPTZCMD;
   bStop: boolean;
   deviceChannel: number;
+  speed?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | number; // default 4
 };
 
 export function devicePTZcontrol(
   params: DevicePTZControlParams
 ): Promise<boolean> {
-  return funsdk.devicePTZControl(params);
+  const withDefaultParams: Required<DevicePTZControlParams> = {
+    speed: 4,
+    ...params,
+  };
+
+  return funsdk.devicePTZControl(withDefaultParams);
 }
 
 export function resetDeviceConfig(

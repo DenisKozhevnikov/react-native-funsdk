@@ -27,7 +27,8 @@ import * as React from 'react';
 //   SearcResultRecordFile,
 //   // hasLogin,
 // } from 'react-native-funsdk';
-import { RecordPage } from './record';
+// import { RecordPage } from './record';
+import { MonitorPage } from './live';
 // import { MonitorPage } from './live';
 
 // export default function App() {
@@ -59,8 +60,8 @@ export default function App() {
 
   return (
     <>
-      <RecordPage />
-      {/* <MonitorPage /> */}
+      {/* <RecordPage /> */}
+      <MonitorPage />
     </>
   );
 

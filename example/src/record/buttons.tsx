@@ -3,7 +3,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  ScrollView,
+  // ScrollView,
   View,
 } from 'react-native';
 import {
@@ -44,14 +44,6 @@ export const RecordButtons = ({
     }
   };
 
-  const startPlayRecord0 = () => {
-    playerRef?.startPlayRecord(0);
-  };
-
-  const startPlayRecord1 = () => {
-    playerRef?.startPlayRecord(1);
-  };
-
   const searchRecordByFile = () => {
     const hour = 60 * 60 * 1000;
     const day = hour * 24;
@@ -75,21 +67,42 @@ export const RecordButtons = ({
     playerRef?.closeVoice();
   };
 
+  const pause = () => {
+    playerRef?.pausePlay();
+  };
+
+  const rePlay = () => {
+    playerRef?.rePlay();
+  };
+
+  const testFunc = () => {
+    // playerRef.;
+  };
+  // const updateSpeed = (speed: number) => {
+  //   playerRef?.setPlaySpeed(speed);
+  // };
+
   return (
-    <ScrollView style={{ backgroundColor: '#EFEFEF', flex: 1 }}>
-      <View style={styles.view}>
-        <Button text="loadChannelsCount" onPress={() => loadChannelsCount()} />
-        <Button text="loadChannelsInfo" onPress={() => loadChannelsInfo()} />
-        <Button text="startPlayRecord0" onPress={() => startPlayRecord0()} />
-        <Button text="startPlayRecord1" onPress={() => startPlayRecord1()} />
-        <Button
-          text="searchRecordByFile"
-          onPress={() => searchRecordByFile()}
-        />
-        <Button text="openVoice" onPress={() => openVoice()} />
-        <Button text="closeVoice" onPress={() => closeVoice()} />
-      </View>
-    </ScrollView>
+    // <ScrollView
+    //   style={{
+    //     backgroundColor: '#EFEFEF',
+    //     flex: 1,
+    //   }}
+    // >
+    <View style={styles.view}>
+      <Button text="loadChannelsCount" onPress={() => loadChannelsCount()} />
+      <Button text="loadChannelsInfo" onPress={() => loadChannelsInfo()} />
+      <Button text="searchRecordByFile" onPress={() => searchRecordByFile()} />
+      <Button text="openVoice" onPress={() => openVoice()} />
+      <Button text="closeVoice" onPress={() => closeVoice()} />
+      <Button text="testmethods" onPress={() => testFunc()} />
+      <Button text="pause" onPress={() => pause()} />
+      <Button text="rePlay" onPress={() => rePlay()} />
+      {/* <Button text="slow" onPress={() => updateSpeed(-3)} />
+      <Button text="normal" onPress={() => updateSpeed(0)} />
+      <Button text="fast" onPress={() => updateSpeed(3)} /> */}
+    </View>
+    // </ScrollView>
   );
 };
 
@@ -126,5 +139,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
+    backgroundColor: '#EFEFEF',
   },
 });

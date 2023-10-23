@@ -53,6 +53,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 public class FunSDKRecordView extends LinearLayout
     implements RecordManager.OnRecordManagerListener, DownloadManager.OnDownloadListener {
@@ -404,6 +407,26 @@ public class FunSDKRecordView extends LinearLayout
           map.putInt("fileTimeLong", fileData.getFileTimeLong());
           map.putInt("streamType", fileData.getStreamType());
 
+          map.putInt("downloadStatus", fileData.downloadStatus);
+          map.putInt("downloadType", fileData.downloadType);
+          map.putBoolean("isChecked", fileData.isChecked);
+          map.putDouble("currentPos", fileData.currentPos);
+          map.putDouble("st_5_wnd", fileData.st_5_wnd);
+          map.putInt("seekPosition", fileData.seekPosition);
+          map.putBoolean("isEffective", fileData.isEffective);
+          map.putBoolean("recordLenTypeNormal",
+              fileData.getRecordLenType() == RecordPlayerAttribute.RECORD_LEN_TYPE.RECORD_LEN_NORMAL);
+
+          SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+          String startTimeOfYear = fileData.getStartTimeOfYear();
+          try {
+            Date startDate = dateFormat.parse(startTimeOfYear);
+
+            map.putDouble("startTimestamp", startDate.getTime());
+
+          } catch (ParseException e) {
+            e.printStackTrace(); // Handle the exception appropriately
+          }
           array.pushMap(map);
         }
         holder.putArray("list", array);

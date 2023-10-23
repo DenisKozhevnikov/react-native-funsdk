@@ -5,6 +5,7 @@ import {
   UIManager,
   findNodeHandle,
 } from 'react-native';
+import type { FUNSDK_MEDIA_PLAY_STATE_ENUM } from 'src/record/types';
 
 const Commands = {
   // setVideoFlip: 'setVideoFlip',
@@ -31,7 +32,23 @@ const Commands = {
   seekToTime: 'seekToTime',
 } as const;
 
-export const MonitorView = requireNativeComponent('RCTMonitor');
+export type MonitorViewNativeProps = ViewProps & {
+  onMediaPlayState: (event: {
+    nativeEvent: { state: FUNSDK_MEDIA_PLAY_STATE_ENUM | number };
+  }) => void;
+  onShowRateAndTime: (event: {
+    nativeEvent: { time: string; rate: string };
+  }) => void;
+  onVideoBufferEnd: (event: { nativeEvent: { isBufferEnd: boolean } }) => void;
+  onFailed: (event: {
+    nativeEvent: { msgId: number; errorId: number };
+  }) => void;
+  onStartInit: (event: { nativeEvent: {} }) => void;
+  onDebugState: (event: { nativeEvent: { state: string } }) => void;
+};
+
+export const MonitorView =
+  requireNativeComponent<MonitorViewNativeProps>('RCTMonitor');
 
 const dispatchCommand = (viewId: number, command: string, args: any[] = []) => {
   UIManager.dispatchViewManagerCommand(
@@ -46,8 +63,15 @@ const dispatchCommand = (viewId: number, command: string, args: any[] = []) => {
 
 type MonitorProps = ViewProps & {
   devId: string;
-  // Props для компонента MonitorView
-  // ...
+  channelId: number;
+  onStartInit?: () => void;
+  onMediaPlayState?: (obj: {
+    state: FUNSDK_MEDIA_PLAY_STATE_ENUM | number;
+  }) => void;
+  onShowRateAndTime?: (obj: { time: string; rate: string }) => void;
+  onVideoBufferEnd?: (obj: { isBufferEnd: boolean }) => void;
+  onFailed?: (obj: { msgId: number; errorId: number }) => void;
+  onDebugState?: (obj: { state: string }) => void;
 };
 
 export class Monitor extends React.Component<MonitorProps, any> {
@@ -271,7 +295,51 @@ export class Monitor extends React.Component<MonitorProps, any> {
     dispatchCommand(viewId, Commands.seekToTime);
   }
 
+  _onStartInit = () => {
+    this.props?.onStartInit && this.props?.onStartInit();
+  };
+
+  _onMediaPlayState = (
+    event: Parameters<MonitorViewNativeProps['onMediaPlayState']>[0]
+  ) => {
+    this.props?.onMediaPlayState &&
+      this.props?.onMediaPlayState(event.nativeEvent);
+  };
+
+  _onShowRateAndTime = (
+    event: Parameters<MonitorViewNativeProps['onShowRateAndTime']>[0]
+  ) => {
+    this.props?.onShowRateAndTime &&
+      this.props?.onShowRateAndTime(event.nativeEvent);
+  };
+
+  _onVideoBufferEnd = (
+    event: Parameters<MonitorViewNativeProps['onVideoBufferEnd']>[0]
+  ) => {
+    this.props?.onVideoBufferEnd &&
+      this.props?.onVideoBufferEnd(event.nativeEvent);
+  };
+
+  _onFailed = (event: { nativeEvent: { msgId: number; errorId: number } }) => {
+    this.props?.onFailed && this.props?.onFailed(event.nativeEvent);
+  };
+
+  _onDebugState = (event: { nativeEvent: { state: string } }) => {
+    this.props?.onDebugState && this.props?.onDebugState(event.nativeEvent);
+  };
+
   render() {
-    return <MonitorView {...this.props} ref={this.myRef} />;
+    return (
+      <MonitorView
+        {...this.props}
+        ref={this.myRef}
+        onStartInit={this._onStartInit}
+        onMediaPlayState={this._onMediaPlayState}
+        onShowRateAndTime={this._onShowRateAndTime}
+        onVideoBufferEnd={this._onVideoBufferEnd}
+        onFailed={this._onFailed}
+        onDebugState={this._onDebugState}
+      />
+    );
   }
 }

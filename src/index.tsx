@@ -28,6 +28,7 @@ export * from './info';
 export * from './login';
 export * from './modify';
 export * from './device';
+export * from './manager';
 
 // views
 export * from './monitor';
