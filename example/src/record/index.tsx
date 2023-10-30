@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import {
   funSDKInit,
   getUserId,
@@ -105,9 +105,23 @@ export const RecordPage = () => {
     }, 2000);
   }, [isInit]);
 
-  if (!isInit) {
-    return null;
-  }
+  const [timeline, setTimeline] = useState<number[] | null>(null);
+
+  const getColorByStatus = (status: number) => {
+    if (status === 1) {
+      return 'blue';
+    }
+    if (status === 2) {
+      return 'yellow';
+    }
+    if (status === 3) {
+      return 'green';
+    }
+    if (status === 4) {
+      return 'pink';
+    }
+    return 'black';
+  };
 
   return (
     <View style={styles.container}>
@@ -115,6 +129,7 @@ export const RecordPage = () => {
         ref={playerRef}
         style={styles.monitor}
         devId={DEVICE_ID}
+        channelId={1}
         onMediaPlayState={(ev) => console.log('onMediaPlayState: ', ev)}
         onShowRateAndTime={(ev) => console.log('onShowRateAndTime: ', ev)}
         onVideoBufferEnd={(ev) => console.log('onVideoBufferEnd: ', ev)}
@@ -124,11 +139,41 @@ export const RecordPage = () => {
             setRecordList(ev?.list);
           }
         }}
+        // onSearchRecordByTimesResult={(ev) => {
+        //   console.log('onSearchRecordByTimesResult: ', ev);
+        //   if (ev.minutesStatusList) {
+        //     setTimeline(ev.minutesStatusList);
+        //   }
+        // }}
         onFailed={(obj) => console.log('onFailed: ', obj)}
         onStartInit={() => console.log('onStartInit: ')}
         onDebugState={(obj) => console.log('DEBUG STATE: ', obj)}
       />
-      <RecordButtons playerRef={playerRef.current} />
+      <ScrollView
+        horizontal
+        style={{
+          flexGrow: 0,
+          flexShrink: 0,
+          // padding: 10,
+          height: 40,
+          backgroundColor: 'red',
+        }}
+      >
+        {timeline?.map((minute, index) => {
+          return (
+            <View
+              key={index}
+              style={{
+                width: 1,
+                height: '100%',
+                // backgroundColor: `#${minute}${minute}${minute}${minute}${minute}${minute}`,
+                backgroundColor: getColorByStatus(minute),
+              }}
+            />
+          );
+        })}
+      </ScrollView>
+      <RecordButtons playerRef={playerRef.current} setTimeline={setTimeline} />
       <Text>list of recordlist</Text>
       <RecordList recordList={recordList} playerRef={playerRef.current} />
     </View>

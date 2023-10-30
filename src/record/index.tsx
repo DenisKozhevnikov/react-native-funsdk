@@ -11,9 +11,10 @@ import {
 import type {
   FUNSDK_DOWNLOAD_STATE_ENUM,
   FUNSDK_MEDIA_PLAY_STATE_ENUM,
-} from './types';
+} from '../types/stream';
 
 const Commands = {
+  init: 'init',
   startPlayRecord: 'startPlayRecord',
   searchRecordByFile: 'searchRecordByFile',
   capture: 'capture',
@@ -29,6 +30,7 @@ const Commands = {
   isRecordPlay: 'isRecordPlay',
   downloadFile: 'downloadFile',
   setPlaySpeed: 'setPlaySpeed',
+  startPlayRecordByTime: 'startPlayRecordByTime',
 };
 
 const dispatchCommand = (viewId: number, command: string, args: any[] = []) => {
@@ -100,6 +102,7 @@ export const RecordView = requireNativeComponent<RecordViewNativeProps>(
 
 export type RecordPlayerProps = ViewProps & {
   devId: string;
+  channelId: number;
   onMediaPlayState?: (obj: {
     playSpeed: number;
     state: FUNSDK_MEDIA_PLAY_STATE_ENUM;
@@ -110,6 +113,7 @@ export type RecordPlayerProps = ViewProps & {
     type: SearcResultRecordEnum;
     list: SearcResultRecordFile[];
   }) => void;
+  // onSearchRecordByTimesResult: (...props: any) => void;
   onFailed?: (obj: { msgId: number; errorId: number }) => void;
   onStartInit?: () => void;
   onDebugState?: (obj: { state: string }) => void;
@@ -121,7 +125,9 @@ export type RecordPlayerProps = ViewProps & {
 };
 
 export type RecordPlayerRef = {
+  init: () => void;
   startPlayRecord: (position: number) => void;
+  startPlayRecordByTime: (startTimestamp: number, endTimestamp: number) => void;
   searchRecordByFile: (startTimestamp: number, endTimestamp: number) => void;
   capture: (path: string) => void;
   startRecord: (path: string) => void;
@@ -145,6 +151,7 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
       onShowRateAndTime,
       onVideoBufferEnd,
       onSearchRecordByFilesResult,
+      // onSearchRecordByTimesResult,
       onFailed,
       onStartInit,
       onDebugState,
@@ -162,6 +169,16 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
       ref,
       () => {
         return {
+          init() {
+            console.log('initing');
+            const viewId = findNodeHandle(viewRef.current);
+
+            if (typeof viewId !== 'number') {
+              return;
+            }
+
+            dispatchCommand(viewId, Commands.init, []);
+          },
           startPlayRecord(position: number) {
             const viewId = findNodeHandle(viewRef.current);
 
@@ -170,6 +187,18 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
             }
 
             dispatchCommand(viewId, Commands.startPlayRecord, [position]);
+          },
+          startPlayRecordByTime(startTimestamp: number, endTimestamp: number) {
+            const viewId = findNodeHandle(viewRef.current);
+
+            if (typeof viewId !== 'number') {
+              return;
+            }
+
+            dispatchCommand(viewId, Commands.startPlayRecordByTime, [
+              startTimestamp,
+              endTimestamp,
+            ]);
           },
           searchRecordByFile(startTimestamp: number, endTimestamp: number) {
             const viewId = findNodeHandle(viewRef.current);
@@ -338,6 +367,11 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
         onSearchRecordByFilesResult(event.nativeEvent);
     };
 
+    // const _onSearchRecordByTimesResult = (event: any) => {
+    //   onSearchRecordByTimesResult &&
+    //     onSearchRecordByTimesResult(event.nativeEvent);
+    // };
+
     const _onStartInit = () => {
       onStartInit && onStartInit();
     };
@@ -369,12 +403,14 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
 
     return (
       <RecordView
+        onLayout={(event) => console.log('event: ', event.nativeEvent.layout)}
         ref={viewRef}
         {...props}
         onMediaPlayState={_onMediaPlayState}
         onShowRateAndTime={_onShowRateAndTime}
         onVideoBufferEnd={_onVideoBufferEnd}
         onSearchRecordByFilesResult={_onSearchRecordByFilesResult}
+        // onSearchRecordByTimesResult={_onSearchRecordByTimesResult}
         onFailed={_onFailed}
         onStartInit={_onStartInit}
         onDebugState={_onDebugState}

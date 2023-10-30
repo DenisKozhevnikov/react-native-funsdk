@@ -318,21 +318,22 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
     }
   }
 
-  public void seekToTime() {
-    int times = 150;
-    Calendar searchTime = Calendar.getInstance();
-    System.out.println("searchTime123: " + searchTime.get(Calendar.YEAR));
-    // if (recordManager != null) {
-    int[] time = { searchTime.get(Calendar.YEAR), searchTime.get(Calendar.MONTH) + 1,
-        searchTime.get(Calendar.DAY_OF_MONTH), 0, 0, 0 };
-    System.out.println("time: " + time);
-    int absTime = FunSDK.ToTimeType(time) + times;
-    System.out.println("absTime: " + absTime);
+  // public void seekToTime() {
+  // int times = 150;
+  // Calendar searchTime = Calendar.getInstance();
+  // System.out.println("searchTime123: " + searchTime.get(Calendar.YEAR));
+  // // if (recordManager != null) {
+  // int[] time = { searchTime.get(Calendar.YEAR), searchTime.get(Calendar.MONTH)
+  // + 1,
+  // searchTime.get(Calendar.DAY_OF_MONTH), 0, 0, 0 };
+  // System.out.println("time: " + time);
+  // int absTime = FunSDK.ToTimeType(time) + times;
+  // System.out.println("absTime: " + absTime);
 
-    recordManager.seekToTime(times, absTime);
-    // необходимо срабатывание ивента seekToTime
-    // }
-  }
+  // recordManager.seekToTime(times, absTime);
+  // // необходимо срабатывание ивента seekToTime
+  // // }
+  // }
 
   // depreceated (no method found in 2.4 version)
   // https://libraries.io/maven/io.github.xmcamera:libxmfunsdk

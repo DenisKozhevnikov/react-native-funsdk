@@ -5,7 +5,7 @@ import {
   UIManager,
   findNodeHandle,
 } from 'react-native';
-import type { FUNSDK_MEDIA_PLAY_STATE_ENUM } from 'src/record/types';
+import type { FUNSDK_MEDIA_PLAY_STATE_ENUM } from '../types/stream';
 
 const Commands = {
   // setVideoFlip: 'setVideoFlip',
@@ -286,14 +286,14 @@ export class Monitor extends React.Component<MonitorProps, any> {
     dispatchCommand(viewId, Commands.capturePicFromDevAndSave);
   }
 
-  seekToTime() {
-    const viewId = findNodeHandle(this.myRef.current);
-    if (typeof viewId !== 'number') {
-      return;
-    }
+  // seekToTime() {
+  //   const viewId = findNodeHandle(this.myRef.current);
+  //   if (typeof viewId !== 'number') {
+  //     return;
+  //   }
 
-    dispatchCommand(viewId, Commands.seekToTime);
-  }
+  //   dispatchCommand(viewId, Commands.seekToTime);
+  // }
 
   _onStartInit = () => {
     this.props?.onStartInit && this.props?.onStartInit();

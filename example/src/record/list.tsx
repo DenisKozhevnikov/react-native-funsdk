@@ -126,15 +126,15 @@ export const RecordList = ({
   recordList: SearcResultRecordFile[] | null;
   playerRef: RecordPlayerRef | null;
 }) => {
-  useEffect(() => {
-    const loadList = async () => {
-      let folder = ReactNativeBlobUtil.fs.dirs.PictureDir;
-      const files = await getListOfFiles(folder);
-      console.log('files: ', files);
-    };
+  // useEffect(() => {
+  //   const loadList = async () => {
+  //     let folder = ReactNativeBlobUtil.fs.dirs.PictureDir;
+  //     const files = await getListOfFiles(folder);
+  //     console.log('files: ', files);
+  //   };
 
-    loadList();
-  }, []);
+  //   loadList();
+  // }, []);
   return (
     <FlatList
       style={{ flex: 1 }}

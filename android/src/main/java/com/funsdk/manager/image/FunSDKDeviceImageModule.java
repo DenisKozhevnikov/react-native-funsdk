@@ -187,7 +187,7 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
 
   @Override
   public int OnFunSDKResult(Message message, MsgContent msgContent) {
-    System.out.println(msgContent.toString());
+    // System.out.println(msgContent.toString());
     // System.out.println("onFunSDKResult message " + message.what);
     switch (message.what) {
       case EUIMSG.DOWN_RECODE_BPIC_START: // Начнется загрузка миниатюр видео

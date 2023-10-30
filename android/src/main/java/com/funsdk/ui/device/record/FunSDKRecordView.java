@@ -48,6 +48,7 @@ import static com.manager.device.media.download.DownloadManager.DOWNLOAD_STATE_P
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -57,9 +58,12 @@ import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
+import com.funsdk.utils.device.media.playback.UpdatedDevRecordManager;
+
 public class FunSDKRecordView extends LinearLayout
     implements RecordManager.OnRecordManagerListener, DownloadManager.OnDownloadListener {
   private String devId;
+  private int channelId;
   // нужен ли он?
   private final ThemedReactContext themedReactContext;
   // нужен ли он?
@@ -70,7 +74,7 @@ public class FunSDKRecordView extends LinearLayout
   public static final int TIME_UNIT = 60;
 
   private MediaFileCalendarManager mediaFileCalendarManager;
-  private RecordManager recordManager;
+  private UpdatedDevRecordManager recordManager;
   private Calendar calendarShow;
   private Calendar searchMonthCalendar = Calendar.getInstance();
   protected DeviceManager manager = this.getManager();
@@ -138,16 +142,15 @@ public class FunSDKRecordView extends LinearLayout
     return DeviceManager.getInstance();
   }
 
-  public void init(String devId) {
+  public void init() {
     WritableMap map = Arguments.createMap();
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_START_INIT);
 
     calendarShow = Calendar.getInstance();
-    setDevId(devId);
 
     initRecordPlayer(this, recordPlayType);
     searchRecordByFile(calendarShow);
-    searchRecordByTime(calendarShow);
+    // searchRecordByTime(calendarShow);
 
     // mediaFileCalendarManager = new MediaFileCalendarManager(this);
     // mediaFileCalendarManager.init(devId, null, "h264");
@@ -161,61 +164,77 @@ public class FunSDKRecordView extends LinearLayout
     this.devId = devId;
   }
 
+  public int getChannelId() {
+    return this.channelId;
+  }
+
+  public void setChannelId(int channelId) {
+    this.channelId = channelId;
+  }
+
   public void initRecordPlayer(ViewGroup playView, int recordType) {
-    recordManager = manager.createRecordPlayer(this, getDevId(), recordType);
-    // TODO: сделать методы с каналами
-    // recordManager.setChnId(getChnId());
-    recordManager.setChnId(0);
-    recordManager.setVideoFullScreen(false);// 默认按比例显示
-    // назначаем в менеджер слушатели, примеры по которым будет ответ
-    // OnFunSDKResult(this.playerAttribute, msg, ex) - 5101 обработается в
-    // recordManager и ответ будет в searchResult
-    // onFailed(this.playerAttribute, msg.what, msg.arg2)
-    // onMediaPlayState(this.playerAttribute, 18)
-    // onShowRateAndTime(this.playerAttribute, isShowTime, time,
-    // FileUtils.FormetFileSize(Long.parseLong(value)) + "/S")
-    // onVideoBufferEnd(this.playerAttribute, ex)
-    // onPlayStateClick(v)
-    // searchResult - результат поиска по 5101(DEV_FIND_FILE)
-    recordManager.setOnMediaManagerListener(this);
-    // recordManager.setOnMediaManagerListener(new MediaManagerListener());
+    if (recordManager != null) {
 
-    // recordManager.initVideoThumb(PathManager.getInstance(this.getContext()).getTempImages(),
-    // getDevId(),
-    // this);
+    } else {
 
+      // recordManager = manager.createRecordPlayer(this, getDevId(), recordType);
+      recordManager = new UpdatedDevRecordManager(this, new RecordPlayerAttribute(getDevId()));
+      // TODO: сделать методы с каналами
+      // recordManager.setChnId(getChnId());
+      recordManager.setChnId(getChannelId());
+      recordManager.setVideoFullScreen(false);// 默认按比例显示
+      // назначаем в менеджер слушатели, примеры по которым будет ответ
+      // OnFunSDKResult(this.playerAttribute, msg, ex) - 5101 обработается в
+      // recordManager и ответ будет в searchResult
+      // onFailed(this.playerAttribute, msg.what, msg.arg2)
+      // onMediaPlayState(this.playerAttribute, 18)
+      // onShowRateAndTime(this.playerAttribute, isShowTime, time,
+      // FileUtils.FormetFileSize(Long.parseLong(value)) + "/S")
+      // onVideoBufferEnd(this.playerAttribute, ex)
+      // onPlayStateClick(v)
+      // searchResult - результат поиска по 5101(DEV_FIND_FILE)
+      recordManager.setOnMediaManagerListener(this);
+      // recordManager.setOnMediaManagerListener(new MediaManagerListener());
+
+      // recordManager.initVideoThumb(PathManager.getInstance(this.getContext()).getTempImages(),
+      // getDevId(),
+      // this);
+    }
   }
 
-  public void searchRecordByTime(Calendar searchTime) {
-    this.searchTime = searchTime;
-    int[] times = new int[] {
-        searchTime.get(Calendar.YEAR),
-        searchTime.get(Calendar.MONTH) + 1,
-        searchTime.get(Calendar.DATE)
-    };
-    recordManager.searchFileByTime(times);
-  }
+  // вынес в отдельный класс SearchByTime
+  // public void searchRecordByTime(Calendar searchTime) {
+  // this.searchTime = searchTime;
+  // int[] times = new int[] {
+  // searchTime.get(Calendar.YEAR),
+  // searchTime.get(Calendar.MONTH) + 1,
+  // searchTime.get(Calendar.DATE)
+  // };
+  // recordManager.searchFileByTime(times);
+  // }
 
   public void searchRecordByFile(Calendar searchTime) {
     this.searchTime = searchTime;
-    if (recordManager instanceof DevRecordManager) {
-      searchTime.set(Calendar.HOUR_OF_DAY, 0);
-      searchTime.set(Calendar.MINUTE, 0);
-      searchTime.set(Calendar.SECOND, 0);
+    // if (recordManager instanceof DevRecordManager) {
+    searchTime.set(Calendar.HOUR_OF_DAY, 0);
+    searchTime.set(Calendar.MINUTE, 0);
+    searchTime.set(Calendar.SECOND, 0);
 
-      Calendar endTime = (Calendar) searchTime.clone();
-      endTime.set(Calendar.HOUR_OF_DAY, 23);
-      endTime.set(Calendar.MINUTE, 59);
-      endTime.set(Calendar.SECOND, 59);
+    Calendar endTime = (Calendar) searchTime.clone();
+    endTime.set(Calendar.HOUR_OF_DAY, 23);
+    endTime.set(Calendar.MINUTE, 59);
+    endTime.set(Calendar.SECOND, 59);
 
-      ((DevRecordManager) recordManager).searchFileByTime(searchTime, endTime);
-    }
+    // ((DevRecordManager) recordManager).searchFileByTime(searchTime, endTime);
+    recordManager.searchFileByTime(searchTime, endTime);
+    // }
   }
 
   public void searchRecordByFile(Calendar startTime, Calendar endTime) {
-    if (recordManager instanceof DevRecordManager) {
-      ((DevRecordManager) recordManager).searchFileByTime(startTime, endTime);
-    }
+    // if (recordManager instanceof DevRecordManager) {
+    // ((DevRecordManager) recordManager).searchFileByTime(startTime, endTime);
+    // }
+    recordManager.searchFileByTime(startTime, endTime);
   }
 
   /**
@@ -234,6 +253,45 @@ public class FunSDKRecordView extends LinearLayout
 
     recordManager.startPlay(playCalendar, endCalendar);
   }
+
+  public void startPlayRecord(Calendar playCalendar, Calendar endCalendar) {
+    recordManager.startPlay(playCalendar, endCalendar);
+  }
+
+  // TODO: переработать так как сейчас непонятно как работает
+  // передаем время с начала
+  // public void seekToTime(int times) {
+  // int[] time = { searchTime.get(Calendar.YEAR), searchTime.get(Calendar.MONTH)
+  // + 1,
+  // searchTime.get(Calendar.DAY_OF_MONTH), 0, 0, 0 };
+  // int absTime = FunSDK.ToTimeType(time) + times;
+  // recordManager.seekToTime(times, absTime);
+  // }
+
+  // время старта и время которое прошло со старта
+  // public void seekToTime(long startTimeinMillis, long timeInMillis) {
+  // Calendar times = Calendar.getInstance();
+  // times.setTimeInMillis(timeInMillis);
+
+  // int year = times.get(Calendar.YEAR);
+  // int month = times.get(Calendar.MONTH) + 1;
+  // int day = times.get(Calendar.DAY_OF_MONTH);
+
+  // int[] time = {
+  // year,
+  // month,
+  // day,
+  // 0,
+  // 0,
+  // 0
+  // };
+
+  // int absTime = (int) timeInMillis / 1000;
+
+  // // int absTime = FunSDK.ToTimeType(time) + times;
+  // // recordManager.seekToTime(times, absTime);
+  // recordManager.seekToTime(times, absTime);
+  // }
 
   public void capture(String path) {
     recordManager.capture(path);
@@ -291,35 +349,27 @@ public class FunSDKRecordView extends LinearLayout
     return timeUnit;
   }
 
-  public void setPlayTimeBySecond(int secondTime) {
-    this.playTimeBySecond = secondTime;
-  }
+  // public void setPlayTimeBySecond(int secondTime) {
+  // this.playTimeBySecond = secondTime;
+  // }
 
-  public int getPlayTimeBySecond() {
-    return playTimeBySecond;
-  }
+  // public int getPlayTimeBySecond() {
+  // return playTimeBySecond;
+  // }
 
-  // TODO: переработать так как сейчас непонятно как работает
-  public void seekToTime(int times) {
-    int[] time = { searchTime.get(Calendar.YEAR), searchTime.get(Calendar.MONTH) + 1,
-        searchTime.get(Calendar.DAY_OF_MONTH), 0, 0, 0 };
-    int absTime = FunSDK.ToTimeType(time) + times;
-    recordManager.seekToTime(times, absTime);
-  }
+  // // TODO: понять зачем это надо
+  // public void setPlayTimeByMinute(int minute) {
+  // // result >= 0 返回有效的时间,< 0 保持原来的时间
+  // int result = recordManager.dealWithRecordEffectiveByMinute(minute);
+  // if (result >= 0) {
+  // playTimeByMinute = result;
+  // playTimeBySecond = 0;
+  // }
+  // }
 
-  // TODO: понять зачем это надо
-  public void setPlayTimeByMinute(int minute) {
-    // result >= 0 返回有效的时间,< 0 保持原来的时间
-    int result = recordManager.dealWithRecordEffectiveByMinute(minute);
-    if (result >= 0) {
-      playTimeByMinute = result;
-      playTimeBySecond = 0;
-    }
-  }
-
-  public int getPlayTimeByMinute() {
-    return playTimeByMinute;
-  }
+  // public int getPlayTimeByMinute() {
+  // return playTimeByMinute;
+  // }
 
   public void setRecordType(int recordType) {
     this.recordPlayType = recordType;
@@ -383,7 +433,7 @@ public class FunSDKRecordView extends LinearLayout
     if (data != null) {
       if (data instanceof H264_DVR_FILE_DATA[]) {
         recordList.clear();
-        recordList.addAll(((DevRecordManager) recordManager).getFileDataList());
+        recordList.addAll(recordManager.getFileDataList());
 
         WritableMap holder = Arguments.createMap();
         WritableArray array = Arguments.createArray();
@@ -443,13 +493,8 @@ public class FunSDKRecordView extends LinearLayout
         // recordManager).getCloudMediaFiles().cloudMediaInfoToH264FileData());
         // }
 
-        dealWithRecordTimeList((char[][]) data);
-        // TODO: отправить в реакт данные о том что поиск успешен
-        // WritableMap map = Arguments.createMap();
-        // map.putBoolean("isSearchResult2", true);
-        // eventEmitter.sendEvent(map,
-        // RecordEventEmitter.EVENT_SEARCH_RECORD_BY_FILES_RESULT);
-
+        // выделен в отдельный класс SearchByTime
+        // dealWithRecordTimeList((char[][]) data);
       }
 
       // haveRecordMap = DevDataCenter.getInstance().getHasRecordFile();
@@ -457,44 +502,117 @@ public class FunSDKRecordView extends LinearLayout
       // отправить в реакт данные о том что поиск не успешен
       // iDevRecordView.onSearchRecordByFileResult(false);
       WritableMap map = Arguments.createMap();
-      map.putBoolean("isSearchResult3", false);
+      map.putBoolean("isSearchResult", false);
       eventEmitter.sendEvent(map,
           RecordEventEmitter.EVENT_SEARCH_RECORD_BY_FILES_RESULT);
+      // eventEmitter.sendEvent(map,
+      // RecordEventEmitter.EVENT_SEARCH_RECORD_BY_TIMES_RESULT);
     }
   }
 
-  private void dealWithRecordTimeList(char[][] minutes) {
-    recordTimeList.clear();
-    int count = 24 * 60 / timeUnit;
-    int n = timeUnit / 10;
-    int i = 0, j = 0;
+  // public void charToString(String time, char[][] data) {
+  // StringBuilder sb = new StringBuilder();
+  // for (int i = 0; i < data.length; i++) {
+  // sb.append(i + " ");
+  // for (int j = 0; j < data[i].length; j++) {
+  // char currentChar = data[i][j];
+  // int charValue = (int) currentChar;
+  // sb.append(" ");
+  // sb.append(charValue);
+  // }
+  // sb.append("\n");
+  // }
+  // String result = sb.toString();
 
-    for (i = 0; i < timeCount / 2; i++) {
-      recordTimeMap = new HashMap<String, Object>();
-      recordTimeList.add(recordTimeMap);
-    }
+  // WritableMap map = Arguments.createMap();
+  // String res = "time: " + time + " res: " + "\n" + result;
+  // map.putString("list", res);
+  // eventEmitter.sendEvent(map,
+  // RecordEventEmitter.EVENT_SEARCH_RECORD_BY_TIMES_RESULT);
+  // }
 
-    for (i = 0; i < count; i++) {
+  // https://developer.jftech.com/docs/?menusId=8af0e7f3d4af49eab71cfdd8d7e47cef&siderid=c73c3a8ee303443694928c50a299f223&lang=en#docs-hash-6
+  /// < The video recording uses 720 bytes of 5760 bits to represent 1440 minutes
+  /// of the day
+  /// < 0000: No recording 0001:F_COMMON 0002:F_ALERT 0003:F_DYNAMIC 0004:F_CARD
+  /// 0005:F_HAND
+  // private void dealWithRecordTimeList(char[][] minutes) {
+  // WritableArray charArray = Arguments.createArray();
+  // WritableArray minutesStatusArray = Arguments.createArray();
+  // int charsCount = 0;
+  // int minutesCount = 0;
 
-      String time = TimeUtils.formatTimes(i * timeUnit);
-      System.out.println("time:" + time);
-      char[][] data = new char[n][];
+  // for (char[] recordRow : minutes) {
+  // for (char recordChar : recordRow) {
+  // // recordInfo - варианты числе 0, 17, 19, 49, 51...
+  // int recordInfo = (int) recordChar;
+  // charArray.pushInt(recordInfo);
+  // charsCount++;
 
-      recordTimeMap = new HashMap<String, Object>();
-      for (j = 0; j < n; ++j) {
-        data[j] = minutes[n * i + j];
-      }
+  // // преобразует recordInfo в двоичный формат и выполняет побитовую операцию
+  // "и" с
+  // // 15(1111) получая номер статуса
+  // //
+  // // пример: 49 преобразует в 0011 0001
+  // // побитовая операция "и" 0011 0001 & 0000 1111
+  // // получает 1 для первой минуты
+  // int firstMinute = recordInfo & 15;
+  // minutesStatusArray.pushInt(firstMinute);
+  // minutesCount++;
 
-      recordTimeMap.put("data", data);
-      recordTimeMap.put("time", time);
-      recordTimeList.add(recordTimeMap);
-    }
+  // // сдвигает на 4 бита вправо
+  // //
+  // // пример: 49 преобразует в 0011 0001
+  // // сдвигает на 4 бита вправо и получает: 0011
+  // // побитовая операция "и" 0000 0011 & 0000 1111
+  // // получает 3 для второй минуты
+  // int secondMinute = recordInfo >> 4 & 15;
+  // minutesStatusArray.pushInt(secondMinute);
+  // minutesCount++;
+  // }
+  // }
 
-    for (i = 0; i < timeCount / 2; i++) {
-      recordTimeMap = new HashMap<String, Object>();
-      recordTimeList.add(recordTimeMap);
-    }
-  }
+  // WritableMap map = Arguments.createMap();
+  // map.putArray("charList", charArray);
+  // map.putArray("minutesStatusList", minutesStatusArray);
+  // map.putInt("charsCount", charsCount);
+  // map.putInt("minutesCount", minutesCount);
+  // eventEmitter.sendEvent(map,
+  // RecordEventEmitter.EVENT_SEARCH_RECORD_BY_TIMES_RESULT);
+
+  // recordTimeList.clear();
+  // int count = 24 * 60 / timeUnit; // 24
+  // int n = timeUnit / 10; // 6
+  // int i = 0, j = 0;
+
+  // for (i = 0; i < timeCount / 2; i++) {
+  // recordTimeMap = new HashMap<String, Object>();
+  // recordTimeList.add(recordTimeMap);
+  // }
+
+  // for (i = 0; i < count; i++) {
+
+  // String time = TimeUtils.formatTimes(i * timeUnit);
+
+  // char[][] data = new char[n][];
+
+  // recordTimeMap = new HashMap<String, Object>();
+  // for (j = 0; j < n; ++j) {
+  // data[j] = minutes[n * i + j];
+  // }
+
+  // recordTimeMap.put("data", data);
+  // recordTimeMap.put("time", time);
+
+  // // Вывод содержимого массива с char[] в читаемом формате
+  // // charToString(time, data);
+  // recordTimeList.add(recordTimeMap);
+  // }
+  // for (i = 0; i < timeCount / 2; i++) {
+  // recordTimeMap = new HashMap<String, Object>();
+  // recordTimeList.add(recordTimeMap);
+  // }
+  // }
 
   public interface OnMediaManagerListener {
     void onMediaPlayState(PlayerAttribute var1, int var2);
