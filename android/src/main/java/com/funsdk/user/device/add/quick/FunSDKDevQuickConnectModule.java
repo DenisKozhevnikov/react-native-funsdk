@@ -110,8 +110,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
       // scanResult.capabilities, dhcpInfo, 180 * 1000,
       // this);
       DeviceManager.getInstance().startQuickSetWiFi(XUtils.initSSID(curSSID), pwd, scanResult.capabilities, dhcpInfo,
-          // 180 * 1000,
-          100,
+          180 * 1000,
           new DeviceManager.OnQuickSetWiFiListener() {
             @Override
             public void onQuickSetResult(XMDevInfo xmDevInfo, int errorId) {
