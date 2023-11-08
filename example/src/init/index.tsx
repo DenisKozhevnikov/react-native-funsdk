@@ -18,7 +18,7 @@ import {
   DEVICE_PASSWORD,
   USER_NAME,
   USER_PASSWORD,
-} from '../topsecretdata';
+} from '../topsecret';
 import React from 'react';
 
 export const useInit = () => {

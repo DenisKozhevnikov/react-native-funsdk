@@ -8,7 +8,7 @@ import {
 } from 'react-native-funsdk';
 import { RecordList } from './list';
 import { RecordButtons } from './buttons';
-import { DEVICE_ID } from '../topsecretdata';
+import { DEVICE_ID } from '../topsecret';
 // import { useInit } from '../init';
 
 export const RecordPage = () => {

@@ -13,7 +13,7 @@ import {
   searchTimeinfo,
   startSetWiFi,
 } from 'react-native-funsdk';
-import { DEVICE_ID } from '../topsecretdata';
+import { DEVICE_ID } from '../topsecret';
 
 const Button = ({ onPress, text }: { onPress: () => void; text: string }) => {
   return (

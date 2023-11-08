@@ -40,7 +40,7 @@ import {
   DEVICE_PASSWORD,
   USER_NAME,
   USER_PASSWORD,
-} from '../topsecretdata';
+} from '../topsecret';
 
 const monitorsList = new Map<number, React.RefObject<Monitor>>();
 
