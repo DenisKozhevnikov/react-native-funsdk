@@ -60,6 +60,7 @@ import java.text.ParseException;
 
 import com.funsdk.utils.device.media.playback.UpdatedDevRecordManager;
 
+// public class FunSDKRecordView extends LinearLayout {
 public class FunSDKRecordView extends LinearLayout
     implements RecordManager.OnRecordManagerListener, DownloadManager.OnDownloadListener {
   private String devId;
@@ -695,12 +696,12 @@ public class FunSDKRecordView extends LinearLayout
    */
   @Override
   public void onShowRateAndTime(PlayerAttribute attribute, boolean isShowTime,
-      String time, String rate) {
+      String time, long rate) {
 
     WritableMap map = Arguments.createMap();
     // map.putBoolean("isShowTime", isShowTime);
     map.putString("time", time);
-    map.putString("rate", rate);
+    map.putDouble("rate", (double) rate);
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_SHOW_RATE_AND_TIME);
   }
 

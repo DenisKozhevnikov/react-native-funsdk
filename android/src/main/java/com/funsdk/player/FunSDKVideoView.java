@@ -123,9 +123,10 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
   }
 
   public void initMonitor() {
-
+    System.out.println("initMonitor");
     if (mediaManager != null) {
     } else {
+      System.out.println("initMonitor next");
       WritableMap map = Arguments.createMap();
       eventEmitter.sendEvent(map, FunSDKVideoEventEmitter.EVENT_START_INIT);
       mediaManager = manager.createMonitorPlayer(this, getDevId());
@@ -150,10 +151,13 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
   }
 
   public void PlayVideo() {
+    System.out.println("PlayVideo");
     if (mediaManager != null) {
+      System.out.println("PlayVideo with mediaManager");
       // mediaManager.rePlay();
       mediaManager.startMonitor();
     } else {
+      System.out.println("PlayVideo with start init");
       initMonitor();
     }
   }
@@ -411,13 +415,15 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
    */
   @Override
   public void onShowRateAndTime(PlayerAttribute attribute, boolean isShowTime,
-      String time, String rate) {
+      String time, long rate) {
+    // String time, String rate) {
 
     WritableMap map = Arguments.createMap();
     // map.putBoolean("isShowTime", isShowTime);
     map.putString("time", time);
-    map.putString("rate", rate);
-    eventEmitter.sendEvent(map, FunSDKVideoEventEmitter.EVENT_SHOW_RATE_AND_TIME);
+    map.putDouble("rate", (double) rate);
+    eventEmitter.sendEvent(map,
+        FunSDKVideoEventEmitter.EVENT_SHOW_RATE_AND_TIME);
   }
 
   /**

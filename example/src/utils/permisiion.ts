@@ -45,3 +45,28 @@ export const askPermissionReadStorage = async () => {
     return false;
   }
 };
+
+export const askPermissionLocation = async () => {
+  try {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION as Permission,
+      {
+        title: 'Location permission is required for WiFi connections',
+        message:
+          'This app needs location permission as this is required  ' +
+          'to scan for wifi networks.',
+        buttonNegative: 'DENY',
+        buttonPositive: 'ALLOW',
+      }
+    );
+
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.log('Ошибка при чтении файла:', error);
+    return false;
+  }
+};

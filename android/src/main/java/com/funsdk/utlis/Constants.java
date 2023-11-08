@@ -41,6 +41,8 @@ public class Constants {
     public static final String APP_SECRET = "secret";
     public static final String APP_MOVEDCARD = "movedCard";
 
+    public static final String PASS_WIFI = "passwordWifi";
+
     public static BaseAccountManager.OnAccountManagerListener getResultCallback(Promise promise) {
         return new BaseAccountManager.OnAccountManagerListener() {
             @Override

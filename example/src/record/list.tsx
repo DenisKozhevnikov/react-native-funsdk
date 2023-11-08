@@ -54,7 +54,7 @@ const RecordItem = ({
           Alert.alert('Отсутсвует разрешение на сохранение файлов');
           return;
         }
-
+        console.log('fileInfo.startTimeOfYear: ', fileInfo.startTimeOfYear);
         const downloadInfo = await downloadSingleImage({
           deviceId: DEVICE_ID,
           deviceChannel: fileInfo.channel,

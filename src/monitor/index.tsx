@@ -93,8 +93,10 @@ export class Monitor extends React.Component<MonitorProps, any> {
   // }
 
   playVideo() {
+    console.log('rnfunsdk playVideo');
     const viewId = findNodeHandle(this.myRef.current);
 
+    console.log('rnfunsdk playVideo ', viewId);
     if (typeof viewId !== 'number') {
       return;
     }

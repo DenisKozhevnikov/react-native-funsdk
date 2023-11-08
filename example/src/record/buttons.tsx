@@ -11,6 +11,7 @@ import {
   getChannelCount,
   getChannelInfo,
   searchTimeinfo,
+  startSetWiFi,
 } from 'react-native-funsdk';
 import { DEVICE_ID } from '../topsecretdata';
 
@@ -88,13 +89,12 @@ export const RecordButtons = ({
     try {
       // 27.10.23
       // const start = 1698364800000;
-      const start = 1698364800000;
-      // const end = 1698451199000;
+      // const start = 1698364800000;
+      const start = 1699387500000;
 
       const result = await searchTimeinfo({
         deviceId: DEVICE_ID,
         time: start,
-        // endTime: end,
         deviceChannel: 0,
         fileType: 0,
         streamType: 0,
@@ -152,6 +152,10 @@ export const RecordButtons = ({
     playerRef?.init();
   };
 
+  const test = () => {
+    startSetWiFi({ passwordWifi: '' });
+  };
+
   return (
     // <ScrollView
     //   style={{
@@ -178,6 +182,7 @@ export const RecordButtons = ({
       <Button text="rePlay" onPress={() => rePlay()} />
       <Button text="stopPlay" onPress={() => stopPlay()} />
       <Button text="init" onPress={() => init()} />
+      <Button text="test" onPress={() => test()} />
       {/* <Button text="slow" onPress={() => updateSpeed(-3)} />
       <Button text="normal" onPress={() => updateSpeed(0)} />
       <Button text="fast" onPress={() => updateSpeed(3)} /> */}

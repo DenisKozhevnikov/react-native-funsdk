@@ -118,9 +118,11 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     // view.setVideoFlip();
     // }
     if (commandId == COMMAND_START_MONITOR_ID) {
+      System.out.println("commandId PlayVideo");
       view.PlayVideo();
     }
     if (commandId == COMMAND_PAUSE_MONITOR_ID) {
+      System.out.println("commandId PauseVideo");
       view.PauseVideo();
     }
     if (commandId == COMMAND_REPLAY_MONITOR_ID) {

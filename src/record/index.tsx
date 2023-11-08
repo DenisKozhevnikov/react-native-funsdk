@@ -31,7 +31,7 @@ const Commands = {
   downloadFile: 'downloadFile',
   setPlaySpeed: 'setPlaySpeed',
   startPlayRecordByTime: 'startPlayRecordByTime',
-};
+} as const;
 
 const dispatchCommand = (viewId: number, command: string, args: any[] = []) => {
   UIManager.dispatchViewManagerCommand(

@@ -199,12 +199,6 @@ public class DataConverter {
     return deconstructedList;
   }
 
-  // TODO: понять работает ли это и как?
-  public static void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
-    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-        .emit(eventName, params);
-  }
-
   public static WritableMap parseToWritableMap(String s) {
     if (TextUtils.isEmpty(s))
       return Arguments.createMap();

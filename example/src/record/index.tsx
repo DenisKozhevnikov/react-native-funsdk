@@ -1,109 +1,24 @@
 import React, { useRef, useState } from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import {
-  funSDKInit,
-  getUserId,
-  getUserName,
-  loginByAccount,
-  // logout,
-  // registerByNotBind,
-  getDeviceList,
-  addDevice,
   RecordPlayer,
-  updateAllDevStateFromServer,
-  getDetailDeviceList,
-  loginDeviceWithCredential,
   SearcResultRecordFile,
   RecordPlayerRef,
   // hasLogin,
 } from 'react-native-funsdk';
 import { RecordList } from './list';
 import { RecordButtons } from './buttons';
-import {
-  DEVICE_ID,
-  DEVICE_LOGIN,
-  DEVICE_PASSWORD,
-  USER_NAME,
-  USER_PASSWORD,
-} from '../topsecretdata';
+import { DEVICE_ID } from '../topsecretdata';
+// import { useInit } from '../init';
 
 export const RecordPage = () => {
   const playerRef = useRef<RecordPlayerRef>(null);
-  const [isInit, setIsInit] = React.useState(false);
+
+  // useInit();
 
   const [recordList, setRecordList] = React.useState<
     SearcResultRecordFile[] | null
   >(null);
-
-  React.useEffect(() => {
-    if (isInit) {
-      return;
-    }
-    funSDKInit();
-    const someFuncs = async () => {
-      try {
-        // const res = await loginByAccount({
-        //   username: '',
-        //   password: '',
-        // });
-        console.log('start somefunc');
-        const res = await loginByAccount({
-          username: USER_NAME,
-          password: USER_PASSWORD,
-        });
-        // const res = await registerByNotBind({
-        //   username: '',
-        //   password: '',
-        // });
-        console.log('res somefunc: ', res);
-        await someInfos();
-      } catch (error) {
-        console.log('error in someFuncs: ', error);
-      }
-    };
-    const someInfos = async () => {
-      try {
-        const userId = await getUserId();
-        const userName = await getUserName();
-        const deviceList = await getDeviceList();
-        console.log('res someinfos: ', userId, userName, deviceList);
-        await addDeviceTest();
-        const updatedStatus = await updateAllDevStateFromServer();
-        console.log('updatedStatus: ', updatedStatus);
-        const detailedList = await getDetailDeviceList();
-        console.log('detailedList: ', detailedList);
-
-        const loginstatus = await loginDeviceWithCredential({
-          deviceId: DEVICE_ID,
-          deviceLogin: DEVICE_LOGIN,
-          devicePassword: DEVICE_PASSWORD,
-        });
-        console.log('loginstatus: ', loginstatus);
-        setIsInit(true);
-      } catch (error) {
-        console.log('error: ', error);
-      }
-    };
-    const addDeviceTest = async () => {
-      try {
-        const addedDevice = await addDevice({
-          deviceId: DEVICE_ID,
-          username: DEVICE_LOGIN,
-          password: DEVICE_PASSWORD,
-          deviceType: 'no need',
-          deviceName: 'supername',
-        });
-        console.log('addedDevice: ', addedDevice);
-        const deviceList = await getDeviceList();
-        console.log('deviceList: ', deviceList);
-      } catch (error) {
-        console.log('error on add device: ', error);
-      }
-    };
-    setTimeout(() => {
-      someFuncs();
-    }, 2000);
-  }, [isInit]);
 
   const [timeline, setTimeline] = useState<number[] | null>(null);
 
@@ -139,12 +54,6 @@ export const RecordPage = () => {
             setRecordList(ev?.list);
           }
         }}
-        // onSearchRecordByTimesResult={(ev) => {
-        //   console.log('onSearchRecordByTimesResult: ', ev);
-        //   if (ev.minutesStatusList) {
-        //     setTimeline(ev.minutesStatusList);
-        //   }
-        // }}
         onFailed={(obj) => console.log('onFailed: ', obj)}
         onStartInit={() => console.log('onStartInit: ')}
         onDebugState={(obj) => console.log('DEBUG STATE: ', obj)}

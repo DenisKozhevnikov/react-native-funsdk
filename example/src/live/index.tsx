@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -44,8 +44,8 @@ import {
 
 const monitorsList = new Map<number, React.RefObject<Monitor>>();
 
-export const MonitorPage = () => {
-  const [isInit, setIsInit] = React.useState(false);
+export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
+  // const [isInit, setIsInit] = React.useState(false);
   const monitorRef = useRef<Monitor>(null);
   const monitorRef2 = useRef<Monitor>(null);
   const [activeChannel, setActiveChannel] = useState(0);
@@ -54,7 +54,7 @@ export const MonitorPage = () => {
 
   const getMonitor = (channelId: number) => {
     const hasMonitor = monitorsList.has(channelId);
-
+    console.log('hasMonitor: ', hasMonitor);
     if (!hasMonitor) {
       return;
     }
@@ -62,90 +62,95 @@ export const MonitorPage = () => {
     return monitorsList.get(channelId);
   };
 
-  React.useEffect(() => {
-    if (isInit) {
-      return;
-    }
-
+  useEffect(() => {
     monitorsList.set(0, monitorRef);
     monitorsList.set(1, monitorRef2);
+  }, []);
 
-    funSDKInit();
-    const someFuncs = async () => {
-      try {
-        // const res = await loginByAccount({
-        //   username: '',
-        //   password: '',
-        // });
-        console.log('start somefunc');
-        const res = await loginByAccount({
-          username: USER_NAME,
-          password: USER_PASSWORD,
-        });
-        // const res = await registerByNotBind({
-        //   username: '',
-        //   password: '',
-        // });
-        console.log('res somefunc: ', res);
-        await someInfos();
-      } catch (error) {
-        console.log('error in someFuncs: ', error);
-      }
-    };
-    const someInfos = async () => {
-      try {
-        const userId = await getUserId();
-        const userName = await getUserName();
-        const deviceList = await getDeviceList();
-        console.log('res someinfos: ', userId, userName, deviceList);
-        await addDeviceTest();
-        const updatedStatus = await updateAllDevStateFromServer();
-        console.log('updatedStatus: ', updatedStatus);
-        const detailedList = await getDetailDeviceList();
-        console.log('detailedList: ', detailedList);
+  // React.useEffect(() => {
+  //   if (isInit) {
+  //     return;
+  //   }
 
-        // const loginstatus = await loginDeviceWithCredential({
-        //   deviceId: DEVICE_ID,
-        //   deviceLogin: DEVICE_LOGIN,
-        //   devicePassword: DEVICE_PASSWORD,
-        // });
-        // console.log('loginstatus: ', loginstatus);
-        setIsInit(true);
-      } catch (error) {
-        console.log('error: ', error);
-      }
-    };
-    const addDeviceTest = async () => {
-      try {
-        // const addedDevice = await addDevice({
-        //   deviceId: DEVICE_ID,
-        //   username: DEVICE_LOGIN,
-        //   password: DEVICE_PASSWORD,
-        //   deviceType: 'no need',
-        //   deviceName: 'supername',
-        // });
-        // console.log('addedDevice: ', addedDevice);
-        const deviceList = await getDeviceList();
-        console.log('deviceList: ', deviceList);
-      } catch (error) {
-        console.log('error on add device: ', error);
-      }
-    };
-    setTimeout(() => {
-      someFuncs();
-    }, 2000);
-  }, [isInit]);
+  //   monitorsList.set(0, monitorRef);
+  //   monitorsList.set(1, monitorRef2);
+
+  //   funSDKInit();
+  //   const someFuncs = async () => {
+  //     try {
+  //       // const res = await loginByAccount({
+  //       //   username: '',
+  //       //   password: '',
+  //       // });
+  //       console.log('start somefunc');
+  //       const res = await loginByAccount({
+  //         username: USER_NAME,
+  //         password: USER_PASSWORD,
+  //       });
+  //       // const res = await registerByNotBind({
+  //       //   username: '',
+  //       //   password: '',
+  //       // });
+  //       console.log('res somefunc: ', res);
+  //       await someInfos();
+  //     } catch (error) {
+  //       console.log('error in someFuncs: ', error);
+  //     }
+  //   };
+  //   const someInfos = async () => {
+  //     try {
+  //       const userId = await getUserId();
+  //       const userName = await getUserName();
+  //       const deviceList = await getDeviceList();
+  //       console.log('res someinfos: ', userId, userName, deviceList);
+  //       await addDeviceTest();
+  //       const updatedStatus = await updateAllDevStateFromServer();
+  //       console.log('updatedStatus: ', updatedStatus);
+  //       const detailedList = await getDetailDeviceList();
+  //       console.log('detailedList: ', detailedList);
+
+  //       // const loginstatus = await loginDeviceWithCredential({
+  //       //   deviceId: DEVICE_ID,
+  //       //   deviceLogin: DEVICE_LOGIN,
+  //       //   devicePassword: DEVICE_PASSWORD,
+  //       // });
+  //       // console.log('loginstatus: ', loginstatus);
+  //       setIsInit(true);
+  //     } catch (error) {
+  //       console.log('error: ', error);
+  //     }
+  //   };
+  //   const addDeviceTest = async () => {
+  //     try {
+  //       // const addedDevice = await addDevice({
+  //       //   deviceId: DEVICE_ID,
+  //       //   username: DEVICE_LOGIN,
+  //       //   password: DEVICE_PASSWORD,
+  //       //   deviceType: 'no need',
+  //       //   deviceName: 'supername',
+  //       // });
+  //       // console.log('addedDevice: ', addedDevice);
+  //       const deviceList = await getDeviceList();
+  //       console.log('deviceList: ', deviceList);
+  //     } catch (error) {
+  //       console.log('error on add device: ', error);
+  //     }
+  //   };
+  //   setTimeout(() => {
+  //     someFuncs();
+  //   }, 2000);
+  // }, [isInit]);
 
   const [isLogged, setIsLogged] = useState(false);
 
   const handleDeviceLogin = async () => {
     try {
-      const loginstatus = await loginDeviceWithCredential({
-        deviceId: DEVICE_ID,
-        deviceLogin: DEVICE_LOGIN,
-        devicePassword: DEVICE_PASSWORD,
-      });
-      console.log('loginstatus: ', loginstatus);
+      // const loginstatus = await loginDeviceWithCredential({
+      //   deviceId: DEVICE_ID,
+      //   deviceLogin: DEVICE_LOGIN,
+      //   devicePassword: DEVICE_PASSWORD,
+      // });
+      // console.log('loginstatus: ', loginstatus);
       setIsLogged(true);
     } catch (error) {
       console.log('error login: ', error);
@@ -242,8 +247,9 @@ export const MonitorPage = () => {
   };
 
   const startPlay = () => {
+    console.log('startPlay');
+    console.log('startPlay', getMonitor(activeChannel));
     getMonitor(activeChannel)?.current?.playVideo();
-
     // monitorRef.current?.playVideo();
     // monitorRef2.current?.playVideo();
   };
