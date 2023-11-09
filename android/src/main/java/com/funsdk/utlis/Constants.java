@@ -23,6 +23,7 @@ public class Constants {
     public static final String DEVICE_PASSWORD = "devicePassword";
     public static final String DEVICE_NEW_PASSWORD = "deviceNewPassword";
     public static final String DEVICE_CHANNEL = "deviceChannel";
+    public static final String DEVICE_IS_DELETE_FROM_OTHERS = "isDevDeleteFromOthersUsers";
 
     public static final String RECORD_FILE_DATA = "recordFileData";
 

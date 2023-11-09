@@ -61,15 +61,6 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
    * poisk i podkliuchenie ustroistva v wifi
    * необходимо разрешение location в android
    */
-  // @ReactMethod
-  // public void startSetWiFi(ReadableMap params, Promise promise) {
-  // if (ReactParamsCheck.checkParams(new String[] { Constants.PASS_WIFI },
-  // params)) {
-  // String passWifi = params.getString(Constants.PASS_WIFI);
-  // startQuickSetWiFi(passWifi);
-  // promise.resolve("nu ya gotov");
-  // }
-  // }
   @ReactMethod
   public void startSetWiFi(ReadableMap params) {
     if (ReactParamsCheck.checkParams(new String[] { Constants.PASS_WIFI }, params)) {
@@ -117,12 +108,14 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
               System.out.println(" nu a eto kak vozmohno wifiManager null!" + errorId);
 
               if (xmDevInfo != null) {
-                System.out.println(" chto to nashlo!");
-
                 WritableMap result = Arguments.createMap();
-                result.putString("status", "успешно найдено устройство");
+                result.putString("status",
+                    "успешно найдено устройство, идём получать случайно имя пользователя и пароль");
                 EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
 
+                // сбрасываем значение на дефолтное (вдруг мы до этого уже искали)
+                isNeedGetDevRandomUserPwdAgain = true;
+                getDevRandomUserPwd(xmDevInfo);
               } else {
                 WritableMap result = Arguments.createMap();
                 result.putString("error", "errorId: " + errorId);
@@ -145,23 +138,36 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
   }
 
   boolean isInit = false;
-  boolean isNeedGetDevRandomUserPwdAgain = true;// 是否需要再次获取随机用户名密码（用于在配网成功后，因设备的34567端口还没有建立起来，App通过IP方式去访问设备会失败，所以需要重试）
+  // Вам нужно снова получить случайное имя пользователя и пароль (используется
+  // после успешной настройки сети, поскольку порт 34567 устройства еще не
+  // установлен, приложению не удастся получить доступ к устройству через IP,
+  // поэтому вам нужно повторить попытку)
+  boolean isNeedGetDevRandomUserPwdAgain = true;
 
   /**
-   * 获取设备的随机用户名和密码
+   * Получите случайное имя пользователя и пароль для устройства
    */
   private void getDevRandomUserPwd(XMDevInfo xmDevInfo) {
     DeviceManager.getInstance().getDevRandomUserPwd(xmDevInfo, new DeviceManager.OnDevManagerListener() {
       @Override
       public void onSuccess(String devId, int operationType, Object result) {
-        // 获取设备登录Token信息：先要登录设备，然后通过DevGetLocalEncToken来获取
+        // Получите информацию о токене входа в устройство: сначала войдите на
+        // устройство, а затем получите ее через DevGetLocalEncToken.
         DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
           @Override
           public void onSuccess(String devId, int operationType, Object result) {
-            // 获取设备登录Token信息
+            WritableMap resultMap = Arguments.createMap();
+            resultMap.putString("status", "успешно авторизовано на устройстве");
+            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, resultMap);
+
+            // Получить информацию о токене входа в систему устройства
             String devToken = FunSDK.DevGetLocalEncToken(devId);
             xmDevInfo.setDevToken(devToken);
-            System.out.println("devToken:" + devToken);
+
+            WritableMap resultToken = Arguments.createMap();
+            resultToken.putString("status", "Начинаем добавление устройства. Токен устройства - " + devToken);
+            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, resultToken);
+
             // XMPromptDlg.onShow(iDevQuickConnectView.getContext(),
             // iDevQuickConnectView.getContext().getString(R.string.is_need_delete_dev_from_other_account),
             // new View.OnClickListener() {
@@ -175,24 +181,38 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
             // addDevice(xmDevInfo, false);
             // }
             // });
-            // addDevice(xmDevInfo, false);
+            addDevice(xmDevInfo, false);
           }
 
           @Override
           public void onFailed(String devId, int msgId, String jsonName, int errorId) {
-            System.out.println("login: " + errorId);
+            WritableMap result = Arguments.createMap();
+            result.putString("error", "errorId: " + errorId);
+            result.putString("status", "ошибка при авторизации на устройстве");
+            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
           }
         });
       }
 
       @Override
       public void onFailed(String devId, int msgId, String jsonName, int errorId) {
-        System.out.println("errorId: " + errorId);
+        WritableMap result = Arguments.createMap();
+        result.putString("error", "errorId: " + errorId);
+        result.putString("msgId", "msgId: " + msgId);
+        result.putString("devId", "devId: " + devId);
+        result.putString("status", "ошибка при авторизации на устройстве. Возможно попробуем ещё раз");
+        EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+
         if (isNeedGetDevRandomUserPwdAgain && (errorId == -10005 || errorId == -100000)) {
-          // 如果获取随机用户名密码超时的话，可以延时1s重试一次
+          // Если время получения случайного имени пользователя и пароля истекло, вы
+          // можете подождать 1 секунду и повторить попытку.
           new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
+              WritableMap result = Arguments.createMap();
+              result.putString("status", "идём опять получать случайное имя и пароль");
+              EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+
               getDevRandomUserPwd(xmDevInfo);
             }
           }, 1000);
@@ -202,8 +222,9 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
         }
 
         if (errorId == -400009) {
-          // 如果不支持随机用户名密码的话，就以 用户名：admin 密码为空登录设备
-          // 是否要将该设备从其他账号下移除
+          // Если случайное имя пользователя и пароль не поддерживаются, войдите на
+          // устройство с именем пользователя: admin и пустым паролем.
+          // Вы хотите удалить это устройство из других учетных записей?
           // XMPromptDlg.onShow(iDevQuickConnectView.getContext(),
           // iDevQuickConnectView.getContext().getString(R.string.is_need_delete_dev_from_other_account),
           // new View.OnClickListener() {
@@ -217,10 +238,17 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
           // addDevice(xmDevInfo, false);
           // }
           // });
+          WritableMap resultErr = Arguments.createMap();
+          resultErr.putString("status", "ошибка: -400009 но всё равно идём авторизовываться");
+          EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, resultErr);
+
           addDevice(xmDevInfo, false);
         } else {
+          // Не удалось настроить сеть:
           // ToastUtils.showLong("配网失败：" + errorId);
-          System.out.println("配网失败：" + errorId);
+          WritableMap resultErr = Arguments.createMap();
+          resultErr.putString("status", "Не удалось настроить сеть - " + errorId);
+          EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, resultErr);
         }
       }
     });
@@ -238,7 +266,10 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
         new BaseAccountManager.OnAccountManagerListener() {
           @Override
           public void onSuccess(int msgId) {
-            System.out.println("addDevice onSuccess: " + msgId);
+            WritableMap result = Arguments.createMap();
+            result.putString("status", "Устройство успешно добавлено на вашем аккаунте");
+            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+
             // Toast.makeText(iDevQuickConnectView.getContext(), R.string.add_s,
             // Toast.LENGTH_LONG).show();
             // iDevQuickConnectView.onAddDevResult();
@@ -246,7 +277,12 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
 
           @Override
           public void onFailed(int msgId, int errorId) {
-            System.out.println("addDevice onSuccess: " + msgId + " errorId: " + errorId);
+            // System.out.println("addDevice onSuccess: " + msgId + " errorId: " + errorId);
+            WritableMap result = Arguments.createMap();
+            result.putString("status", "Ошибка добавления устройства на вашем аккаунте");
+            result.putString("error", "errorId: " + errorId);
+            result.putString("msgId", "msgId: " + msgId);
+            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
             // Toast
             // .makeText(iDevQuickConnectView.getContext(),
             // iDevQuickConnectView.getContext().getString(R.string.add_f) + ":" + errorId,
