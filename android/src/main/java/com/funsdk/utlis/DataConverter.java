@@ -2,6 +2,8 @@ package com.funsdk.utils;
 
 import androidx.annotation.Nullable;
 import android.text.TextUtils;
+import android.graphics.Bitmap;
+import android.util.Base64;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.io.ByteArrayOutputStream;
 
 public class DataConverter {
 
@@ -166,13 +169,10 @@ public class DataConverter {
         case Number:
           double value = readableArray.getDouble(i);
           try {
-            // Long型支持，如果数字大于int, 且是整数,转化成long
             if (value % 1 == 0) {
               if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
-                // int型支持
                 deconstructedList.add(i, (int) value);
               } else if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
-                // Long型支持，
                 deconstructedList.add(i, (long) value);
               }
             } else {
@@ -192,8 +192,6 @@ public class DataConverter {
           deconstructedList.add(i, parseToList(readableArray.getArray(i)));
           break;
         default:
-          // throw new IllegalArgumentException("Could not convert object at index " + i +
-          // ".");
       }
     }
     return deconstructedList;
@@ -272,5 +270,15 @@ public class DataConverter {
       }
     }
     return list;
+  }
+
+  public static String base64FromBitmap(Bitmap bitmap) {
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+
+    byte[] byteArray = byteArrayOutputStream.toByteArray();
+
+    return Base64.encodeToString(byteArray, Base64.DEFAULT);
   }
 }

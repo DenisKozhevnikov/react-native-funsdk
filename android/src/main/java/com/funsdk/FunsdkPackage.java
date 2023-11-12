@@ -20,6 +20,7 @@ import com.funsdk.user.forget.FunSDKForgetModule;
 import com.funsdk.user.device.add.ap.FunSDKDevApConnectModule;
 import com.funsdk.user.device.add.list.FunSDKDevListConnectModule;
 import com.funsdk.user.device.add.quick.FunSDKDevQuickConnectModule;
+import com.funsdk.user.device.add.qrcode.FunSDKDevQRCodeConnectModule;
 import com.funsdk.user.device.add.sn.FunSDKDevSnConnectModule;
 import com.funsdk.user.device.status.FunSDKDevStatusModule;
 import com.funsdk.manager.image.FunSDKDeviceImageModule;
@@ -47,6 +48,7 @@ public class FunsdkPackage implements ReactPackage {
     modules.add(new FunSDKDeviceImageModule(reactContext));
     modules.add(new FunSDKDeviceSearchByTime(reactContext));
     modules.add(new FunSDKDevQuickConnectModule(reactContext));
+    modules.add(new FunSDKDevQRCodeConnectModule(reactContext));
 
     return modules;
   }

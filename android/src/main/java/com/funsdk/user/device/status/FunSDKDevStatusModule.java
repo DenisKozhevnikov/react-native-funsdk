@@ -137,46 +137,48 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
   }
 
   // not tested
-  // @ReactMethod
-  // public void setLocalDeviceUserPassword(ReadableMap params, Promise promise) {
-  // if (ReactParamsCheck
-  // .checkParams(new String[] { Constants.DEVICE_ID, Constants.DEVICE_LOGIN,
-  // Constants.DEVICE_PASSWORD }, params)) {
-  // String devId = params.getString(Constants.DEVICE_ID);
-  // String devUser = params.getString(Constants.DEVICE_LOGIN);
-  // String pwd = params.getString(Constants.DEVICE_PASSWORD);
+  // появился в 4.0
+  @ReactMethod
+  public void setLocalDeviceUserPassword(ReadableMap params, Promise promise) {
+    if (ReactParamsCheck
+        .checkParams(new String[] { Constants.DEVICE_ID, Constants.DEVICE_LOGIN,
+            Constants.DEVICE_PASSWORD }, params)) {
+      String devId = params.getString(Constants.DEVICE_ID);
+      String devUser = params.getString(Constants.DEVICE_LOGIN);
+      String pwd = params.getString(Constants.DEVICE_PASSWORD);
 
-  // int iRet = FunSDK.DevSetLocalPwd(devId,
-  // devUser,
-  // pwd);
-  // if (iRet >= 0) {
-  // XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
-  // if (xmDevInfo != null) {
-  // xmDevInfo.setDevUserName(devUser);
-  // setDevPassword - отсутствует в 2.4 версии (есть в 4.0)
-  // xmDevInfo.setDevPassword(pwd);
-  // }
-  // }
-  // promise.resolve("success");
-  // }
-  // }
+      int iRet = FunSDK.DevSetLocalPwd(devId,
+          devUser,
+          pwd);
+      if (iRet >= 0) {
+        XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
+        if (xmDevInfo != null) {
+          xmDevInfo.setDevUserName(devUser);
+          // setDevPassword - отсутствует в 2.4 версии (есть в 4.0)
+          xmDevInfo.setDevPassword(pwd);
+        }
+      }
+      promise.resolve("success");
+    }
+  }
 
   // not tested
-  // @ReactMethod
-  // public void setLocalLoginInfo(ReadableMap params, Promise promise) {
-  // if (ReactParamsCheck
-  // .checkParams(
-  // new String[] { Constants.DEVICE_ID, Constants.DEVICE_LOGIN,
-  // Constants.DEVICE_PASSWORD, Constants.TOKEN },
-  // params)) {
-  // DeviceManager.getInstance().setLocalDevLoginInfo(
-  // params.getString(Constants.DEVICE_ID),
-  // params.getString(Constants.DEVICE_LOGIN),
-  // params.getString(Constants.DEVICE_PASSWORD),
-  // params.getString(Constants.TOKEN));
-  // promise.resolve("success");
-  // }
-  // }
+  // появился в 4.0
+  @ReactMethod
+  public void setLocalLoginInfo(ReadableMap params, Promise promise) {
+    if (ReactParamsCheck
+        .checkParams(
+            new String[] { Constants.DEVICE_ID, Constants.DEVICE_LOGIN,
+                Constants.DEVICE_PASSWORD, Constants.TOKEN },
+            params)) {
+      DeviceManager.getInstance().setLocalDevLoginInfo(
+          params.getString(Constants.DEVICE_ID),
+          params.getString(Constants.DEVICE_LOGIN),
+          params.getString(Constants.DEVICE_PASSWORD),
+          params.getString(Constants.TOKEN));
+      promise.resolve("success");
+    }
+  }
 
   // not tested
   @ReactMethod

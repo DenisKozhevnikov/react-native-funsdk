@@ -34,7 +34,8 @@ import com.funsdk.utils.EventSender;
 
 public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
   public ReactApplicationContext reactContext;
-  public String EVENT_METHOD = "onSetWiFi";
+  private static final String ON_SET_WIFI_DEBUG = "onSetWiFi";
+  private static final String ON_ADD_DEVICE_STATUS = "onAddDeviceStatus";
 
   public FunSDKDevQuickConnectModule(ReactApplicationContext context) {
     super(context);
@@ -57,28 +58,56 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
 
   }
 
+  public void sendDeviceConnectStatus(String status, Object errorId, Object msgId) {
+    WritableMap addDevResult = Arguments.createMap();
+    addDevResult.putString("status", status);
+
+    if (errorId instanceof String) {
+      addDevResult.putString("errorId", (String) errorId);
+    } else if (errorId instanceof Integer) {
+      addDevResult.putInt("errorId", (Integer) errorId);
+    } else {
+      addDevResult.putNull("errorId");
+    }
+
+    if (msgId instanceof String) {
+      addDevResult.putString("msgId", (String) msgId);
+    } else if (msgId instanceof Integer) {
+      addDevResult.putInt("msgId", (Integer) msgId);
+    } else {
+      addDevResult.putNull("msgId");
+    }
+
+    EventSender.sendEvent(getReactApplicationContext(), ON_ADD_DEVICE_STATUS, addDevResult);
+  }
+
   /**
    * poisk i podkliuchenie ustroistva v wifi
    * необходимо разрешение location в android
    */
   @ReactMethod
   public void startSetWiFi(ReadableMap params) {
-    if (ReactParamsCheck.checkParams(new String[] { Constants.PASS_WIFI }, params)) {
+    if (ReactParamsCheck.checkParams(new String[] { Constants.PASS_WIFI, Constants.DEVICE_IS_DELETE_FROM_OTHERS },
+        params)) {
       String passWifi = params.getString(Constants.PASS_WIFI);
+      boolean isDevDeleteFromOthers = params.getBoolean(Constants.DEVICE_IS_DELETE_FROM_OTHERS);
 
       WritableMap result = Arguments.createMap();
       result.putString("status", "поиск начат");
-      EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+      EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
-      startQuickSetWiFi(passWifi);
+      sendDeviceConnectStatus("start", null, null);
+
+      startQuickSetWiFi(passWifi, isDevDeleteFromOthers);
     }
   }
 
-  public void startQuickSetWiFi(String pwd) {
+  public void startQuickSetWiFi(String pwd, boolean isDevDeleteFromOthers) {
     XMWifiManager xmWifiManager = XMWifiManager.getInstance((Context) reactContext);
 
-    WifiManager wifiManager = (WifiManager) reactContext
-        .getSystemService(Context.WIFI_SERVICE);
+    // не нужен?
+    // WifiManager wifiManager = (WifiManager) reactContext
+    // .getSystemService(Context.WIFI_SERVICE);
 
     // WifiInfo wifiInfo = wifiManager.getConnectionInfo();
     // DhcpInfo dhcpInfo = wifiManager.getDhcpInfo();
@@ -91,36 +120,45 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
     // String curSSID = wifiInfo.getSSID();
     ScanResult scanResult = xmWifiManager.getCurScanResult(curSSID);
 
+    if (scanResult == null || wifiInfo == null || dhcpInfo == null) {
+      WritableMap result = Arguments.createMap();
+      result.putString("status", "ошибка при получении wifi данных");
+      EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
+
+      // проверьте подключение к wifi, настройки доступа к location в android (?)
+      sendDeviceConnectStatus("error-wifi", null, null);
+      return;
+    }
+
     WritableMap result = Arguments.createMap();
     result.putString("data", "curSSID: " + curSSID);
     result.putString("status", "поиск продолжается");
-    EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+    EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
     if (scanResult != null && wifiInfo != null && dhcpInfo != null) {
-      // manager.startQuickSetWiFi(XUtils.initSSID(wifiInfo.getSSID()), pwd,
-      // scanResult.capabilities, dhcpInfo, 180 * 1000,
-      // this);
       DeviceManager.getInstance().startQuickSetWiFi(XUtils.initSSID(curSSID), pwd, scanResult.capabilities, dhcpInfo,
           180 * 1000,
           new DeviceManager.OnQuickSetWiFiListener() {
             @Override
             public void onQuickSetResult(XMDevInfo xmDevInfo, int errorId) {
-              System.out.println(" nu a eto kak vozmohno wifiManager null!" + errorId);
 
               if (xmDevInfo != null) {
                 WritableMap result = Arguments.createMap();
                 result.putString("status",
-                    "успешно найдено устройство, идём получать случайно имя пользователя и пароль");
-                EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+                    "успешно найдено устройство, идём получать случайное имя пользователя и пароль");
+                EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
                 // сбрасываем значение на дефолтное (вдруг мы до этого уже искали)
                 isNeedGetDevRandomUserPwdAgain = true;
-                getDevRandomUserPwd(xmDevInfo);
+                // проверяем возможно ли залогиниться с рандомным именем/паролем
+                getDevRandomUserPwd(xmDevInfo, isDevDeleteFromOthers);
               } else {
                 WritableMap result = Arguments.createMap();
                 result.putString("error", "errorId: " + errorId);
                 result.putString("status", "ошибка при поиске");
-                EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+                EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
+
+                sendDeviceConnectStatus("error", errorId, null);
               }
             }
 
@@ -147,7 +185,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
   /**
    * Получите случайное имя пользователя и пароль для устройства
    */
-  private void getDevRandomUserPwd(XMDevInfo xmDevInfo) {
+  private void getDevRandomUserPwd(XMDevInfo xmDevInfo, boolean isDevDeleteFromOthers) {
     DeviceManager.getInstance().getDevRandomUserPwd(xmDevInfo, new DeviceManager.OnDevManagerListener() {
       @Override
       public void onSuccess(String devId, int operationType, Object result) {
@@ -158,7 +196,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
           public void onSuccess(String devId, int operationType, Object result) {
             WritableMap resultMap = Arguments.createMap();
             resultMap.putString("status", "успешно авторизовано на устройстве");
-            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, resultMap);
+            EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultMap);
 
             // Получить информацию о токене входа в систему устройства
             String devToken = FunSDK.DevGetLocalEncToken(devId);
@@ -166,22 +204,11 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
 
             WritableMap resultToken = Arguments.createMap();
             resultToken.putString("status", "Начинаем добавление устройства. Токен устройства - " + devToken);
-            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, resultToken);
+            EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultToken);
 
-            // XMPromptDlg.onShow(iDevQuickConnectView.getContext(),
-            // iDevQuickConnectView.getContext().getString(R.string.is_need_delete_dev_from_other_account),
-            // new View.OnClickListener() {
-            // @Override
-            // public void onClick(View v) {
-            // addDevice(xmDevInfo, true);
-            // }
-            // }, new View.OnClickListener() {
-            // @Override
-            // public void onClick(View v) {
-            // addDevice(xmDevInfo, false);
-            // }
-            // });
-            addDevice(xmDevInfo, false);
+            // если будет необходимо выбирать на этой стадии добавлять устройство или нет,
+            // то надо будет переделать
+            addDevice(xmDevInfo, isDevDeleteFromOthers);
           }
 
           @Override
@@ -189,7 +216,9 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
             WritableMap result = Arguments.createMap();
             result.putString("error", "errorId: " + errorId);
             result.putString("status", "ошибка при авторизации на устройстве");
-            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+            EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
+
+            sendDeviceConnectStatus("error", errorId, null);
           }
         });
       }
@@ -201,7 +230,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
         result.putString("msgId", "msgId: " + msgId);
         result.putString("devId", "devId: " + devId);
         result.putString("status", "ошибка при авторизации на устройстве. Возможно попробуем ещё раз");
-        EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+        EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
         if (isNeedGetDevRandomUserPwdAgain && (errorId == -10005 || errorId == -100000)) {
           // Если время получения случайного имени пользователя и пароля истекло, вы
@@ -211,9 +240,9 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
             public void run() {
               WritableMap result = Arguments.createMap();
               result.putString("status", "идём опять получать случайное имя и пароль");
-              EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+              EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
-              getDevRandomUserPwd(xmDevInfo);
+              getDevRandomUserPwd(xmDevInfo, isDevDeleteFromOthers);
             }
           }, 1000);
 
@@ -225,30 +254,21 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
           // Если случайное имя пользователя и пароль не поддерживаются, войдите на
           // устройство с именем пользователя: admin и пустым паролем.
           // Вы хотите удалить это устройство из других учетных записей?
-          // XMPromptDlg.onShow(iDevQuickConnectView.getContext(),
-          // iDevQuickConnectView.getContext().getString(R.string.is_need_delete_dev_from_other_account),
-          // new View.OnClickListener() {
-          // @Override
-          // public void onClick(View v) {
-          // addDevice(xmDevInfo, true);
-          // }
-          // }, new View.OnClickListener() {
-          // @Override
-          // public void onClick(View v) {
-          // addDevice(xmDevInfo, false);
-          // }
-          // });
           WritableMap resultErr = Arguments.createMap();
           resultErr.putString("status", "ошибка: -400009 но всё равно идём авторизовываться");
-          EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, resultErr);
+          EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultErr);
 
-          addDevice(xmDevInfo, false);
+          // если будет необходимо выбирать на этой стадии добавлять устройство или нет,
+          // то надо будет переделать
+          addDevice(xmDevInfo, isDevDeleteFromOthers);
         } else {
           // Не удалось настроить сеть:
           // ToastUtils.showLong("配网失败：" + errorId);
           WritableMap resultErr = Arguments.createMap();
           resultErr.putString("status", "Не удалось настроить сеть - " + errorId);
-          EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, resultErr);
+          EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultErr);
+
+          sendDeviceConnectStatus("error", errorId, null);
         }
       }
     });
@@ -268,11 +288,9 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
           public void onSuccess(int msgId) {
             WritableMap result = Arguments.createMap();
             result.putString("status", "Устройство успешно добавлено на вашем аккаунте");
-            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
+            EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
-            // Toast.makeText(iDevQuickConnectView.getContext(), R.string.add_s,
-            // Toast.LENGTH_LONG).show();
-            // iDevQuickConnectView.onAddDevResult();
+            sendDeviceConnectStatus("success", null, msgId);
           }
 
           @Override
@@ -282,13 +300,9 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
             result.putString("status", "Ошибка добавления устройства на вашем аккаунте");
             result.putString("error", "errorId: " + errorId);
             result.putString("msgId", "msgId: " + msgId);
-            EventSender.sendEvent(getReactApplicationContext(), EVENT_METHOD, result);
-            // Toast
-            // .makeText(iDevQuickConnectView.getContext(),
-            // iDevQuickConnectView.getContext().getString(R.string.add_f) + ":" + errorId,
-            // Toast.LENGTH_LONG)
-            // .show();
-            // iDevQuickConnectView.onAddDevResult();
+            EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
+
+            sendDeviceConnectStatus("error", errorId, null);
           }
 
           @Override

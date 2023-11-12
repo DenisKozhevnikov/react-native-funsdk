@@ -32,6 +32,7 @@ import { MonitorPage } from './live';
 import { WIFIDevice } from './wifi';
 import { useInit } from './init';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { QRCodeDevice } from './qrcode';
 
 export default function App() {
   const { isInit, statusText } = useInit();
@@ -42,7 +43,8 @@ export default function App() {
     <>
       {/* <RecordPage /> */}
       {/* <MonitorPage isInit={isInit} /> */}
-      <WIFIDevice />
+      {/* <WIFIDevice /> */}
+      <QRCodeDevice />
       <ScrollView
         // pointerEvents="none"
         // contentContainerStyle={{ height: 50 }}

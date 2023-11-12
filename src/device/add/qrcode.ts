@@ -1,8 +1,8 @@
 import { NativeEventEmitter, NativeModules } from 'react-native';
 
-const funsdk = NativeModules.FunSDKDevQuickConnectModule;
+const funsdk = NativeModules.FunSDKDevQRCodeConnectModule;
 
-export type StartSetWiFiParams = {
+export type StartSetByQRCodeParams = {
   passwordWifi: string;
   isDevDeleteFromOthersUsers: boolean;
 };
@@ -11,27 +11,28 @@ export type StartSetWiFiParams = {
  * passwordWifi: string;
  * isDevDeleteFromOthersUsers: boolean;
  */
-export function startSetWiFi(params: StartSetWiFiParams): void {
-  return funsdk.startSetWiFi(params);
+export function startSetByQRCode(params: StartSetByQRCodeParams): void {
+  return funsdk.startSetByQRCode(params);
 }
 
-export function stopSetWiFi(): Promise<boolean> {
-  return funsdk.stopSetWiFi();
+export function stopSetByQRCode(): Promise<boolean> {
+  return funsdk.stopSetByQRCode();
 }
 
-export enum WiFiListenersEnum {
+export enum QRCodeListenersEnum {
   ON_SET_WIFI = 'onSetWiFi',
   ON_ADD_DEVICE_STATUS = 'onAddDeviceStatus',
 }
 
-export type OnAddDeviceStatusType = {
+export type OnAddQRDeviceStatusType = {
   status: string | 'error' | 'start' | 'error-wifi';
   errorId: number | null;
   msgId: number | null;
+  base64Image?: string;
 };
 
-export const wifiEventModule = funsdk;
-export const wifiEventEmitter = new NativeEventEmitter(funsdk);
+export const qrCodeEventModule = funsdk;
+export const qrCodeEventEmitter = new NativeEventEmitter(qrCodeEventModule);
 
 // listener example
 // useEffect(() => {
