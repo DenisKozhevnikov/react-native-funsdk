@@ -36,7 +36,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#EFEFEF',
   },
   scrollView: {
-    marginTop: 20,
+    marginTop: 30,
     padding: 10,
     backgroundColor: '#EFEFEF',
   },

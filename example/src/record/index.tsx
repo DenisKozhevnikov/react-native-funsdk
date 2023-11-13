@@ -44,7 +44,7 @@ export const RecordPage = () => {
         ref={playerRef}
         style={styles.monitor}
         devId={DEVICE_ID}
-        channelId={1}
+        channelId={0}
         onMediaPlayState={(ev) => console.log('onMediaPlayState: ', ev)}
         onShowRateAndTime={(ev) => console.log('onShowRateAndTime: ', ev)}
         onVideoBufferEnd={(ev) => console.log('onVideoBufferEnd: ', ev)}

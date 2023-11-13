@@ -69,8 +69,8 @@ export const RecordButtons = ({
     // const start = 1697572800000;
     // const end = 1697659200000;
     //19.10.23
-    const start = 1698364800000;
-    const end = 1698451199000;
+    const start = 1699680774000;
+    const end = 1699767174000;
     // const start = 1697745599000;
     // const end = 1697659200000;
 
@@ -78,8 +78,8 @@ export const RecordButtons = ({
   };
 
   const startPlayRecordByTime = () => {
-    const start = 1698523190000;
-    const end = 1698526790000;
+    const start = 1699767174000;
+    const end = 1699853574000;
     // const start = 1698365090000;
     // const end = 1698608819000;
     playerRef?.startPlayRecordByTime(start, end);
@@ -90,7 +90,7 @@ export const RecordButtons = ({
       // 27.10.23
       // const start = 1698364800000;
       // const start = 1698364800000;
-      const start = 1699387500000;
+      const start = 1699680774000;
 
       const result = await searchTimeinfo({
         deviceId: DEVICE_ID,
@@ -153,7 +153,7 @@ export const RecordButtons = ({
   };
 
   const test = () => {
-    startSetWiFi({ passwordWifi: '' });
+    // startSetWiFi({ passwordWifi: '' });
   };
 
   return (

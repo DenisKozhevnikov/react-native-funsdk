@@ -10,8 +10,12 @@ import {
 import { styles } from '../styles';
 import { askPermissionLocation } from '../utils/permisiion';
 import {
+  LoadTestPushData,
   OnAddQRDeviceStatusType,
   QRCodeListenersEnum,
+  closePush,
+  isPushOpen,
+  openPush,
   qrCodeEventEmitter,
   startSetByQRCode,
   stopSetByQRCode,
@@ -46,6 +50,19 @@ export const Buttons = () => {
     setConnectStatus((prev) => {
       return [...prev, 'поиск остановлен'];
     });
+  };
+
+  const handleTestBtn = () => {
+    LoadTestPushData();
+  };
+  const handleTestBtnOpen = () => {
+    openPush();
+  };
+  const handleTestBtnClose = () => {
+    closePush();
+  };
+  const handleTestBtnIsOpen = () => {
+    isPushOpen();
   };
 
   useEffect(() => {
@@ -89,6 +106,16 @@ export const Buttons = () => {
           onPress={() => handleGetQRAndStartFindDevice()}
         />
         <Button text="stopFindDevice" onPress={() => stopFindByQRDevice()} />
+        <Button text="handleTestBtn" onPress={() => handleTestBtn()} />
+        <Button text="handleTestBtnOpen" onPress={() => handleTestBtnOpen()} />
+        <Button
+          text="handleTestBtnClose"
+          onPress={() => handleTestBtnClose()}
+        />
+        <Button
+          text="handleTestBtnIsOpen"
+          onPress={() => handleTestBtnIsOpen()}
+        />
       </View>
       <Text>Введённый пароль: {wifiPassword}</Text>
       <TextInput
