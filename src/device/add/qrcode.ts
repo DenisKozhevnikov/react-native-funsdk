@@ -25,10 +25,25 @@ export enum QRCodeListenersEnum {
 }
 
 export type OnAddQRDeviceStatusType = {
-  status: string | 'error' | 'start' | 'error-wifi';
+  status: string | 'error' | 'start' | 'error-wifi' | 'success';
   errorId: number | null;
   msgId: number | null;
   base64Image?: string;
+  deviceData: {
+    devId: string;
+    devName: string;
+    devUserName: string;
+    devPassword: string;
+    devIp: string;
+    devPort: number;
+    devType: number;
+    devState: number;
+    string: string;
+    pid: string;
+    mac: string;
+    devToken: string;
+    cloudCryNum: string;
+  } | null;
 };
 
 export const qrCodeEventModule = funsdk;

@@ -25,9 +25,24 @@ export enum WiFiListenersEnum {
 }
 
 export type OnAddDeviceStatusType = {
-  status: string | 'error' | 'start' | 'error-wifi';
+  status: string | 'error' | 'start' | 'error-wifi' | 'success';
   errorId: number | null;
   msgId: number | null;
+  deviceData: {
+    devId: string;
+    devName: string;
+    devUserName: string;
+    devPassword: string;
+    devIp: string;
+    devPort: number;
+    devType: number;
+    devState: number;
+    string: string;
+    pid: string;
+    mac: string;
+    devToken: string;
+    cloudCryNum: string;
+  } | null;
 };
 
 export const wifiEventModule = funsdk;

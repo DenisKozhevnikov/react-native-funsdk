@@ -170,7 +170,7 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
       () => {
         return {
           init() {
-            console.log('initing');
+            // console.log('initing');
             const viewId = findNodeHandle(viewRef.current);
 
             if (typeof viewId !== 'number') {
@@ -403,7 +403,7 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
 
     return (
       <RecordView
-        onLayout={(event) => console.log('event: ', event.nativeEvent.layout)}
+        // onLayout={(event) => console.log('event: ', event.nativeEvent.layout)}
         ref={viewRef}
         {...props}
         onMediaPlayState={_onMediaPlayState}

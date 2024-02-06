@@ -74,7 +74,7 @@ dependencies {
   implementation "com.facebook.react:react-native:+"
 
   // implementation 'io.github.xmcamera:libxmfunsdk:2.4'
-  implementation 'io.github.xmcamera:libxmfunsdk:4.0'
+  implementation 'io.github.xmcamera:libxmfunsdk:4.4'
   // implementation 'io.github.xmcamera:uilibrary:1.0'
 }
 

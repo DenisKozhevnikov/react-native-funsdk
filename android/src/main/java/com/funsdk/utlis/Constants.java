@@ -42,6 +42,11 @@ public class Constants {
     public static final String APP_SECRET = "secret";
     public static final String APP_MOVEDCARD = "movedCard";
 
+    public static final String APP_CUSTOM_PWD_TYPE = "customPwdType";
+    public static final String APP_CUSTOM_PWD = "customPwd";
+    public static final String APP_CUSTOM_SERVER_ADDR = "customServerAddr";
+    public static final String APP_CUSTOM_CUSTOM_PORT = "customPort";
+
     public static final String PASS_WIFI = "passwordWifi";
 
     public static BaseAccountManager.OnAccountManagerListener getResultCallback(Promise promise) {

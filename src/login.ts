@@ -7,7 +7,7 @@ export type LoginByAccountParams = {
   password: string;
 };
 
-/*
+/**
  * username: string;
  * password: string;
  */
@@ -16,7 +16,7 @@ export function loginByAccount(params: LoginByAccountParams): Promise<any> {
 }
 
 export type LoginByLocalParams = {};
-/*
+/**
  * does not work
  */
 export function loginByLocal(params: LoginByLocalParams): Promise<any> {
@@ -24,7 +24,7 @@ export function loginByLocal(params: LoginByLocalParams): Promise<any> {
 }
 
 export type LoginByAPParams = {};
-/*
+/**
  * does not work
  */
 export function loginByAP(params: LoginByAPParams): Promise<any> {

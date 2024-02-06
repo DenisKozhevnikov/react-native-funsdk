@@ -9,18 +9,18 @@ import {
   // FlatList,
 } from 'react-native';
 import {
-  funSDKInit,
-  getUserId,
-  getUserName,
-  loginByAccount,
+  // funSDKInit,
+  // getUserId,
+  // getUserName,
+  // loginByAccount,
   // logout,
   // registerByNotBind,
-  getDeviceList,
+  // getDeviceList,
   // addDevice,
   // RecordPlayer,
-  updateAllDevStateFromServer,
-  getDetailDeviceList,
-  loginDeviceWithCredential,
+  // updateAllDevStateFromServer,
+  // getDetailDeviceList,
+  // loginDeviceWithCredential,
   // SearcResultRecordFile,
   Monitor,
   devicePTZcontrol,
@@ -36,10 +36,10 @@ import {
 } from 'react-native-funsdk';
 import {
   DEVICE_ID,
-  DEVICE_LOGIN,
-  DEVICE_PASSWORD,
-  USER_NAME,
-  USER_PASSWORD,
+  // DEVICE_LOGIN,
+  // DEVICE_PASSWORD,
+  // USER_NAME,
+  // USER_PASSWORD,
 } from '../topsecret';
 
 const monitorsList = new Map<number, React.RefObject<Monitor>>();

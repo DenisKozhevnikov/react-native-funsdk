@@ -56,14 +56,21 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
    * XMFunSDKManager.getInstance(0,"",customServerAddr,customPort).initXMCloudPlatform(this,appUuid,appKey,appSecret,appMovedCard,true);
    */
   @ReactMethod
-  public void init() {
-    // if (ReactParamsCheck.checkParams(
-    // new String[] { Constants.APP_UUID, Constants.APP_KEY, Constants.APP_SECRET,
-    // Constants.APP_MOVEDCARD },
-    // params)) {
+  public void init(ReadableMap params) {
+    if (ReactParamsCheck.checkParamsV2(
+        new String[] { Constants.APP_CUSTOM_PWD_TYPE, Constants.APP_CUSTOM_PWD, Constants.APP_CUSTOM_SERVER_ADDR,
+            Constants.APP_CUSTOM_CUSTOM_PORT },
+        params)) {
+      int customPwdType = params.getInt(Constants.APP_CUSTOM_PWD_TYPE); // 0
+      String customPwd = params.getString(Constants.APP_CUSTOM_PWD);
+      String customServerAddr = params.getString(Constants.APP_CUSTOM_SERVER_ADDR);
+      int customPort = params.getInt(Constants.APP_CUSTOM_CUSTOM_PORT);
+      xmFunSDKManager = XMFunSDKManager.getInstance(customPwdType, customPwd, customServerAddr, customPort);
+    } else {
+      xmFunSDKManager = XMFunSDKManager.getInstance();
+    }
 
     // public void init(String name, String location) {
-    xmFunSDKManager = XMFunSDKManager.getInstance();
     xmFunSDKManager.initXMCloudPlatform(reactContext);
 
     // uuid, key, secret, movedcard in AndroidManifest.xml

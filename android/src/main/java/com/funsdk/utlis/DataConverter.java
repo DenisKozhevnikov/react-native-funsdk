@@ -281,4 +281,14 @@ public class DataConverter {
 
     return Base64.encodeToString(byteArray, Base64.DEFAULT);
   }
+
+  public static void putToWritableMap(WritableMap rnMap, String key, Object value) {
+    if (value instanceof String) {
+      rnMap.putString(key, (String) value);
+    } else if (value instanceof Integer) {
+      rnMap.putInt(key, (Integer) value);
+    } else {
+      rnMap.putNull(key);
+    }
+  }
 }

@@ -83,9 +83,9 @@ export type ModifyDeviceNameParams = DeviceIdParams & {
 };
 
 export function modifyDeviceName(
-  params: ModifyDevicePasswordParams
+  params: ModifyDeviceNameParams
 ): Promise<DeviceManagerPromiseSuccessType> {
-  return funsdk.modifyDevicePassword(params);
+  return funsdk.modifyDeviceName(params);
 }
 
 export type DevicePTZControlParams = {

@@ -11,7 +11,7 @@ import {
   getChannelCount,
   getChannelInfo,
   searchTimeinfo,
-  startSetWiFi,
+  // startSetWiFi,
 } from 'react-native-funsdk';
 import { DEVICE_ID } from '../topsecret';
 

@@ -16,6 +16,10 @@ import {
   DEVICE_ID,
   DEVICE_LOGIN,
   DEVICE_PASSWORD,
+  PORT,
+  PWD,
+  PWD_TYPE,
+  SERVER_ADDR,
   USER_NAME,
   USER_PASSWORD,
 } from '../topsecret';
@@ -39,7 +43,13 @@ export const useInit = () => {
     if (isInit) {
       return;
     }
-    funSDKInit();
+
+    funSDKInit({
+      customPwdType: PWD_TYPE,
+      customPwd: PWD,
+      customServerAddr: SERVER_ADDR,
+      customPort: PORT,
+    });
     const someFuncs = async () => {
       try {
         // const res = await loginByAccount({

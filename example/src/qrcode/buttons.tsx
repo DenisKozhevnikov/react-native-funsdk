@@ -10,12 +10,12 @@ import {
 import { styles } from '../styles';
 import { askPermissionLocation } from '../utils/permisiion';
 import {
-  LoadTestPushData,
+  // LoadTestPushData,
   OnAddQRDeviceStatusType,
   QRCodeListenersEnum,
-  closePush,
-  isPushOpen,
-  openPush,
+  // closePush,
+  // isPushOpen,
+  // openPush,
   qrCodeEventEmitter,
   startSetByQRCode,
   stopSetByQRCode,
@@ -52,18 +52,18 @@ export const Buttons = () => {
     });
   };
 
-  const handleTestBtn = () => {
-    LoadTestPushData();
-  };
-  const handleTestBtnOpen = () => {
-    openPush();
-  };
-  const handleTestBtnClose = () => {
-    closePush();
-  };
-  const handleTestBtnIsOpen = () => {
-    isPushOpen();
-  };
+  // const handleTestBtn = () => {
+  //   LoadTestPushData();
+  // };
+  // const handleTestBtnOpen = () => {
+  //   openPush();
+  // };
+  // const handleTestBtnClose = () => {
+  //   closePush();
+  // };
+  // const handleTestBtnIsOpen = () => {
+  //   isPushOpen();
+  // };
 
   useEffect(() => {
     // debug
@@ -81,6 +81,7 @@ export const Buttons = () => {
       QRCodeListenersEnum.ON_ADD_DEVICE_STATUS,
       (event: OnAddQRDeviceStatusType) => {
         if (event.base64Image) {
+          console.log('eventDeviceListener: ', event); // "someValue"
           setBase64Image(event.base64Image);
         } else {
           console.log('eventDeviceListener: ', event); // "someValue"
@@ -106,7 +107,7 @@ export const Buttons = () => {
           onPress={() => handleGetQRAndStartFindDevice()}
         />
         <Button text="stopFindDevice" onPress={() => stopFindByQRDevice()} />
-        <Button text="handleTestBtn" onPress={() => handleTestBtn()} />
+        {/* <Button text="handleTestBtn" onPress={() => handleTestBtn()} />
         <Button text="handleTestBtnOpen" onPress={() => handleTestBtnOpen()} />
         <Button
           text="handleTestBtnClose"
@@ -115,7 +116,7 @@ export const Buttons = () => {
         <Button
           text="handleTestBtnIsOpen"
           onPress={() => handleTestBtnIsOpen()}
-        />
+        /> */}
       </View>
       <Text>Введённый пароль: {wifiPassword}</Text>
       <TextInput

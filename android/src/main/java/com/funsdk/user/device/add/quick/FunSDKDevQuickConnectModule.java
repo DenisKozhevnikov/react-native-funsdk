@@ -31,6 +31,7 @@ import com.utils.XUtils;
 import com.funsdk.utils.Constants;
 import com.funsdk.utils.ReactParamsCheck;
 import com.funsdk.utils.EventSender;
+import com.funsdk.utils.DataConverter;
 
 public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
   public ReactApplicationContext reactContext;
@@ -58,24 +59,31 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
 
   }
 
-  public void sendDeviceConnectStatus(String status, Object errorId, Object msgId) {
+  public void sendDeviceConnectStatus(String status, Object errorId, Object msgId, XMDevInfo xmDevInfo) {
     WritableMap addDevResult = Arguments.createMap();
     addDevResult.putString("status", status);
 
-    if (errorId instanceof String) {
-      addDevResult.putString("errorId", (String) errorId);
-    } else if (errorId instanceof Integer) {
-      addDevResult.putInt("errorId", (Integer) errorId);
-    } else {
-      addDevResult.putNull("errorId");
-    }
+    DataConverter.putToWritableMap(addDevResult, "errorId", errorId);
+    DataConverter.putToWritableMap(addDevResult, "msgId", msgId);
 
-    if (msgId instanceof String) {
-      addDevResult.putString("msgId", (String) msgId);
-    } else if (msgId instanceof Integer) {
-      addDevResult.putInt("msgId", (Integer) msgId);
-    } else {
-      addDevResult.putNull("msgId");
+    if (xmDevInfo != null) {
+      WritableMap deviceData = Arguments.createMap();
+
+      DataConverter.putToWritableMap(deviceData, "devId", xmDevInfo.getDevId());
+      DataConverter.putToWritableMap(deviceData, "devName", xmDevInfo.getDevName());
+      DataConverter.putToWritableMap(deviceData, "devUserName", xmDevInfo.getDevUserName());
+      DataConverter.putToWritableMap(deviceData, "devPassword", xmDevInfo.getDevPassword());
+      DataConverter.putToWritableMap(deviceData, "devIp", xmDevInfo.getDevIp());
+      DataConverter.putToWritableMap(deviceData, "devPort", xmDevInfo.getDevPort());
+      DataConverter.putToWritableMap(deviceData, "devType", xmDevInfo.getDevType());
+      DataConverter.putToWritableMap(deviceData, "devState", xmDevInfo.getDevState());
+      DataConverter.putToWritableMap(deviceData, "string", xmDevInfo.toString());
+      DataConverter.putToWritableMap(deviceData, "pid", xmDevInfo.getPid());
+      DataConverter.putToWritableMap(deviceData, "mac", xmDevInfo.getMac());
+      DataConverter.putToWritableMap(deviceData, "devToken", xmDevInfo.getDevToken());
+      DataConverter.putToWritableMap(deviceData, "cloudCryNum", xmDevInfo.getCloudCryNum());
+
+      addDevResult.putMap("deviceData", deviceData);
     }
 
     EventSender.sendEvent(getReactApplicationContext(), ON_ADD_DEVICE_STATUS, addDevResult);
@@ -96,7 +104,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
       result.putString("status", "поиск начат");
       EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
-      sendDeviceConnectStatus("start", null, null);
+      sendDeviceConnectStatus("start", null, null, null);
 
       startQuickSetWiFi(passWifi, isDevDeleteFromOthers);
     }
@@ -126,7 +134,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
       EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
       // проверьте подключение к wifi, настройки доступа к location в android (?)
-      sendDeviceConnectStatus("error-wifi", null, null);
+      sendDeviceConnectStatus("error-wifi", null, null, null);
       return;
     }
 
@@ -158,7 +166,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
                 result.putString("status", "ошибка при поиске");
                 EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
-                sendDeviceConnectStatus("error", errorId, null);
+                sendDeviceConnectStatus("error", errorId, null, null);
               }
             }
 
@@ -218,7 +226,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
             result.putString("status", "ошибка при авторизации на устройстве");
             EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
-            sendDeviceConnectStatus("error", errorId, null);
+            sendDeviceConnectStatus("error", errorId, null, null);
           }
         });
       }
@@ -268,7 +276,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
           resultErr.putString("status", "Не удалось настроить сеть - " + errorId);
           EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultErr);
 
-          sendDeviceConnectStatus("error", errorId, null);
+          sendDeviceConnectStatus("error", errorId, null, null);
         }
       }
     });
@@ -290,7 +298,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
             result.putString("status", "Устройство успешно добавлено на вашем аккаунте");
             EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
-            sendDeviceConnectStatus("success", null, msgId);
+            sendDeviceConnectStatus("success", null, msgId, xmDevInfo);
           }
 
           @Override
@@ -302,7 +310,7 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
             result.putString("msgId", "msgId: " + msgId);
             EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
-            sendDeviceConnectStatus("error", errorId, null);
+            sendDeviceConnectStatus("error", errorId, null, null);
           }
 
           @Override

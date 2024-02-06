@@ -67,46 +67,52 @@ public class FunSDKDevQRCodeConnectModule extends ReactContextBaseJavaModule {
         WritableMap addDevResult = Arguments.createMap();
         addDevResult.putString("status", status);
 
-        if (errorId instanceof String) {
-            addDevResult.putString("errorId", (String) errorId);
-        } else if (errorId instanceof Integer) {
-            addDevResult.putInt("errorId", (Integer) errorId);
-        } else {
-            addDevResult.putNull("errorId");
-        }
-
-        if (msgId instanceof String) {
-            addDevResult.putString("msgId", (String) msgId);
-        } else if (msgId instanceof Integer) {
-            addDevResult.putInt("msgId", (Integer) msgId);
-        } else {
-            addDevResult.putNull("msgId");
-        }
+        DataConverter.putToWritableMap(addDevResult, "errorId", errorId);
+        DataConverter.putToWritableMap(addDevResult, "msgId", msgId);
 
         EventSender.sendEvent(getReactApplicationContext(), ON_ADD_DEVICE_STATUS, addDevResult);
     }
 
+    // с изображением qr кода в виде base64
     public void sendDeviceConnectStatus(String status, Object errorId, Object msgId, String base64) {
         WritableMap addDevResult = Arguments.createMap();
         addDevResult.putString("status", status);
 
-        if (errorId instanceof String) {
-            addDevResult.putString("errorId", (String) errorId);
-        } else if (errorId instanceof Integer) {
-            addDevResult.putInt("errorId", (Integer) errorId);
-        } else {
-            addDevResult.putNull("errorId");
-        }
-
-        if (msgId instanceof String) {
-            addDevResult.putString("msgId", (String) msgId);
-        } else if (msgId instanceof Integer) {
-            addDevResult.putInt("msgId", (Integer) msgId);
-        } else {
-            addDevResult.putNull("msgId");
-        }
+        DataConverter.putToWritableMap(addDevResult, "errorId", errorId);
+        DataConverter.putToWritableMap(addDevResult, "msgId", msgId);
 
         addDevResult.putString("base64Image", base64);
+
+        EventSender.sendEvent(getReactApplicationContext(), ON_ADD_DEVICE_STATUS, addDevResult);
+    }
+
+    // с данными об устройстве
+    public void sendDeviceConnectStatus(String status, Object errorId, Object msgId, XMDevInfo xmDevInfo) {
+        WritableMap addDevResult = Arguments.createMap();
+        addDevResult.putString("status", status);
+
+        DataConverter.putToWritableMap(addDevResult, "errorId", errorId);
+        DataConverter.putToWritableMap(addDevResult, "msgId", msgId);
+
+        if (xmDevInfo != null) {
+            WritableMap deviceData = Arguments.createMap();
+
+            DataConverter.putToWritableMap(deviceData, "devId", xmDevInfo.getDevId());
+            DataConverter.putToWritableMap(deviceData, "devName", xmDevInfo.getDevName());
+            DataConverter.putToWritableMap(deviceData, "devUserName", xmDevInfo.getDevUserName());
+            DataConverter.putToWritableMap(deviceData, "devPassword", xmDevInfo.getDevPassword());
+            DataConverter.putToWritableMap(deviceData, "devIp", xmDevInfo.getDevIp());
+            DataConverter.putToWritableMap(deviceData, "devPort", xmDevInfo.getDevPort());
+            DataConverter.putToWritableMap(deviceData, "devType", xmDevInfo.getDevType());
+            DataConverter.putToWritableMap(deviceData, "devState", xmDevInfo.getDevState());
+            DataConverter.putToWritableMap(deviceData, "string", xmDevInfo.toString());
+            DataConverter.putToWritableMap(deviceData, "pid", xmDevInfo.getPid());
+            DataConverter.putToWritableMap(deviceData, "mac", xmDevInfo.getMac());
+            DataConverter.putToWritableMap(deviceData, "devToken", xmDevInfo.getDevToken());
+            DataConverter.putToWritableMap(deviceData, "cloudCryNum", xmDevInfo.getCloudCryNum());
+
+            addDevResult.putMap("deviceData", deviceData);
+        }
 
         EventSender.sendEvent(getReactApplicationContext(), ON_ADD_DEVICE_STATUS, addDevResult);
     }
@@ -274,7 +280,7 @@ public class FunSDKDevQRCodeConnectModule extends ReactContextBaseJavaModule {
                         debugResult.putString("status", "Устройство успешно добавлено на вашем аккаунте");
                         EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, debugResult);
 
-                        sendDeviceConnectStatus("success", null, msgId);
+                        sendDeviceConnectStatus("success", null, msgId, xmDevInfo);
                     }
 
                     @Override

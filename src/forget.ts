@@ -6,7 +6,7 @@ export type ForgetCheckPwdParams = {
   password: string;
 };
 
-/*
+/**
  * password: string;
  */
 export function forgetCheckPwd(params: ForgetCheckPwdParams): Promise<any> {
@@ -17,7 +17,7 @@ export type RequestSendEmailCodeForResetPWParams = {
   email: string;
 };
 
-/*
+/**
  * email: string;
  */
 export function requestSendEmailCodeForResetPW(
@@ -30,7 +30,7 @@ export type RequestSendPhoneMsgForResetPWParams = {
   phoneNumber: string;
 };
 
-/*
+/**
  * phoneNumber: string;
  */
 export function requestSendPhoneMsgForResetPW(
@@ -44,7 +44,7 @@ export type RequestVerifyEmailCodeParams = {
   verifyCode: string;
 };
 
-/*
+/**
  * email: string;
  * verifyCode: string;
  */
@@ -59,7 +59,7 @@ export type RequestVerifyPhoneCodeParams = {
   verifyCode: string;
 };
 
-/*
+/**
  * phoneNumber: string;
  * verifyCode: string;
  */
@@ -74,7 +74,7 @@ export type RequestResetPasswByEmailParams = {
   verifyCode: string;
 };
 
-/*
+/**
  * phoneNumber: string;
  * verifyCode: string;
  */
@@ -89,7 +89,7 @@ export type RequestResetPasswByPhoneParams = {
   newPassword: string;
 };
 
-/*
+/**
  * phoneNumber: string;
  * newPassword: string;
  */

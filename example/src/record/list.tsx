@@ -13,7 +13,10 @@ import {
   type SearcResultRecordFile,
 } from 'react-native-funsdk';
 import { DEVICE_ID } from '../topsecret';
-import { createFolderIfNotExist, getListOfFiles } from '../utils/folder';
+import {
+  createFolderIfNotExist,
+  // getListOfFiles
+} from '../utils/folder';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import {
   // askPermissionReadStorage,
