@@ -287,6 +287,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
           onMediaPlayState={(obj) => console.log('onMediaPlayState: ', obj)}
           onShowRateAndTime={(obj) => console.log('onShowRateAndTime: ', obj)}
           onVideoBufferEnd={(obj) => console.log('onVideoBufferEnd: ', obj)}
+          onGetInfo={(obj) => console.log(obj)}
           onFailed={(obj) => console.log('onFailed: ', obj)}
           onDebugState={(obj) => console.log('onDebugState: ', obj)}
         />
@@ -308,6 +309,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
           onMediaPlayState={(obj) => console.log('onMediaPlayState: ', obj)}
           onShowRateAndTime={(obj) => console.log('onShowRateAndTime: ', obj)}
           onVideoBufferEnd={(obj) => console.log('onVideoBufferEnd: ', obj)}
+          onGetInfo={(obj) => console.log(obj)}
           onFailed={(obj) => console.log('onFailed: ', obj)}
           onDebugState={(obj) => console.log('onDebugState: ', obj)}
         />
@@ -315,6 +317,14 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
       <ScrollView>
         <TouchableOpacity onPress={startPlay} style={styles.button}>
           <Text style={styles.buttonText}>startPlay</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            getMonitor(activeChannel)?.current?.getStreamType();
+          }}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>getStreamType</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {

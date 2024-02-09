@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import {
   WiFiListenersEnum,
+  deleteDevice,
   startSetWiFi,
   stopSetWiFi,
   wifiEventEmitter,
@@ -78,6 +79,13 @@ export const Buttons = () => {
       <View style={styles.view}>
         <Button text="handleFindDevice" onPress={() => handleFindDevice()} />
         <Button text="stopFindDevice" onPress={() => stopFindDevice()} />
+        <Button
+          text="deleteDev"
+          onPress={async () => {
+            const res = await deleteDevice({ deviceId: '930630351cf83099' });
+            console.log('deleted: ', res);
+          }}
+        />
       </View>
       <Text>Введённый пароль: {wifiPassword}</Text>
       <TextInput

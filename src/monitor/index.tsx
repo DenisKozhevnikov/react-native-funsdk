@@ -40,6 +40,9 @@ export type MonitorViewNativeProps = ViewProps & {
     nativeEvent: { time: string; rate: string };
   }) => void;
   onVideoBufferEnd: (event: { nativeEvent: { isBufferEnd: boolean } }) => void;
+  onGetInfo: (event: {
+    nativeEvent: { type: 'streamType'; streamType: number };
+  }) => void;
   onFailed: (event: {
     nativeEvent: { msgId: number; errorId: number };
   }) => void;
@@ -70,6 +73,7 @@ type MonitorProps = ViewProps & {
   }) => void;
   onShowRateAndTime?: (obj: { time: string; rate: string }) => void;
   onVideoBufferEnd?: (obj: { isBufferEnd: boolean }) => void;
+  onGetInfo?: (obj: { type: 'streamType'; streamType: number }) => void;
   onFailed?: (obj: { msgId: number; errorId: number }) => void;
   onDebugState?: (obj: { state: string }) => void;
 };
@@ -322,6 +326,10 @@ export class Monitor extends React.Component<MonitorProps, any> {
       this.props?.onVideoBufferEnd(event.nativeEvent);
   };
 
+  _onGetInfo = (event: Parameters<MonitorViewNativeProps['onGetInfo']>[0]) => {
+    this.props?.onGetInfo && this.props?.onGetInfo(event.nativeEvent);
+  };
+
   _onFailed = (event: { nativeEvent: { msgId: number; errorId: number } }) => {
     this.props?.onFailed && this.props?.onFailed(event.nativeEvent);
   };
@@ -339,6 +347,7 @@ export class Monitor extends React.Component<MonitorProps, any> {
         onMediaPlayState={this._onMediaPlayState}
         onShowRateAndTime={this._onShowRateAndTime}
         onVideoBufferEnd={this._onVideoBufferEnd}
+        onGetInfo={this._onGetInfo}
         onFailed={this._onFailed}
         onDebugState={this._onDebugState}
       />
