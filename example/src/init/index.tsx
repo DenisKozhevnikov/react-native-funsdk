@@ -44,6 +44,7 @@ export const useInit = () => {
       return;
     }
 
+    // funSDKInit({});
     funSDKInit({
       customPwdType: PWD_TYPE,
       customPwd: PWD,

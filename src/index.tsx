@@ -33,3 +33,6 @@ export * from './manager';
 // views
 export * from './monitor';
 export * from './record';
+
+//types
+export * from './types';

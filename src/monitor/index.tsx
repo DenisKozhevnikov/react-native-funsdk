@@ -5,7 +5,7 @@ import {
   UIManager,
   findNodeHandle,
 } from 'react-native';
-import type { FUNSDK_MEDIA_PLAY_STATE_ENUM } from '../types/stream';
+import { FUNSDK_MEDIA_PLAY_STATE_ENUM, STREAM_TYPE } from '../types/stream';
 
 const Commands = {
   // setVideoFlip: 'setVideoFlip',
@@ -27,12 +27,16 @@ const Commands = {
   startDoubleIntercom: 'startDoubleIntercom',
   stopDoubleIntercom: 'stopDoubleIntercom',
   switchStreamTypeMonitor: 'switchStreamTypeMonitor',
+  updateStreamTypeMonitor: 'updateStreamTypeMonitor',
   setVideoFullScreen: 'setVideoFullScreen',
   capturePicFromDevAndSave: 'capturePicFromDevAndSave',
   seekToTime: 'seekToTime',
 } as const;
 
 export type MonitorViewNativeProps = ViewProps & {
+  devId: string;
+  channelId: number;
+  streamType: STREAM_TYPE;
   onMediaPlayState: (event: {
     nativeEvent: { state: FUNSDK_MEDIA_PLAY_STATE_ENUM | number };
   }) => void;
@@ -67,6 +71,7 @@ const dispatchCommand = (viewId: number, command: string, args: any[] = []) => {
 type MonitorProps = ViewProps & {
   devId: string;
   channelId: number;
+  streamType?: STREAM_TYPE;
   onStartInit?: () => void;
   onMediaPlayState?: (obj: {
     state: FUNSDK_MEDIA_PLAY_STATE_ENUM | number;
@@ -97,10 +102,8 @@ export class Monitor extends React.Component<MonitorProps, any> {
   // }
 
   playVideo() {
-    console.log('rnfunsdk playVideo');
     const viewId = findNodeHandle(this.myRef.current);
 
-    console.log('rnfunsdk playVideo ', viewId);
     if (typeof viewId !== 'number') {
       return;
     }
@@ -272,6 +275,16 @@ export class Monitor extends React.Component<MonitorProps, any> {
     dispatchCommand(viewId, Commands.switchStreamTypeMonitor);
   }
 
+  updateStreamTypeMonitor(streamType: STREAM_TYPE) {
+    const viewId = findNodeHandle(this.myRef.current);
+
+    if (typeof viewId !== 'number') {
+      return;
+    }
+
+    dispatchCommand(viewId, Commands.updateStreamTypeMonitor, [streamType]);
+  }
+
   setVideoFullScreen(isFullScreen: boolean) {
     const viewId = findNodeHandle(this.myRef.current);
 
@@ -341,6 +354,7 @@ export class Monitor extends React.Component<MonitorProps, any> {
   render() {
     return (
       <MonitorView
+        streamType={STREAM_TYPE.EXTRA}
         {...this.props}
         ref={this.myRef}
         onStartInit={this._onStartInit}

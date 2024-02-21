@@ -49,8 +49,10 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
   private static final int COMMAND_STOP_DOUBLE_INTERCOM_ID = 15;
   private static final String COMMAND_SWTICH_STREAM_TYPE_MONITOR = "switchStreamTypeMonitor";
   private static final int COMMAND_SWTICH_STREAM_TYPE_MONITOR_ID = 16;
+  private static final String COMMAND_UPDATE_STREAM_TYPE_MONITOR = "updateStreamTypeMonitor";
+  private static final int COMMAND_UPDATE_STREAM_TYPE_MONITOR_ID = 161;
   private static final String COMMAND_SET_VIDEO_FULLSCREEN = "setVideoFullScreen";
-  private static final int COMMAND_SET_VIDEO_FULLSCREEN_ID = 16;
+  private static final int COMMAND_SET_VIDEO_FULLSCREEN_ID = 1600;
   private static final String COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE = "capturePicFromDevAndSave";
   private static final int COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE_ID = 17;
   private static final String COMMAND_GET_STREAM_TYPE = "getStreamType";
@@ -106,6 +108,7 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     commandsMap.put(COMMAND_START_DOUBLE_INTERCOM, COMMAND_START_DOUBLE_INTERCOM_ID);
     commandsMap.put(COMMAND_STOP_DOUBLE_INTERCOM, COMMAND_STOP_DOUBLE_INTERCOM_ID);
     commandsMap.put(COMMAND_SWTICH_STREAM_TYPE_MONITOR, COMMAND_SWTICH_STREAM_TYPE_MONITOR_ID);
+    commandsMap.put(COMMAND_UPDATE_STREAM_TYPE_MONITOR, COMMAND_UPDATE_STREAM_TYPE_MONITOR_ID);
     commandsMap.put(COMMAND_SET_VIDEO_FULLSCREEN, COMMAND_SET_VIDEO_FULLSCREEN_ID);
     commandsMap.put(COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE, COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE_ID);
 
@@ -146,7 +149,7 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
       view.stopVideoRecord();
     }
     if (commandId == COMMAND_GET_STREAM_TYPE_ID) {
-      view.getStreamType();
+      view.sendStreamType();
     }
     if (commandId == COMMAND_SEEK_TO_TIME_ID) {
       // view.seekToTime();
@@ -176,6 +179,10 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     if (commandId == COMMAND_SWTICH_STREAM_TYPE_MONITOR_ID) {
       view.switchStreamTypeMonitor();
     }
+    if (commandId == COMMAND_UPDATE_STREAM_TYPE_MONITOR_ID) {
+      int streamType = args.getInt(0);
+      view.updateStreamTypeMonitor(streamType);
+    }
     if (commandId == COMMAND_SET_VIDEO_FULLSCREEN_ID) {
       boolean speakerType = args.getBoolean(0);
       view.setVideoFullScreen(speakerType);
@@ -191,7 +198,12 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
   }
 
   @ReactProp(name = "channelId")
-  public void setDeviceId(FunSDKVideoView view, int channelId) {
+  public void setChannelId(FunSDKVideoView view, int channelId) {
     view.setChannelId(channelId);
+  }
+
+  @ReactProp(name = "streamType")
+  public void setStreamType(FunSDKVideoView view, int streamType) {
+    view.setStreamType(streamType);
   }
 }

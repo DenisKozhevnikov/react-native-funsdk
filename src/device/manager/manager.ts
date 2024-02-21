@@ -9,7 +9,7 @@ import type {
 const funsdk = NativeModules.FunSDKDevStatusModule;
 
 export function loginDevice(
-  params: DeviceCredentialParams
+  params: DeviceIdParams
 ): Promise<DeviceManagerPromiseSuccessType> {
   return funsdk.loginDevice(params);
 }

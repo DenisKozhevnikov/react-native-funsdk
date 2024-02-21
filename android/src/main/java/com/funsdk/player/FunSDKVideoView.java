@@ -28,6 +28,8 @@ import java.util.HashMap;
 public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMediaManagerListener {
   private String devId;
   private int channelId;
+  // streamType === SDKCONST.StreamType
+  private int streamType;
   private final ThemedReactContext themedReactContext;
   private Activity activity = null;
   private final FunSDKVideoEventEmitter eventEmitter;
@@ -98,7 +100,6 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
   protected void onDetachedFromWindow() {
     super.onDetachedFromWindow();
     destroyMonitor();
-    // System.out.println("onDetachedFromWindow FunSDKVideoView");
   }
 
   protected DeviceManager getManager() {
@@ -122,17 +123,24 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
     this.channelId = channelId;
   }
 
+  public void setStreamType(int streamType) {
+    this.streamType = streamType;
+  }
+
+  public int getStreamType() {
+    return this.streamType;
+  }
+
   public void initMonitor() {
-    // System.out.println("initMonitor");
     if (mediaManager != null) {
     } else {
-      // System.out.println("initMonitor next");
       WritableMap map = Arguments.createMap();
       eventEmitter.sendEvent(map, FunSDKVideoEventEmitter.EVENT_START_INIT);
       mediaManager = manager.createMonitorPlayer(this, getDevId());
       mediaManager.setHardDecode(false);
       mediaManager.setOnMediaManagerListener(this);
       mediaManager.setChnId(getChannelId());
+      mediaManager.setStreamType(getStreamType());
       mediaManager.setVideoFullScreen(false);
       mediaManager.startMonitor();
     }
@@ -151,13 +159,10 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
   }
 
   public void PlayVideo() {
-    // System.out.println("PlayVideo");
     if (mediaManager != null) {
-      // System.out.println("PlayVideo with mediaManager");
       // mediaManager.rePlay();
       mediaManager.startMonitor();
     } else {
-      // System.out.println("PlayVideo with start init");
       initMonitor();
     }
   }
@@ -168,7 +173,7 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
     }
   }
 
-  public void getStreamType() {
+  public void sendStreamType() {
     if (mediaManager != null) {
       int answer = mediaManager.getStreamType();
 
@@ -200,9 +205,7 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
 
   public void captureImage(String path) {
     if (mediaManager != null) {
-      // System.out.println("Capture image path: " + path);
       String answer = mediaManager.capture(path);
-      // System.out.println("answer: " + answer);
     }
   }
 
@@ -264,7 +267,6 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
 
   public void startDoubleIntercom() {
     if (mediaManager != null) {
-      // System.out.println("startTalkByDoubleDirection: " + this.activity);
       mediaManager.startTalkByDoubleDirection(this.activity, true);
       // mediaManager.getTalkManager().setSpeakerType(speakerType);
       // необходимо срабатывание ивента onDoubleIntercome
@@ -286,6 +288,14 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
       mediaManager.stopPlay();
       mediaManager.startMonitor();
       // необходимо срабатывание ивента onStreamChange
+    }
+  }
+
+  public void updateStreamTypeMonitor(int streamType) {
+    if (mediaManager != null) {
+      mediaManager.setStreamType(streamType);
+      mediaManager.stopPlay();
+      mediaManager.startMonitor();
     }
   }
 

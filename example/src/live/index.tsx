@@ -32,6 +32,7 @@ import {
   getBuildTime,
   EPTZCMD,
   DevicePTZControlParams,
+  STREAM_TYPE,
   // hasLogin,
 } from 'react-native-funsdk';
 import {
@@ -280,6 +281,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
         <Monitor
           devId={DEVICE_ID}
           channelId={0}
+          streamType={STREAM_TYPE.EXTRA}
           style={styles.monitor}
           ref={monitorRef}
           onLayout={(event) => console.log('event: ', event.nativeEvent)}
@@ -302,6 +304,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
         <Monitor
           devId={DEVICE_ID}
           channelId={1}
+          streamType={STREAM_TYPE.MAIN}
           style={styles.monitor}
           ref={monitorRef2}
           onLayout={(event) => console.log('event: ', event.nativeEvent)}
@@ -340,6 +343,26 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
           style={styles.button}
         >
           <Text style={styles.buttonText}>swtichStream</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            getMonitor(activeChannel)?.current?.updateStreamTypeMonitor(
+              STREAM_TYPE.MAIN
+            );
+          }}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>stream type MAIN (hd)</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            getMonitor(activeChannel)?.current?.updateStreamTypeMonitor(
+              STREAM_TYPE.EXTRA
+            );
+          }}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>stream type EXTRA (sd)</Text>
         </TouchableOpacity>
         <Text style={styles.buttonText}>{PTZSpeed}</Text>
         <View style={{ flexDirection: 'row' }}>
