@@ -128,3 +128,25 @@ export function getMcuVersion(
 ): Promise<DeviceManagerPromiseSuccessType> {
   return funsdk.getMcuVersion(params);
 }
+
+// public static final int CONNECT_TYPE_P2P = 0;
+// public static final int CONNECT_TYPE_TRANSMIT = 1;
+// public static final int CONNECT_TYPE_IP = 2;
+// public static final int CONNECT_TYPE_RPS = 5;
+// public static final int CONNECT_TYPE_RTS_P2P = 6;
+// public static final int CONNECT_TYPE_RTS = 7;
+// 0:p2p连接，1转发模式 2:IP地址直连
+export enum networkMode {
+  P2P,
+  FORWARDING,
+  IP,
+  RPS = 5,
+  RTS_P2P,
+  RTS,
+}
+
+export function getNetworkMode(
+  params: DeviceIdParams
+): Promise<{ value: networkMode }> {
+  return funsdk.getNetworkMode(params);
+}

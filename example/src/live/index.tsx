@@ -33,6 +33,9 @@ import {
   EPTZCMD,
   DevicePTZControlParams,
   STREAM_TYPE,
+  getHardWare,
+  getUpdataTime,
+  getNetworkMode,
   // hasLogin,
 } from 'react-native-funsdk';
 import {
@@ -497,6 +500,51 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
         </TouchableOpacity>
         <TouchableOpacity onPress={loadDeviceInfo} style={styles.button}>
           <Text style={styles.buttonText}>loadDeviceInfo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={async () => {
+            try {
+              const result = await getHardWare({
+                deviceId: DEVICE_ID,
+              });
+              console.log('getHardWare is: ', result);
+            } catch (error) {
+              console.log('getHardWare error: ', error);
+            }
+          }}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>hardware</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={async () => {
+            try {
+              const result = await getUpdataTime({
+                deviceId: DEVICE_ID,
+              });
+              console.log('getUpdataTime is: ', result);
+            } catch (error) {
+              console.log('getUpdataTime error: ', error);
+            }
+          }}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>getUpdataTime</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={async () => {
+            try {
+              const result = await getNetworkMode({
+                deviceId: DEVICE_ID,
+              });
+              console.log('getNetworkMode is: ', result);
+            } catch (error) {
+              console.log('getNetworkMode error: ', error);
+            }
+          }}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>getNetworkMode</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

@@ -18,6 +18,7 @@ import com.funsdk.utils.ReactParamsCheck;
 
 import com.lib.FunSDK;
 import com.lib.sdk.bean.PtzCtrlInfoBean;
+import com.lib.sdk.struct.SDBDeviceInfo;
 
 import com.funsdk.utils.DataConverter;
 
@@ -497,6 +498,23 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
       DevDataCenter.getInstance().getMcuVersion(
           params.getString(Constants.DEVICE_ID),
           getResultCallback(promise));
+    }
+  }
+
+  // not tested
+  @ReactMethod
+  public void getNetworkMode(ReadableMap params, Promise promise) {
+    if (ReactParamsCheck
+        .checkParams(new String[] { Constants.DEVICE_ID }, params)) {
+      XMDevInfo devInfo = DevDataCenter.getInstance().getDevInfo(params.getString(Constants.DEVICE_ID));
+      SDBDeviceInfo sbdInfo = devInfo.getSdbDevInfo();
+
+      // 0:p2p连接，1转发模式 2:IP地址直连
+      int connectType = sbdInfo.connectType;
+
+      WritableMap map = Arguments.createMap();
+      map.putInt("value", (Integer) connectType);
+      promise.resolve(map);
     }
   }
 
