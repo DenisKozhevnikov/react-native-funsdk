@@ -12,6 +12,9 @@ import com.facebook.react.bridge.Callback;
 import com.manager.db.DevDataCenter;
 import com.manager.db.XMDevInfo;
 import com.manager.device.DeviceManager;
+import com.manager.XMFunSDKManager;
+import com.utils.SignatureUtil;
+import com.utils.TimeMillisUtil;
 
 import com.funsdk.utils.Constants;
 import com.funsdk.utils.ReactParamsCheck;
@@ -515,6 +518,48 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
       WritableMap map = Arguments.createMap();
       map.putInt("value", (Integer) connectType);
       promise.resolve(map);
+    }
+  }
+
+  // Получение токена для авторизации
+  @ReactMethod
+  public void getAccessToken(Promise promise) {
+    promise.resolve(DevDataCenter.getInstance().getAccessToken());
+  }
+
+  // Получение строки secret или signature или sign для запросов
+  @ReactMethod
+  public void getSecret(Promise promise) {
+    if (DevDataCenter.getInstance().isLoginByAccount()) {
+      String timeMillis = TimeMillisUtil.getTimMillis();
+
+      String uuid = XMFunSDKManager.getInstance().getAppUuid();
+      String appKey = XMFunSDKManager.getInstance().getAppKey();
+      String appSecret = XMFunSDKManager.getInstance().getAppSecret();
+      int movedCard = XMFunSDKManager.getInstance().getAppMovecard();
+
+      try {
+        String secret = SignatureUtil.getEncryptStr(uuid,
+            appKey,
+            appSecret,
+            timeMillis,
+            movedCard);
+
+        WritableMap map = Arguments.createMap();
+        map.putString("timeMillis", timeMillis);
+        map.putString("secret", secret);
+        map.putString("uuid", uuid);
+        map.putString("appKey", appKey);
+        map.putString("appSecret", appSecret);
+        map.putInt("movedCard", movedCard);
+
+        promise.resolve(map);
+      } catch (Exception e) {
+        e.printStackTrace();
+        promise.reject("signError");
+      }
+    } else {
+      promise.reject("loginError");
     }
   }
 

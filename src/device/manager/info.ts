@@ -150,3 +150,20 @@ export function getNetworkMode(
 ): Promise<{ value: networkMode }> {
   return funsdk.getNetworkMode(params);
 }
+
+export function getAccessToken(): Promise<string> {
+  return funsdk.getAccessToken();
+}
+
+export type SecretPromiseSuccessType = {
+  timeMillis: string;
+  secret: string;
+  uuid: string;
+  appKey: string;
+  appSecret: string;
+  movedCard: number;
+};
+
+export function getSecret(): Promise<SecretPromiseSuccessType> {
+  return funsdk.getSecret();
+}

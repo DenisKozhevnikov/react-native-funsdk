@@ -20,6 +20,7 @@ import com.funsdk.user.forget.FunSDKForgetModule;
 import com.funsdk.user.device.add.ap.FunSDKDevApConnectModule;
 import com.funsdk.user.device.add.list.FunSDKDevListConnectModule;
 import com.funsdk.user.device.add.quick.FunSDKDevQuickConnectModule;
+import com.funsdk.user.device.add.share.FunSDKDevShareManagerModule;
 import com.funsdk.user.device.add.qrcode.FunSDKDevQRCodeConnectModule;
 import com.funsdk.user.device.add.sn.FunSDKDevSnConnectModule;
 import com.funsdk.user.device.status.FunSDKDevStatusModule;
@@ -51,6 +52,7 @@ public class FunsdkPackage implements ReactPackage {
     modules.add(new FunSDKDevQuickConnectModule(reactContext));
     modules.add(new FunSDKDevQRCodeConnectModule(reactContext));
     modules.add(new FunSDKPushMessageModule(reactContext));
+    modules.add(new FunSDKDevShareManagerModule(reactContext));
 
     return modules;
   }

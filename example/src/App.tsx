@@ -32,6 +32,7 @@ import { MonitorPage } from './live';
 // import { WIFIDevice } from './wifi';
 import { useInit } from './init';
 import { ScrollView, Text, TouchableOpacity } from 'react-native';
+// import { Share } from './share';
 // import { QRCodeDevice } from './qrcode';
 // import { PushInitLink } from './push';
 
@@ -47,6 +48,7 @@ export default function App() {
       {/* <WIFIDevice /> */}
       {/* <QRCodeDevice /> */}
       {/* <PushInitLink /> */}
+      {/* <Share /> */}
       <ScrollView
         // pointerEvents="none"
         // contentContainerStyle={{ height: 50 }}

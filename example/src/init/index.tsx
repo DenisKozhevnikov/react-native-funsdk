@@ -120,7 +120,7 @@ export const useInit = () => {
     };
     setTimeout(() => {
       someFuncs();
-    }, 2000);
+    }, 0);
   }, [isInit]);
 
   return { isInit, statusText };

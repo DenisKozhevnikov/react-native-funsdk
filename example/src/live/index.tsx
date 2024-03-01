@@ -307,7 +307,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
         <Monitor
           devId={DEVICE_ID}
           channelId={1}
-          streamType={STREAM_TYPE.MAIN}
+          streamType={STREAM_TYPE.EXTRA}
           style={styles.monitor}
           ref={monitorRef2}
           onLayout={(event) => console.log('event: ', event.nativeEvent)}

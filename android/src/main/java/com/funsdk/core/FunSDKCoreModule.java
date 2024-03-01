@@ -126,4 +126,15 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
   }
   // }
 
+  @ReactMethod
+  public void SysSetServerIPPort(ReadableMap params) {
+    if (ReactParamsCheck.checkParams(new String[] { "serverKey", "serverIpOrDomain", "serverPort" },
+        params)) {
+      String serverKey = params.getString("serverKey");
+      String serverIpOrDomain = params.getString("serverIpOrDomain");
+      int serverPort = params.getInt("serverPort");
+
+      xmFunSDKManager.sysSetServerIPPort(serverKey, serverIpOrDomain, serverPort);
+    }
+  }
 }
