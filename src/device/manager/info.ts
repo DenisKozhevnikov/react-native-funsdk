@@ -1,5 +1,9 @@
 import { NativeModules } from 'react-native';
-import type { DeviceIdParams, DeviceManagerPromiseSuccessType } from './types';
+import type {
+  DeviceIdParams,
+  DeviceManagerPromiseSuccessType,
+  EFUN_ATTR,
+} from './types';
 
 const funsdk = NativeModules.FunSDKDevStatusModule;
 
@@ -166,4 +170,22 @@ export type SecretPromiseSuccessType = {
 
 export function getSecret(): Promise<SecretPromiseSuccessType> {
   return funsdk.getSecret();
+}
+
+export function getFunStrAttr(params: {
+  FunStrAttr: EFUN_ATTR;
+}): Promise<string> {
+  return funsdk.getFunStrAttr(params);
+}
+
+export function devGetLocalUserName(params: DeviceIdParams): Promise<string> {
+  return funsdk.devGetLocalUserName(params);
+}
+
+export function getDevType(params: DeviceIdParams): Promise<number> {
+  return funsdk.getDevType(params);
+}
+
+export function devGetLocalEncToken(params: DeviceIdParams): Promise<string> {
+  return funsdk.devGetLocalEncToken(params);
 }

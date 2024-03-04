@@ -22,6 +22,7 @@ import com.funsdk.utils.ReactParamsCheck;
 import com.lib.FunSDK;
 import com.lib.sdk.bean.PtzCtrlInfoBean;
 import com.lib.sdk.struct.SDBDeviceInfo;
+import static com.lib.EFUN_ATTR.LOGIN_USER_ID;
 
 import com.funsdk.utils.DataConverter;
 
@@ -560,6 +561,47 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
       }
     } else {
       promise.reject("loginError");
+    }
+  }
+
+  @ReactMethod
+  public void getFunStrAttr(ReadableMap params, Promise promise) {
+    if (ReactParamsCheck
+        .checkParams(new String[] { Constants.FUN_STR_ATTR }, params)) {
+      int FunStrAttr = params.getInt(Constants.FUN_STR_ATTR);
+
+      String result = FunSDK.GetFunStrAttr(FunStrAttr);
+      promise.resolve(result);
+    }
+  }
+
+  @ReactMethod
+  public void devGetLocalUserName(ReadableMap params, Promise promise) {
+    if (ReactParamsCheck
+        .checkParams(new String[] { Constants.DEVICE_ID }, params)) {
+      String loginName = FunSDK.DevGetLocalUserName(params.getString(Constants.DEVICE_ID));
+
+      promise.resolve(loginName);
+    }
+  }
+
+  @ReactMethod
+  public void getDevType(ReadableMap params, Promise promise) {
+    if (ReactParamsCheck
+        .checkParams(new String[] { Constants.DEVICE_ID }, params)) {
+      int devType = DevDataCenter.getInstance().getDevType(params.getString(Constants.DEVICE_ID));
+
+      promise.resolve(devType);
+    }
+  }
+
+  @ReactMethod
+  public void devGetLocalEncToken(ReadableMap params, Promise promise) {
+    if (ReactParamsCheck
+        .checkParams(new String[] { Constants.DEVICE_ID }, params)) {
+      String devToken = FunSDK.DevGetLocalEncToken(params.getString(Constants.DEVICE_ID));
+
+      promise.resolve(devToken);
     }
   }
 
