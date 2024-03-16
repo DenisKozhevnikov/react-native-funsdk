@@ -39,13 +39,15 @@ export function getBuildTime(
 
 export function getHardWare(
   params: DeviceIdParams
-): Promise<DeviceManagerPromiseSuccessType> {
+): Promise<DeviceManagerPromiseSuccessType & { value: string }> {
   return funsdk.getHardWare(params);
 }
 
-export function getDigChannel(
-  params: DeviceIdParams
-): Promise<DeviceManagerPromiseSuccessType> {
+export function getDigChannel(params: DeviceIdParams): Promise<
+  DeviceManagerPromiseSuccessType & {
+    value: number;
+  }
+> {
   return funsdk.getDigChannel(params);
 }
 

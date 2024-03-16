@@ -1,27 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
-  // Text,
   TouchableOpacity,
   Text,
   ScrollView,
-  // FlatList,
 } from 'react-native';
 import {
-  // funSDKInit,
-  // getUserId,
-  // getUserName,
-  // loginByAccount,
-  // logout,
-  // registerByNotBind,
-  // getDeviceList,
-  // addDevice,
-  // RecordPlayer,
-  // updateAllDevStateFromServer,
-  // getDetailDeviceList,
-  // loginDeviceWithCredential,
-  // SearcResultRecordFile,
   Monitor,
   devicePTZcontrol,
   getChannelCount,
@@ -36,22 +21,15 @@ import {
   getHardWare,
   getUpdataTime,
   getNetworkMode,
-  // hasLogin,
+  getDigChannel,
 } from 'react-native-funsdk';
-import {
-  DEVICE_ID,
-  // DEVICE_LOGIN,
-  // DEVICE_PASSWORD,
-  // USER_NAME,
-  // USER_PASSWORD,
-} from '../topsecret';
+import { DEVICE_ID } from '../topsecret';
+import { MonitorView } from './MonitorView';
 
-const monitorsList = new Map<number, React.RefObject<Monitor>>();
+export const monitorsList = new Map<number, React.RefObject<Monitor>>();
 
 export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
-  // const [isInit, setIsInit] = React.useState(false);
-  const monitorRef = useRef<Monitor>(null);
-  const monitorRef2 = useRef<Monitor>(null);
+  const [numberOfCameras, setNumberOfCameras] = useState<number | null>(null);
   const [activeChannel, setActiveChannel] = useState(0);
   const [PTZSpeed, setPTZSpeed] =
     useState<NonNullable<DevicePTZControlParams['speed']>>(4);
@@ -66,99 +44,19 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
     return monitorsList.get(channelId);
   };
 
-  useEffect(() => {
-    monitorsList.set(0, monitorRef);
-    monitorsList.set(1, monitorRef2);
-  }, []);
-
-  // React.useEffect(() => {
-  //   if (isInit) {
-  //     return;
-  //   }
-
-  //   monitorsList.set(0, monitorRef);
-  //   monitorsList.set(1, monitorRef2);
-
-  //   funSDKInit();
-  //   const someFuncs = async () => {
-  //     try {
-  //       // const res = await loginByAccount({
-  //       //   username: '',
-  //       //   password: '',
-  //       // });
-  //       console.log('start somefunc');
-  //       const res = await loginByAccount({
-  //         username: USER_NAME,
-  //         password: USER_PASSWORD,
-  //       });
-  //       // const res = await registerByNotBind({
-  //       //   username: '',
-  //       //   password: '',
-  //       // });
-  //       console.log('res somefunc: ', res);
-  //       await someInfos();
-  //     } catch (error) {
-  //       console.log('error in someFuncs: ', error);
-  //     }
-  //   };
-  //   const someInfos = async () => {
-  //     try {
-  //       const userId = await getUserId();
-  //       const userName = await getUserName();
-  //       const deviceList = await getDeviceList();
-  //       console.log('res someinfos: ', userId, userName, deviceList);
-  //       await addDeviceTest();
-  //       const updatedStatus = await updateAllDevStateFromServer();
-  //       console.log('updatedStatus: ', updatedStatus);
-  //       const detailedList = await getDetailDeviceList();
-  //       console.log('detailedList: ', detailedList);
-
-  //       // const loginstatus = await loginDeviceWithCredential({
-  //       //   deviceId: DEVICE_ID,
-  //       //   deviceLogin: DEVICE_LOGIN,
-  //       //   devicePassword: DEVICE_PASSWORD,
-  //       // });
-  //       // console.log('loginstatus: ', loginstatus);
-  //       setIsInit(true);
-  //     } catch (error) {
-  //       console.log('error: ', error);
-  //     }
-  //   };
-  //   const addDeviceTest = async () => {
-  //     try {
-  //       // const addedDevice = await addDevice({
-  //       //   deviceId: DEVICE_ID,
-  //       //   username: DEVICE_LOGIN,
-  //       //   password: DEVICE_PASSWORD,
-  //       //   deviceType: 'no need',
-  //       //   deviceName: 'supername',
-  //       // });
-  //       // console.log('addedDevice: ', addedDevice);
-  //       const deviceList = await getDeviceList();
-  //       console.log('deviceList: ', deviceList);
-  //     } catch (error) {
-  //       console.log('error on add device: ', error);
-  //     }
-  //   };
-  //   setTimeout(() => {
-  //     someFuncs();
-  //   }, 2000);
-  // }, [isInit]);
-
   const [isLogged, setIsLogged] = useState(false);
 
   const handleDeviceLogin = async () => {
     try {
-      // const loginstatus = await loginDeviceWithCredential({
-      //   deviceId: DEVICE_ID,
-      //   deviceLogin: DEVICE_LOGIN,
-      //   devicePassword: DEVICE_PASSWORD,
-      // });
-      // console.log('loginstatus: ', loginstatus);
+      const digChannelResult = await getDigChannel({ deviceId: DEVICE_ID });
+
+      if (typeof digChannelResult.value === 'number') {
+        setNumberOfCameras(digChannelResult.value);
+      }
+
       setIsLogged(true);
     } catch (error) {
       console.log('error login: ', error);
-      // handleDeviceLogin();
       setIsLogged(true);
     }
   };
@@ -252,7 +150,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
 
   const startPlay = () => {
     console.log('startPlay');
-    console.log('startPlay', getMonitor(activeChannel));
+    // console.log('startPlay', getMonitor(activeChannel));
     getMonitor(activeChannel)?.current?.playVideo();
     // monitorRef.current?.playVideo();
     // monitorRef2.current?.playVideo();
@@ -274,52 +172,18 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => setActiveChannel(0)}
-        style={{
-          padding: 10,
-          backgroundColor: activeChannel === 0 ? 'red' : 'transparent',
-        }}
-      >
-        <Monitor
-          devId={DEVICE_ID}
-          channelId={0}
-          streamType={STREAM_TYPE.EXTRA}
-          style={styles.monitor}
-          ref={monitorRef}
-          onLayout={(event) => console.log('event: ', event.nativeEvent)}
-          onStartInit={() => console.log('START INIT 1 CAMERA')}
-          onMediaPlayState={(obj) => console.log('onMediaPlayState: ', obj)}
-          onShowRateAndTime={(obj) => console.log('onShowRateAndTime: ', obj)}
-          onVideoBufferEnd={(obj) => console.log('onVideoBufferEnd: ', obj)}
-          onGetInfo={(obj) => console.log(obj)}
-          onFailed={(obj) => console.log('onFailed: ', obj)}
-          onDebugState={(obj) => console.log('onDebugState: ', obj)}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => setActiveChannel(1)}
-        style={{
-          padding: 10,
-          backgroundColor: activeChannel === 1 ? 'red' : 'transparent',
-        }}
-      >
-        <Monitor
-          devId={DEVICE_ID}
-          channelId={1}
-          streamType={STREAM_TYPE.EXTRA}
-          style={styles.monitor}
-          ref={monitorRef2}
-          onLayout={(event) => console.log('event: ', event.nativeEvent)}
-          onStartInit={() => console.log('START INIT 2 CAMERA')}
-          onMediaPlayState={(obj) => console.log('onMediaPlayState: ', obj)}
-          onShowRateAndTime={(obj) => console.log('onShowRateAndTime: ', obj)}
-          onVideoBufferEnd={(obj) => console.log('onVideoBufferEnd: ', obj)}
-          onGetInfo={(obj) => console.log(obj)}
-          onFailed={(obj) => console.log('onFailed: ', obj)}
-          onDebugState={(obj) => console.log('onDebugState: ', obj)}
-        />
-      </TouchableOpacity>
+      <View style={{ marginTop: 30, flexDirection: 'row', flexWrap: 'wrap' }}>
+        {!!numberOfCameras &&
+          [...Array(numberOfCameras).keys()].map((val) => (
+            <MonitorView
+              key={val}
+              devId={DEVICE_ID}
+              channelId={val}
+              isActive={activeChannel === val}
+              onPress={() => setActiveChannel(val)}
+            />
+          ))}
+      </View>
       <ScrollView>
         <TouchableOpacity onPress={startPlay} style={styles.button}>
           <Text style={styles.buttonText}>startPlay</Text>
@@ -335,13 +199,6 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
         <TouchableOpacity
           onPress={() => {
             getMonitor(activeChannel)?.current?.switchStreamTypeMonitor();
-            // if (activeChannel === 0) {
-            //   monitorRef.current?.switchStreamTypeMonitor();
-            // }
-
-            // if (activeChannel === 1) {
-            //   monitorRef2.current?.switchStreamTypeMonitor();
-            // }
           }}
           style={styles.button}
         >
