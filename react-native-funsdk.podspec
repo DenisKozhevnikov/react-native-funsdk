@@ -11,12 +11,18 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "11.0" }
+  s.platforms    = { :ios => "12.0" }
   s.source       = { :git => "https://github.com/DenisKozhevnikov/react-native-funsdk.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm}"
 
   s.dependency "React-Core"
+  
+  # https://github.com/callstack/react-native-builder-bob/discussions/379
+  s.vendored_frameworks = "https://gitlab.xmcloud.io/demo/FunSDKDemo_iOS/-/tree/master/FunSDKDemo/XMFunSDKDemo/Supporting/library/FunSDK.framework"
+  s.vendored_frameworks = "https://gitlab.xmcloud.io/demo/FunSDKDemo_iOS/-/tree/master/FunSDKDemo/XMFunSDKDemo/Supporting/library/XMNetInterface.framework"
+  # s.vendored_frameworks = "IOSframeworks/FunSDK.framework"
+  # s.vendored_frameworks = "IOSframeworks/XMNetInterface.framework"
 
   # Don't install the dependencies when we run `pod install` in the old architecture.
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
