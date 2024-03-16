@@ -26,4 +26,11 @@ public class ReactParamsCheck {
         }
         return true;
     }
+
+    /**
+     * Проверяет один параметр в ReadableMap
+     */
+    public static boolean checkOneParam(String key, ReadableMap params) {
+        return params.hasKey(key);
+    }
 }

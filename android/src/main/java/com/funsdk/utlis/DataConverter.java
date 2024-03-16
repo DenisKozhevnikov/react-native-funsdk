@@ -40,13 +40,12 @@ public class DataConverter {
 
     try {
       Date date = dateFormat.parse(time);
-      // System.out.println(date);
+
       if (null != date) {
         return date;
       }
     } catch (ParseException e) {
       e.printStackTrace();
-      System.out.println("stringToDate error");
     }
 
     return Calendar.getInstance().getTime();
@@ -200,7 +199,6 @@ public class DataConverter {
   public static WritableMap parseToWritableMap(String s) {
     if (TextUtils.isEmpty(s))
       return Arguments.createMap();
-    System.out.println("parseToWritableMap string to object: " + s);
     return parseToWritableMap(JSON.parseObject(s));
   }
 

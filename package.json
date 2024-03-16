@@ -1,6 +1,6 @@
 {
   "name": "react-native-funsdk",
-  "version": "0.4.1",
+  "version": "0.4.3",
   "description": "test",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -41,7 +41,10 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/DenisKozhevnikov/react-native-funsdk",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DenisKozhevnikov/react-native-funsdk.git"
+  },
   "author": "DenisKozhevnikov <denis.bugagashkin@yandex.ru> (https://github.com/DenisKozhevnikov)",
   "license": "MIT",
   "bugs": {

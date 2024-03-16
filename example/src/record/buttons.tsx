@@ -49,30 +49,13 @@ export const RecordButtons = ({
   };
 
   const searchRecordByFile = () => {
-    // const hour = 60 * 60 * 1000;
-    // const day = hour * 24;
-
-    // const date = new Date();
-    // const timestamp = date.getTime();
-    // const timezoneOffset = date.getTimezoneOffset();
-    // const correctedTimestamp = timestamp + timezoneOffset * 1000 * 60;
-
-    // const start = correctedTimestamp - 6 * day;
-    // const end = correctedTimestamp - 5 * day;
-    // 17.10.23
-    // const start = 1697486400000;
-    // const end = 1697587199000;
-    // 18.10.23
-    // const start = 1697587200000;
-    // const end = 1697673599000;
-    // 18.10.23 -4hrs
-    // const start = 1697572800000;
-    // const end = 1697659200000;
-    //19.10.23
-    const start = 1699680774000;
-    const end = 1699767174000;
-    // const start = 1697745599000;
-    // const end = 1697659200000;
+    // 1000 - 1 мс
+    // 60 - 1 минута
+    // 60 - 1 час
+    // 24 - 1 сутки
+    // 3 - 3 дня
+    const start = Date.now() - 1000 * 60 * 60 * 24 * 30;
+    const end = Date.now() - 1000 * 60 * 60 * 24;
 
     playerRef?.searchRecordByFile(start, end);
   };

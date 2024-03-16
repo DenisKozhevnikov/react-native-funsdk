@@ -15,7 +15,11 @@ type IsDeviceFunctionSupportParams = {
 
 export function isDeviceFunctionSupport(
   params: IsDeviceFunctionSupportParams
-): Promise<DeviceManagerPromiseSuccessType> {
+): Promise<
+  DeviceManagerPromiseSuccessType & {
+    value: boolean;
+  }
+> {
   return funsdk.isDeviceFunctionSupport(params);
 }
 

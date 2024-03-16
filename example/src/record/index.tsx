@@ -38,6 +38,12 @@ export const RecordPage = () => {
     return 'black';
   };
 
+  console.log(
+    'recordList: ',
+    recordList?.length,
+    recordList?.map((record) => record.startTimeOfYear)
+  );
+
   return (
     <View style={styles.container}>
       <RecordPlayer
@@ -49,7 +55,7 @@ export const RecordPage = () => {
         onShowRateAndTime={(ev) => console.log('onShowRateAndTime: ', ev)}
         onVideoBufferEnd={(ev) => console.log('onVideoBufferEnd: ', ev)}
         onSearchRecordByFilesResult={(ev) => {
-          // console.log(ev);
+          console.log('onSearchRecordByFilesResult ', ev?.list?.length);
           if (ev?.list) {
             setRecordList(ev?.list);
           }
