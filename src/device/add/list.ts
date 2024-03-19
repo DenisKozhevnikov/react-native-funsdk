@@ -1,4 +1,5 @@
 import { NativeModules } from 'react-native';
+import type { DEVICE } from 'src/types';
 
 const funsdk = NativeModules.FunSDKDevListConnectModule;
 
@@ -24,7 +25,17 @@ export function getDeviceState(params: GetDeviceStateParams): Promise<any> {
   return funsdk.getDevState(params);
 }
 
-export function getDetailDeviceList(): Promise<any> {
+export type DetailDeviceType = {
+  devId: string;
+  devIp: string;
+  devIpPort: string;
+  devName: string;
+  devPort: number;
+  devState: number;
+  devType: DEVICE.TYPE;
+};
+
+export function getDetailDeviceList(): Promise<DetailDeviceType[]> {
   return funsdk.getDetailDeviceList();
 }
 

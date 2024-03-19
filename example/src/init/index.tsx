@@ -108,8 +108,8 @@ export const useInit = () => {
           deviceId: DEVICE_ID,
           username: DEVICE_LOGIN,
           password: DEVICE_PASSWORD,
-          deviceType: 'no need',
-          deviceName: 'supername',
+          // deviceType: 'no need',
+          deviceName: 'supername2',
         });
         console.log('addedDevice: ', addedDevice);
         const deviceList = await getDeviceList();

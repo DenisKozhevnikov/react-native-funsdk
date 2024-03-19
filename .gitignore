@@ -70,3 +70,7 @@ android/keystores/debug.keystore
 lib/
 
 *topsecret.ts
+
+# Временно добавлен в исключение 
+# gh не позволяет загружать файлы более 100мб
+IOSframeworks/

@@ -42,9 +42,16 @@ export function logoutDevice(params: DeviceIdParams): Promise<true> {
   return funsdk.logoutDevice(params);
 }
 
-export function getChannelInfo(
-  params: DeviceIdParams
-): Promise<DeviceManagerPromiseSuccessType> {
+export function getChannelInfo(params: DeviceIdParams): Promise<
+  DeviceManagerPromiseSuccessType & {
+    value: {
+      canUsedChannelSize: number;
+      isComOpen: boolean;
+      nChnCount: number;
+      st_channelTitle: string[];
+    };
+  }
+> {
   return funsdk.getChannelInfo(params);
 }
 
