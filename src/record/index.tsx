@@ -165,6 +165,65 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
       React.Component<RecordViewNativeProps, {}, any> & Readonly<NativeMethods>
     >(null);
 
+    const _onMediaPlayState = (
+      event: Parameters<RecordViewNativeProps['onMediaPlayState']>[0]
+    ) => {
+      onMediaPlayState && onMediaPlayState(event.nativeEvent);
+    };
+
+    const _onShowRateAndTime = (
+      event: Parameters<RecordViewNativeProps['onShowRateAndTime']>[0]
+    ) => {
+      onShowRateAndTime && onShowRateAndTime(event.nativeEvent);
+    };
+
+    const _onVideoBufferEnd = (
+      event: Parameters<RecordViewNativeProps['onVideoBufferEnd']>[0]
+    ) => {
+      onVideoBufferEnd && onVideoBufferEnd(event.nativeEvent);
+    };
+
+    const _onSearchRecordByFilesResult = (
+      event: Parameters<RecordViewNativeProps['onSearchRecordByFilesResult']>[0]
+    ) => {
+      onSearchRecordByFilesResult &&
+        onSearchRecordByFilesResult(event.nativeEvent);
+    };
+
+    // const _onSearchRecordByTimesResult = (event: any) => {
+    //   onSearchRecordByTimesResult &&
+    //     onSearchRecordByTimesResult(event.nativeEvent);
+    // };
+
+    const _onStartInit = () => {
+      onStartInit && onStartInit();
+    };
+
+    const _onFailed = (event: {
+      nativeEvent: { msgId: number; errorId: number };
+    }) => {
+      onFailed && onFailed(event.nativeEvent);
+    };
+
+    const _onDebugState = (event: { nativeEvent: { state: string } }) => {
+      onDebugState && onDebugState(event.nativeEvent);
+    };
+
+    const _onDownloadProgress = (event: {
+      nativeEvent: { progress: number };
+    }) => {
+      onDownloadProgress && onDownloadProgress(event.nativeEvent);
+    };
+
+    const _onDownloadState = (event: {
+      nativeEvent: {
+        downloadState: FUNSDK_DOWNLOAD_STATE_ENUM;
+        fileName: string;
+      };
+    }) => {
+      onDownloadState && onDownloadState(event.nativeEvent);
+    };
+
     useImperativeHandle(
       ref,
       () => {
@@ -341,65 +400,6 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
       },
       []
     );
-
-    const _onMediaPlayState = (
-      event: Parameters<RecordViewNativeProps['onMediaPlayState']>[0]
-    ) => {
-      onMediaPlayState && onMediaPlayState(event.nativeEvent);
-    };
-
-    const _onShowRateAndTime = (
-      event: Parameters<RecordViewNativeProps['onShowRateAndTime']>[0]
-    ) => {
-      onShowRateAndTime && onShowRateAndTime(event.nativeEvent);
-    };
-
-    const _onVideoBufferEnd = (
-      event: Parameters<RecordViewNativeProps['onVideoBufferEnd']>[0]
-    ) => {
-      onVideoBufferEnd && onVideoBufferEnd(event.nativeEvent);
-    };
-
-    const _onSearchRecordByFilesResult = (
-      event: Parameters<RecordViewNativeProps['onSearchRecordByFilesResult']>[0]
-    ) => {
-      onSearchRecordByFilesResult &&
-        onSearchRecordByFilesResult(event.nativeEvent);
-    };
-
-    // const _onSearchRecordByTimesResult = (event: any) => {
-    //   onSearchRecordByTimesResult &&
-    //     onSearchRecordByTimesResult(event.nativeEvent);
-    // };
-
-    const _onStartInit = () => {
-      onStartInit && onStartInit();
-    };
-
-    const _onFailed = (event: {
-      nativeEvent: { msgId: number; errorId: number };
-    }) => {
-      onFailed && onFailed(event.nativeEvent);
-    };
-
-    const _onDebugState = (event: { nativeEvent: { state: string } }) => {
-      onDebugState && onDebugState(event.nativeEvent);
-    };
-
-    const _onDownloadProgress = (event: {
-      nativeEvent: { progress: number };
-    }) => {
-      onDownloadProgress && onDownloadProgress(event.nativeEvent);
-    };
-
-    const _onDownloadState = (event: {
-      nativeEvent: {
-        downloadState: FUNSDK_DOWNLOAD_STATE_ENUM;
-        fileName: string;
-      };
-    }) => {
-      onDownloadState && onDownloadState(event.nativeEvent);
-    };
 
     return (
       <RecordView

@@ -7,6 +7,7 @@ import {
   deleteDevice,
   getDigChannel,
   getChannelInfo,
+  isDeviceFunctionSupport,
 } from 'react-native-funsdk';
 import Base64 from './utils';
 
@@ -119,6 +120,17 @@ const DeviceCard = ({ device }: { device: DetailDeviceType }) => {
                   }
                 }
               )
+            }
+          />
+
+          <TchblButton
+            text="isDeviceFunctionSupport"
+            onPress={() =>
+              actionDevice(isDeviceFunctionSupport, {
+                deviceId: device.devId,
+                functionName: 'OtherFunction',
+                functionCommandStr: 'SDsupportRecord',
+              })
             }
           />
 
