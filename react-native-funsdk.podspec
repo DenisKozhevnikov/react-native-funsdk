@@ -19,10 +19,10 @@ Pod::Spec.new do |s|
   s.dependency "React-Core"
   
   # https://github.com/callstack/react-native-builder-bob/discussions/379
-  s.vendored_frameworks = "https://gitlab.xmcloud.io/demo/FunSDKDemo_iOS/-/tree/master/FunSDKDemo/XMFunSDKDemo/Supporting/library/FunSDK.framework"
-  s.vendored_frameworks = "https://gitlab.xmcloud.io/demo/FunSDKDemo_iOS/-/tree/master/FunSDKDemo/XMFunSDKDemo/Supporting/library/XMNetInterface.framework"
-  # s.vendored_frameworks = "IOSframeworks/FunSDK.framework"
-  # s.vendored_frameworks = "IOSframeworks/XMNetInterface.framework"
+  # s.vendored_frameworks = "https://gitlab.xmcloud.io/demo/FunSDKDemo_iOS/-/tree/master/FunSDKDemo/XMFunSDKDemo/Supporting/library/FunSDK.framework"
+  # s.vendored_frameworks = "https://gitlab.xmcloud.io/demo/FunSDKDemo_iOS/-/tree/master/FunSDKDemo/XMFunSDKDemo/Supporting/library/XMNetInterface.framework"
+  s.vendored_frameworks = "IOSframeworks/FunSDK.framework"
+  s.vendored_frameworks = "IOSframeworks/XMNetInterface.framework"
 
   # Don't install the dependencies when we run `pod install` in the old architecture.
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then

@@ -12,8 +12,13 @@
 //
 //#endif /* Core_h */
 
+#import <Foundation/Foundation.h>
 #import <React/RCTBridgeModule.h>
 
-@interface FunSDKCoreModule : NSObject <RCTBridgeModule>
+NS_ASSUME_NONNULL_BEGIN
+
+@interface FunSDKCoreModule : NSObject<RCTBridgeModule>
 
 @end
+
+NS_ASSUME_NONNULL_END

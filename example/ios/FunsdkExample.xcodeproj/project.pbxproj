@@ -24,6 +24,13 @@
 			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
 			remoteInfo = FunsdkExample;
 		};
+		A223F5452BB1C39600BA6E6C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A223F5402BB1C39600BA6E6C /* Funsdk.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 134814201AA4EA6300B7C361;
+			remoteInfo = Funsdk;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +48,11 @@
 		5B7EB9410499542E8C5724F5 /* Pods-FunsdkExample-FunsdkExampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FunsdkExample-FunsdkExampleTests.debug.xcconfig"; path = "Target Support Files/Pods-FunsdkExample-FunsdkExampleTests/Pods-FunsdkExample-FunsdkExampleTests.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = FunsdkExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-FunsdkExample-FunsdkExampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FunsdkExample-FunsdkExampleTests.release.xcconfig"; path = "Target Support Files/Pods-FunsdkExample-FunsdkExampleTests/Pods-FunsdkExample-FunsdkExampleTests.release.xcconfig"; sourceTree = "<group>"; };
+		A223F53B2BB1C39600BA6E6C /* FunSDKCoreModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKCoreModule.h; sourceTree = "<group>"; };
+		A223F53C2BB1C39600BA6E6C /* FunSDKCoreModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKCoreModule.mm; sourceTree = "<group>"; };
+		A223F53E2BB1C39600BA6E6C /* Funsdk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Funsdk.h; sourceTree = "<group>"; };
+		A223F53F2BB1C39600BA6E6C /* Funsdk.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Funsdk.mm; sourceTree = "<group>"; };
+		A223F5402BB1C39600BA6E6C /* Funsdk.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Funsdk.xcodeproj; sourceTree = "<group>"; };
 		BABABF9CF70765AAB95CE521 /* Pods_FunsdkExample_FunsdkExampleTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FunsdkExample_FunsdkExampleTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBF3FEDC208FDAC9DE294A15 /* Pods_FunsdkExample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FunsdkExample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -116,6 +128,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				A223F5412BB1C39600BA6E6C /* ios */,
 				13B07FAE1A68108700A75B9A /* FunsdkExample */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				00E356EF1AD99517003FC87E /* FunsdkExampleTests */,
@@ -133,6 +146,35 @@
 			children = (
 				13B07F961A680F5B00A75B9A /* FunsdkExample.app */,
 				00E356EE1AD99517003FC87E /* FunsdkExampleTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A223F53D2BB1C39600BA6E6C /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				A223F53B2BB1C39600BA6E6C /* FunSDKCoreModule.h */,
+				A223F53C2BB1C39600BA6E6C /* FunSDKCoreModule.mm */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		A223F5412BB1C39600BA6E6C /* ios */ = {
+			isa = PBXGroup;
+			children = (
+				A223F53D2BB1C39600BA6E6C /* Core */,
+				A223F53E2BB1C39600BA6E6C /* Funsdk.h */,
+				A223F53F2BB1C39600BA6E6C /* Funsdk.mm */,
+				A223F5402BB1C39600BA6E6C /* Funsdk.xcodeproj */,
+			);
+			name = ios;
+			path = ../../ios;
+			sourceTree = "<group>";
+		};
+		A223F5422BB1C39600BA6E6C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A223F5462BB1C39600BA6E6C /* libFunsdk.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -222,6 +264,12 @@
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = A223F5422BB1C39600BA6E6C /* Products */;
+					ProjectRef = A223F5402BB1C39600BA6E6C /* Funsdk.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* FunsdkExample */,
@@ -229,6 +277,16 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		A223F5462BB1C39600BA6E6C /* libFunsdk.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libFunsdk.a;
+			remoteRef = A223F5452BB1C39600BA6E6C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		00E356EC1AD99517003FC87E /* Resources */ = {

@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A2DE94D92BA5F6FC00F0C71D /* FunSDKCoreModule.m in Sources */ = {isa = PBXBuildFile; fileRef = A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.m */; };
+		A2DE94D92BA5F6FC00F0C71D /* FunSDKCoreModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,7 +25,7 @@
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libFunsdk.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFunsdk.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2DE94D72BA5F65D00F0C71D /* FunSDKCoreModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKCoreModule.h; sourceTree = "<group>"; };
-		A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FunSDKCoreModule.m; sourceTree = "<group>"; };
+		A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKCoreModule.mm; sourceTree = "<group>"; };
 		B3E7B5881CC2AC0600A0062D /* Funsdk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Funsdk.h; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* Funsdk.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Funsdk.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -63,7 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				A2DE94D72BA5F65D00F0C71D /* FunSDKCoreModule.h */,
-				A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.m */,
+				A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.mm */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -125,7 +125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A2DE94D92BA5F6FC00F0C71D /* FunSDKCoreModule.m in Sources */,
+				A2DE94D92BA5F6FC00F0C71D /* FunSDKCoreModule.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
