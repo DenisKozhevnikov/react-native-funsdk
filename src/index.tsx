@@ -22,17 +22,17 @@
 // }
 
 export * from './core';
-export * from './register';
-export * from './forget';
-export * from './info';
-export * from './login';
-export * from './modify';
-export * from './device';
-export * from './manager';
+// export * from './register';
+// export * from './forget';
+// export * from './info';
+// export * from './login';
+// export * from './modify';
+// export * from './device';
+// export * from './manager';
 
-// views
-export * from './monitor';
-export * from './record';
+// // views
+// export * from './monitor';
+// export * from './record';
 
-//types
-export * from './types';
+// //types
+// export * from './types';

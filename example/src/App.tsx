@@ -10,23 +10,23 @@ import * as React from 'react';
 // } from 'react-native';
 // import RNFetchBlob from 'rn-fetch-blob';
 
-// import {
-//   funSDKInit,
-//   getUserId,
-//   getUserName,
-//   loginByAccount,
-//   // logout,
-//   registerByNotBind,
-//   getDeviceList,
-//   addDevice,
-//   Monitor,
-//   RecordPlayer,
-//   updateAllDevStateFromServer,
-//   getDetailDeviceList,
-//   loginDeviceWithCredential,
-//   SearcResultRecordFile,
-//   // hasLogin,
-// } from 'react-native-funsdk';
+import {
+  funSDKInit,
+  // getUserId,
+  // getUserName,
+  // loginByAccount,
+  // // logout,
+  // registerByNotBind,
+  // getDeviceList,
+  // addDevice,
+  // Monitor,
+  // RecordPlayer,
+  // updateAllDevStateFromServer,
+  // getDetailDeviceList,
+  // loginDeviceWithCredential,
+  // SearcResultRecordFile,
+  // // hasLogin,
+} from 'react-native-funsdk';
 // import { RecordPage } from './record';
 // import { MonitorPage } from './live';
 // import { WIFIDevice } from './wifi';
@@ -38,7 +38,8 @@ import {
   Text,
   // TouchableOpacity,
 } from 'react-native';
-import { createCalendarEvent } from 'react-native-funsdk';
+
+// import funsdk from 'react-native-funsdk';
 // import { Share } from './share';
 // import { QRCodeDevice } from './qrcode';
 // import { PushInitLink } from './push';
@@ -51,10 +52,15 @@ export default function App() {
       <Text>some random text2</Text>
       <Button
         title="titul"
-        onPress={() =>
-          createCalendarEvent('aba', 'kaba', (num) =>
-            console.log('num is: ', num)
-          )
+        onPress={
+          // () => console.log('dasdas: ', someMethod())
+          () => {
+            funSDKInit((id) => console.log('some id: ', id));
+          }
+          // () => console.log('dasdas: ')
+          // createCalendarEvent('aba', 'kaba', (num) =>
+          //   console.log('num is: ', num)
+          // )
         }
       />
     </SafeAreaView>

@@ -3,13 +3,13 @@ import { NativeModules } from 'react-native';
 const funsdk = NativeModules.FunSDKCoreModule;
 
 // тестовый метод для проверки работоспособности ios
-export function createCalendarEvent(
-  a: string,
-  b: string,
-  cb: (evId: number) => void
-) {
-  return funsdk.createCalendarEvent(a, b, cb);
-}
+// export function createCalendarEvent(
+//   a: string,
+//   b: string,
+//   cb: (evId: number) => void
+// ) {
+//   return funsdk.createCalendarEvent(a, b, cb);
+// }
 
 export enum CUSTOM_PWD_TYPE {
   E_PWD_GENERAL, // Default, universal encryption (MD5 encryption)
@@ -28,9 +28,13 @@ export type FunSDKInitParams = {
 };
 
 // export function funSDKInit(params: FunSDKInitParams): Promise<any> {
-export function funSDKInit(params: FunSDKInitParams = {}): Promise<any> {
+export function funSDKInit(params: (id: number) => void) {
+  // console.log('SAKLDJH');
   return funsdk.init(params);
 }
+// export function funSDKInit(params: FunSDKInitParams = {}): Promise<any> {
+//   return funsdk.init(params);
+// }
 
 export type FunSDKSysSetServerIPPortParams = {
   serverKey:

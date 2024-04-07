@@ -18,28 +18,28 @@
 RCT_EXPORT_MODULE()
 // Тестирование и понимание работы использования нативного кода
 // код взят из: https://reactnative.dev/docs/native-modules-ios#test-what-you-have-built
-RCT_EXPORT_METHOD(createCalendarEvent:(NSString *)title location:(NSString *)location callback: (RCTResponseSenderBlock)callback)
-{
-    NSInteger eventId = 123;
-    callback(@[@(eventId)]);
+//RCT_EXPORT_METHOD(createCalendarEvent:(NSString *)title location:(NSString *)location callback: (RCTResponseSenderBlock)callback)
+//{
+//    NSInteger eventId = 123;
+//    callback(@[@(eventId)]);
+//
+//    RCTLogInfo(@"Pretending to create an event %@ at %@", title, location);
+//}
 
-    RCTLogInfo(@"Pretending to create an event %@ at %@", title, location);
-}
-
-RCT_EXPORT_METHOD(init:(NSString *)title location:(NSString *)location callback: (RCTResponseSenderBlock)callback)
+RCT_EXPORT_METHOD(init: (RCTResponseSenderBlock)callback)
 {
     NSInteger eventId = 123;
     
 
-    RCTLogInfo(@"Pretending to create an event %@ at %@", title, location);
-  
+    RCTLogInfo(@"Pretending to create an event");
+
     SInitParam pa;
   
     pa.nAppType = H264_DVR_LOGIN_TYPE_MOBILE;
     strcpy(pa.sLanguage,"en");
     strcpy(pa.nSource, "xmshop");
   
-//    FUN_Init(0, &pa);
+    FUN_Init(0, &pa);
 
 
   
