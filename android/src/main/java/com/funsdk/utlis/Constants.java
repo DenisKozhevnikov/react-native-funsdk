@@ -39,6 +39,11 @@ public class Constants {
     public static final String FUNCTION_COMMAND_STR = "functionCommandStr";
     public static final String METHOD_NAME = "methodName";
     public static final String SPEED = "speed";
+    public static final String ALARM_TYPE = "alarmType";
+    public static final String ALARM_INFOS = "alarmInfos";
+    public static final String SEARCH_TIME = "searchTime";
+    public static final String SEARCH_DAYS = "searchDays";
+    public static final String DELETE_TYPE = "deleteType";
 
     public static final String APP_UUID = "uuid";
     public static final String APP_KEY = "key";
@@ -53,6 +58,10 @@ public class Constants {
     public static final String PASS_WIFI = "passwordWifi";
 
     public static final String FUN_STR_ATTR = "FunStrAttr";
+
+    public static final String IMAGE_SIZES = "imgSizes";
+    public static final String IMAGE_WIDTH = "imgWidth";
+    public static final String IMAGE_HEIGHT = "imgHeight";
 
     public static BaseAccountManager.OnAccountManagerListener getResultCallback(Promise promise) {
         return new BaseAccountManager.OnAccountManagerListener() {

@@ -25,6 +25,10 @@ import com.manager.account.XMAccountManager;
 
 import com.funsdk.utils.Constants;
 
+import static com.manager.push.XMPushManager.PUSH_TYPE_XM;
+import static com.manager.push.XMPushManager.PUSH_TYPE_GOOGLE;
+import static com.manager.push.XMPushManager.PUSH_TYPE_GOOGLE_V2;
+
 public class FunSDKPushMessageModule extends ReactContextBaseJavaModule implements XMPushManager.OnXMPushLinkListener {
   private ReactApplicationContext reactContext;
   private XMPushManager manager;
@@ -83,6 +87,26 @@ public class FunSDKPushMessageModule extends ReactContextBaseJavaModule implemen
     System.out.println("success init?");
   }
 
+  @ReactMethod
+  public void initGoogleV2FunSDKPush(ReadableMap params, Promise promise) {
+    manager = new XMPushManager(this);
+
+    // String devId = params.getString(Constants.DEVICE_ID);
+    // String token = params.getString(Constants.TOKEN);
+    // int pushType = params.getInt("type");
+
+    // SMCInitInfo info = new SMCInitInfo();
+
+    // G.SetValue(info.st_0_user, XMAccountManager.getInstance().getAccountName());
+    // G.SetValue(info.st_1_password, XMAccountManager.getInstance().getPassword());
+    // G.SetValue(info.st_2_token, token);
+
+    // manager.initFunSDKPush((Context) reactContext, info, pushType);
+    // manager.linkAlarm(devId, 0);
+
+    // System.out.println("success init?");
+  }
+
   public String getDevId() {
     return devId;
   }
@@ -107,54 +131,67 @@ public class FunSDKPushMessageModule extends ReactContextBaseJavaModule implemen
   }
 
   @Override
-  public void onPushInit(int i, int i1) {
-    System.out.println("onPushInit: " + i + i1);
+  public void onPushInit(int pushType, int errorId) {
+    if (errorId >= 0) {
+      System.out.println("onPush 推送初始化成功:" + pushType);
+    } else {
+      System.out.println("onPush 推送初始化失败:" + errorId);
+    }
   }
 
   @Override
-  public void onPushLink(int i, String s, int i1, int i2) {
-    System.out.println("onPushLink: " + i + " s: " + s + " i1: " + i1 + " i2: " + i2);
-
+  public void onPushLink(int pushType, String devId, int seq, int errorId) {
+    if (errorId >= 0) {
+      System.out.println("推送订阅成功:" + devId + " pushType: " + pushType + " seq: " + seq);
+    } else {
+      System.out.println("推送订阅失败:" + devId + ":" + errorId + " pushType: " + pushType + " seq: " + seq);
+    }
   }
 
   @Override
-  public void onPushUnLink(int i, String s, int i1, int i2) {
-    System.out.println("onPushUnLink: " + i + s + i1 + i2);
+  public void onPushUnLink(int pushType, String devId, int seq, int errorId) {
+    if (errorId >= 0) {
+      System.out.println("取消订阅成功:" + devId + " pushType: " + pushType + " seq: " + seq);
+    } else {
+      System.out.println("取消订阅失败:" + devId + ":" + errorId + " pushType: " + pushType + " seq: " + seq);
+    }
   }
 
   @Override
-  public void onIsPushLinkedFromServer(int i, String s, boolean isLinked) {// The callback to isPushOpen()
+  public void onIsPushLinkedFromServer(int pushType, String devId, boolean isLinked) {// The callback to isPushOpen()
     // if (iDevPushView != null) {
     // iDevPushView.onPushStateResult(isLinked);
     // }
-    System.out.println("onIsPushLinkedFromServer: " + Boolean.toString(isLinked));
-    System.out.println("onIsPushLinkedFromServer: " + i + s);
+    System.out.println("onPush onIsPushLinkedFromServer: " + Boolean.toString(isLinked));
+    System.out.println("onPush onIsPushLinkedFromServer: " + pushType + " devId: " + devId);
   }
 
   @Override
-  public void onAlarmInfo(int i, String s, Message message, MsgContent msgContent) {
-    System.out.println("onAlarmInfo: " + i + s);
+  public void onAlarmInfo(int pushType, String devId, Message message, MsgContent msgContent) {
+    String pushMsg = G.ToString(msgContent.pData);
+    System.out.println("onPush onAlarmInfo 接收到报警消息:" + pushMsg + " pushType: " + pushType + " devId: " + devId);
   }
 
   @Override
   public void onLinkDisconnect(int i, String s) {
-    System.out.println("onLinkDisconnect: " + i + s);
+    System.out.println("onPush onLinkDisconnect: " + i + s);
   }
 
   @Override
   public void onWeChatState(String s, int i, int i1) {
-    System.out.println("onWeChatState: " + i + s + i1);
+    System.out.println("onPush onWeChatState: " + i + s + i1);
   }
 
   @Override
-  public void onThirdPushState(String s, int i, int i1, int i2) {
-    System.out.println("onThirdPushState: " + s + i + i1 + i2);
+  public void onThirdPushState(String info, int pushType, int state, int errorId) {
+    System.out.println(
+        "onPush onThirdPushState: " + info + " pushType: " + pushType + " state: " + state + " errorId: " + errorId);
 
   }
 
   @Override
   public void onAllUnLinkResult() {
-    System.out.println("onAllUnLinkResult: ");
+    System.out.println("onPush onAllUnLinkResult: ");
 
   }
 

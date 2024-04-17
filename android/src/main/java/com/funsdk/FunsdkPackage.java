@@ -24,6 +24,7 @@ import com.funsdk.user.device.add.share.FunSDKDevShareManagerModule;
 import com.funsdk.user.device.add.qrcode.FunSDKDevQRCodeConnectModule;
 import com.funsdk.user.device.add.sn.FunSDKDevSnConnectModule;
 import com.funsdk.user.device.status.FunSDKDevStatusModule;
+import com.funsdk.user.device.alarm.FunSDKDevAlarmModule;
 import com.funsdk.manager.image.FunSDKDeviceImageModule;
 import com.funsdk.manager.search.FunSDKDeviceSearchByTime;
 import com.funsdk.manager.push.FunSDKPushMessageModule;
@@ -53,6 +54,7 @@ public class FunsdkPackage implements ReactPackage {
     modules.add(new FunSDKDevQRCodeConnectModule(reactContext));
     modules.add(new FunSDKPushMessageModule(reactContext));
     modules.add(new FunSDKDevShareManagerModule(reactContext));
+    modules.add(new FunSDKDevAlarmModule(reactContext));
 
     return modules;
   }
