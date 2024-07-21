@@ -28,11 +28,11 @@ import * as React from 'react';
 //   // hasLogin,
 // } from 'react-native-funsdk';
 // import { RecordPage } from './record';
-// import { MonitorPage } from './live';
+import { MonitorPage } from './live';
 // import { WIFIDevice } from './wifi';
 import { useInit } from './init';
 import { ScrollView, Text, TouchableOpacity } from 'react-native';
-import { Alarms } from './alarms';
+// import { Alarms } from './alarms';
 // import { DeviceList } from './list';
 // import { Share } from './share';
 // import { QRCodeDevice } from './qrcode';
@@ -46,13 +46,13 @@ export default function App() {
   return (
     <>
       {/* <RecordPage /> */}
-      {/* <MonitorPage isInit={isInit} /> */}
+      <MonitorPage isInit={isInit} />
       {/* <WIFIDevice /> */}
       {/* <QRCodeDevice /> */}
       {/* <PushInitLink /> */}
       {/* <Share /> */}
       {/* <DeviceList /> */}
-      <Alarms />
+      {/* <Alarms /> */}
       <ScrollView
         // pointerEvents="none"
         // contentContainerStyle={{ height: 50 }}

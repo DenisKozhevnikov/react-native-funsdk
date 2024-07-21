@@ -26,6 +26,7 @@ public class FunSDKVideoEventEmitter {
   public static final String EVENT_SHOW_RATE_AND_TIME = "onShowRateAndTime";
   public static final String EVENT_VIDEO_BUFFER_END = "onVideoBufferEnd";
   public static final String EVENT_GET_INFO = "onGetInfo";
+  public static final String EVENT_CAPTURE_PATH = "onCapture";
 
   public static final String EVENT_DEBUG_STATE = "onDebugState";
 
@@ -37,6 +38,7 @@ public class FunSDKVideoEventEmitter {
       EVENT_SHOW_RATE_AND_TIME,
       EVENT_VIDEO_BUFFER_END,
       EVENT_GET_INFO,
+      EVENT_CAPTURE_PATH
   };
 
   @interface VideoEvents {

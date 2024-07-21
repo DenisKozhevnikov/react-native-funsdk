@@ -203,10 +203,12 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
     }
   }
 
-  public void captureImage(String path) {
+  public String captureImage(String path) {
     if (mediaManager != null) {
-      String answer = mediaManager.capture(path);
+      return mediaManager.capture(path);
     }
+
+    return null;
   }
 
   public void startVideoRecord(String path) {
@@ -455,6 +457,12 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
 
   public void onPlayStateClick(View view) {
     // в библиотеке тут пусто
+  }
+
+  public void onCapture(String path) {
+    WritableMap map = Arguments.createMap();
+    map.putString("path", path);
+    eventEmitter.sendEvent(map, FunSDKVideoEventEmitter.EVENT_CAPTURE_PATH);
   }
 
   public interface OnMediaManagerListener {

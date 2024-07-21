@@ -52,6 +52,7 @@ export type MonitorViewNativeProps = ViewProps & {
   }) => void;
   onStartInit: (event: { nativeEvent: {} }) => void;
   onDebugState: (event: { nativeEvent: { state: string } }) => void;
+  onCapture: (event: { nativeEvent: { path: string } }) => void;
 };
 
 export const MonitorView =
@@ -81,6 +82,7 @@ type MonitorProps = ViewProps & {
   onGetInfo?: (obj: { type: 'streamType'; streamType: number }) => void;
   onFailed?: (obj: { msgId: number; errorId: number }) => void;
   onDebugState?: (obj: { state: string }) => void;
+  onCapture?: (obj: { path: string }) => void;
 };
 
 export class Monitor extends React.Component<MonitorProps, any> {
@@ -351,6 +353,10 @@ export class Monitor extends React.Component<MonitorProps, any> {
     this.props?.onDebugState && this.props?.onDebugState(event.nativeEvent);
   };
 
+  _onCapture = (event: { nativeEvent: { path: string } }) => {
+    this.props?.onCapture && this.props?.onCapture(event.nativeEvent);
+  };
+
   render() {
     return (
       <MonitorView
@@ -364,6 +370,7 @@ export class Monitor extends React.Component<MonitorProps, any> {
         onGetInfo={this._onGetInfo}
         onFailed={this._onFailed}
         onDebugState={this._onDebugState}
+        onCapture={this._onCapture}
       />
     );
   }

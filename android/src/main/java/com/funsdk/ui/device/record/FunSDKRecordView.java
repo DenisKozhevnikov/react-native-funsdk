@@ -294,8 +294,8 @@ public class FunSDKRecordView extends LinearLayout
   // recordManager.seekToTime(times, absTime);
   // }
 
-  public void capture(String path) {
-    recordManager.capture(path);
+  public String capture(String path) {
+    return recordManager.capture(path);
   }
 
   public void startRecord(String path) {
@@ -740,6 +740,12 @@ public class FunSDKRecordView extends LinearLayout
     map.putInt("downloadState", downloadState);
     map.putString("fileName", fileName);
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_DOWNLOAD_STATE);
+  }
+
+  public void onCapture(String path) {
+    WritableMap map = Arguments.createMap();
+    map.putString("path", path);
+    eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_CAPTURE_PATH);
   }
 
   // слушатель для downloadmanager

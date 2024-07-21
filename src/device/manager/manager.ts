@@ -2,6 +2,7 @@ import { NativeModules } from 'react-native';
 import type {
   DeviceCredentialParams,
   DeviceIdParams,
+  DeviceInfoType,
   DeviceManagerPromiseSuccessType,
   EPTZCMD,
 } from './types';
@@ -14,9 +15,12 @@ export function loginDevice(
   return funsdk.loginDevice(params);
 }
 
+export type LoginDeviceWithCredentialResponse =
+  DeviceManagerPromiseSuccessType & DeviceInfoType;
+
 export function loginDeviceWithCredential(
   params: DeviceCredentialParams
-): Promise<DeviceManagerPromiseSuccessType> {
+): Promise<LoginDeviceWithCredentialResponse> {
   return funsdk.loginDeviceWithCredential(params);
 }
 

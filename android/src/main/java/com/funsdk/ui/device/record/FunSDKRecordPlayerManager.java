@@ -176,7 +176,8 @@ public class FunSDKRecordPlayerManager extends SimpleViewManager<FunSDKRecordVie
 
     if (commandId == COMMAND_CAPTURE_ID) {
       String path = args.getString(0);
-      view.capture(path);
+      String savedPath = view.capture(path);
+      view.onCapture(savedPath);
     }
 
     if (commandId == COMMAND_START_RECORD_ID) {

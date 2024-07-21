@@ -139,7 +139,12 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     }
     if (commandId == COMMAND_CAPTURE_IMAGE_ID) {
       String path = args.getString(0);
-      view.captureImage(path);
+      String savedPath = view.captureImage(path);
+
+      System.out.println("funsdk captureImage path: " + savedPath);
+      if (savedPath != null) {
+        view.onCapture(savedPath);
+      }
     }
     if (commandId == COMMAND_START_VIDEO_RECORD_ID) {
       String path = args.getString(0);

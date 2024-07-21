@@ -25,6 +25,7 @@ import {
 } from 'react-native-funsdk';
 import { DEVICE_ID } from '../topsecret';
 import { MonitorView } from './MonitorView';
+import { handleImageSaver } from './ImageSaver';
 
 export const monitorsList = new Map<number, React.RefObject<Monitor>>();
 
@@ -49,9 +50,12 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
   const handleDeviceLogin = async () => {
     try {
       const digChannelResult = await getDigChannel({ deviceId: DEVICE_ID });
-
       if (typeof digChannelResult.value === 'number') {
-        setNumberOfCameras(digChannelResult.value);
+        if (digChannelResult.value === 0) {
+          setNumberOfCameras(1);
+        } else {
+          setNumberOfCameras(digChannelResult.value);
+        }
       }
 
       setIsLogged(true);
@@ -156,6 +160,12 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
     // monitorRef2.current?.playVideo();
   };
 
+  const handleCapture = () => {
+    handleImageSaver(DEVICE_ID, activeChannel, (path) => {
+      getMonitor(activeChannel)?.current?.captureImage(path);
+    });
+  };
+
   if (!isInit) {
     return null;
   }
@@ -172,8 +182,28 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
 
   return (
     <View style={styles.container}>
-      <View style={{ marginTop: 30, flexDirection: 'row', flexWrap: 'wrap' }}>
+      <ScrollView
+        style={{
+          marginTop: 30,
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          height: 400,
+          backgroundColor: 'blue',
+        }}
+      >
         {!!numberOfCameras &&
+          [...Array(numberOfCameras >= 3 ? 3 : numberOfCameras).keys()].map(
+            (val) => (
+              <MonitorView
+                key={val}
+                devId={DEVICE_ID}
+                channelId={val}
+                isActive={activeChannel === val}
+                onPress={() => setActiveChannel(val)}
+              />
+            )
+          )}
+        {/* {!!numberOfCameras &&
           [...Array(numberOfCameras).keys()].map((val) => (
             <MonitorView
               key={val}
@@ -182,9 +212,12 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
               isActive={activeChannel === val}
               onPress={() => setActiveChannel(val)}
             />
-          ))}
-      </View>
+          ))} */}
+      </ScrollView>
       <ScrollView>
+        <TouchableOpacity onPress={handleCapture} style={styles.button}>
+          <Text style={styles.buttonText}>capture image</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={startPlay} style={styles.button}>
           <Text style={styles.buttonText}>startPlay</Text>
         </TouchableOpacity>

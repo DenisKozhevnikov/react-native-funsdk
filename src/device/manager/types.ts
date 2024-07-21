@@ -132,3 +132,27 @@ export enum EFUN_ATTR {
   EDA_DEV_TANSPORT_COM_WRITE = 8,
   EDA_NET_KEY_CLICK = 9,
 }
+
+export type DeviceInfoType = {
+  HardWareVersion: string;
+  TalkInChannel: number;
+  DeviceRunTime: string;
+  DigChannel: number;
+  ExtraChannel: number;
+  VideoInChannel: number;
+  TalkOutChannel: number;
+  AudioInChannel: number;
+  DeviceType: number;
+  HardWare: string;
+  AlarmOutChannel: number;
+  UpdataType: string;
+  VideoOutChannel: number;
+  UpdataTime: string;
+  BuildTime: string;
+  EncryptVersion: string;
+  AlarmInChannel: number;
+  CombineSwitch: number;
+  SerialNo: string;
+  SoftWareVersion: string;
+  DeviceModel: string;
+};

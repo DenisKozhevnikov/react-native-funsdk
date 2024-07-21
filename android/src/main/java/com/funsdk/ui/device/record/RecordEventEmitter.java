@@ -29,6 +29,7 @@ public class RecordEventEmitter {
   public static final String EVENT_START_INIT = "onStartInit";
   public static final String EVENT_DOWNLOAD_PROGRESS = "onDownloadProgress";
   public static final String EVENT_DOWNLOAD_STATE = "onDownloadState";
+  public static final String EVENT_CAPTURE_PATH = "onCapture";
 
   public static final String EVENT_DEBUG_STATE = "onDebugState";
 
@@ -42,7 +43,8 @@ public class RecordEventEmitter {
       EVENT_START_INIT,
       EVENT_DEBUG_STATE,
       EVENT_DOWNLOAD_PROGRESS,
-      EVENT_DOWNLOAD_STATE
+      EVENT_DOWNLOAD_STATE,
+      EVENT_CAPTURE_PATH
   };
 
   // понять зачем это надо

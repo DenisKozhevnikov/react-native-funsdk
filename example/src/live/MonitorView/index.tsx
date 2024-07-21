@@ -47,7 +47,8 @@ export const MonitorView = forwardRef<
       style={{
         padding: 5,
         backgroundColor: isActive ? 'red' : 'transparent',
-        width: isActive ? '100%' : '25%',
+        width: 150,
+        height: (150 / 16) * 9,
         // backgroundColor: activeChannel === 0 ? 'red' : 'transparent',
       }}
     >
@@ -64,6 +65,7 @@ export const MonitorView = forwardRef<
         onVideoBufferEnd={(obj) => console.log('onVideoBufferEnd: ', obj)}
         onGetInfo={(obj) => console.log(obj)}
         onFailed={(obj) => console.log('onFailed: ', obj)}
+        onCapture={(obj) => console.log('onCapture: ', obj)}
         onDebugState={(obj) => console.log('onDebugState: ', obj)}
       />
     </TouchableOpacity>
