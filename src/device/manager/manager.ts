@@ -16,7 +16,7 @@ export function loginDevice(
 }
 
 export type LoginDeviceWithCredentialResponse =
-  DeviceManagerPromiseSuccessType & DeviceInfoType;
+  DeviceManagerPromiseSuccessType & { value: DeviceInfoType };
 
 export function loginDeviceWithCredential(
   params: DeviceCredentialParams
