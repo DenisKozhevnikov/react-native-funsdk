@@ -166,6 +166,12 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
     });
   };
 
+  const handleChangeVideoRatio = () => {
+    handleImageSaver(DEVICE_ID, activeChannel, () => {
+      getMonitor(activeChannel)?.current?.changeVideoRatio();
+    });
+  };
+
   if (!isInit) {
     return null;
   }
@@ -215,6 +221,12 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
           ))} */}
       </ScrollView>
       <ScrollView>
+        <TouchableOpacity
+          onPress={handleChangeVideoRatio}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>change video ratio</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={handleCapture} style={styles.button}>
           <Text style={styles.buttonText}>capture image</Text>
         </TouchableOpacity>

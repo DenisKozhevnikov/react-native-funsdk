@@ -31,6 +31,7 @@ const Commands = {
   setVideoFullScreen: 'setVideoFullScreen',
   capturePicFromDevAndSave: 'capturePicFromDevAndSave',
   seekToTime: 'seekToTime',
+  changeVideoRatio: 'changeVideoRatio',
 } as const;
 
 export type MonitorViewNativeProps = ViewProps & {
@@ -305,6 +306,16 @@ export class Monitor extends React.Component<MonitorProps, any> {
     }
 
     dispatchCommand(viewId, Commands.capturePicFromDevAndSave);
+  }
+
+  changeVideoRatio() {
+    const viewId = findNodeHandle(this.myRef.current);
+
+    if (typeof viewId !== 'number') {
+      return;
+    }
+
+    dispatchCommand(viewId, Commands.changeVideoRatio);
   }
 
   // seekToTime() {

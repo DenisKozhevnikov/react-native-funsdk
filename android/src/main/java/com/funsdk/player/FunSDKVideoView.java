@@ -338,6 +338,13 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
     }
   }
 
+  public void changeVideoRatio() {
+    if (mediaManager != null) {
+      mediaManager.setVideoFullScreen(false);
+      // mediaManager.setVideoFullScreen(true);
+    }
+  }
+
   // public void seekToTime() {
   // int times = 150;
   // Calendar searchTime = Calendar.getInstance();

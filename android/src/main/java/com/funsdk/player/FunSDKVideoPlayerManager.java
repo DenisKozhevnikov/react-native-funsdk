@@ -59,6 +59,8 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
   private static final int COMMAND_GET_STREAM_TYPE_ID = 18;
   private static final String COMMAND_SEEK_TO_TIME = "seekToTime";
   private static final int COMMAND_SEEK_TO_TIME_ID = 19;
+  private static final String COMMAND_CHANGE_VIDEO_RATIO = "changeVideoRatio";
+  private static final int COMMAND_CHANGE_VIDEO_RATIO_ID = 20;
 
   ReactApplicationContext mCallerContext;
 
@@ -111,6 +113,7 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     commandsMap.put(COMMAND_UPDATE_STREAM_TYPE_MONITOR, COMMAND_UPDATE_STREAM_TYPE_MONITOR_ID);
     commandsMap.put(COMMAND_SET_VIDEO_FULLSCREEN, COMMAND_SET_VIDEO_FULLSCREEN_ID);
     commandsMap.put(COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE, COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE_ID);
+    commandsMap.put(COMMAND_CHANGE_VIDEO_RATIO, COMMAND_CHANGE_VIDEO_RATIO_ID);
 
     return commandsMap;
   }
@@ -194,6 +197,9 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     }
     if (commandId == COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE_ID) {
       view.capturePicFromDevAndSave();
+    }
+    if (commandId == COMMAND_CHANGE_VIDEO_RATIO_ID) {
+      view.changeVideoRatio();
     }
   }
 

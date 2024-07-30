@@ -3,6 +3,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
 } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import { Monitor, STREAM_TYPE } from 'react-native-funsdk';
@@ -40,6 +41,16 @@ export const MonitorView = forwardRef<
     monRef.current?.playVideo();
   }, [isActive]);
 
+  const [width, setWidth] = useState(150);
+  const [height, setHeight] = useState((150 / 16) * 9);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setWidth(300);
+      setHeight((300 / 16) * 9);
+    }, 3000);
+  }, []);
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -47,8 +58,8 @@ export const MonitorView = forwardRef<
       style={{
         padding: 5,
         backgroundColor: isActive ? 'red' : 'transparent',
-        width: 150,
-        height: (150 / 16) * 9,
+        width,
+        height,
         // backgroundColor: activeChannel === 0 ? 'red' : 'transparent',
       }}
     >
