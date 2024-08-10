@@ -54,7 +54,7 @@ export const RecordButtons = ({
     // 60 - 1 час
     // 24 - 1 сутки
     // 3 - 3 дня
-    const start = Date.now() - 1000 * 60 * 60 * 24 * 30;
+    const start = Date.now() - 1000 * 60 * 60 * 24 * 2;
     const end = Date.now() - 1000 * 60 * 60 * 24;
 
     playerRef?.searchRecordByFile(start, end);

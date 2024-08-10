@@ -191,6 +191,12 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
     // System.out.println("onFunSDKResult message " + message.what);
     switch (message.what) {
       case EUIMSG.DOWN_RECODE_BPIC_START: // Начнется загрузка миниатюр видео
+        // if (msgContent.pData == null) {
+        // DownItemData downItemData = mDownloadResultMap.get(msgContent.seq);
+
+        // downItemData.mListener.onDownloadResult(false, null,
+        // downItemData.mType, msgContent.seq);
+        // }
         // System.out.println("image load start");
         break;
       case EUIMSG.DOWN_RECODE_BPIC_FILE: // Загрузка миниатюр видео – возвращены результаты загрузки файла.

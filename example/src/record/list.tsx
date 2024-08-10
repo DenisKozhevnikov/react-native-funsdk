@@ -69,7 +69,7 @@ const RecordItem = ({
           mSaveImageDir: `${folder}/${DEVICE_ID}`,
           seq: index,
         });
-
+        console.log('downloadInfo:', downloadInfo);
         setThumbLink(downloadInfo.imagePath);
       } catch (error) {
         console.log('handleLoadThumb error: ', error);

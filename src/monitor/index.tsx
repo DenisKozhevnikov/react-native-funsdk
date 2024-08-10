@@ -70,7 +70,7 @@ const dispatchCommand = (viewId: number, command: string, args: any[] = []) => {
   );
 };
 
-type MonitorProps = ViewProps & {
+export type MonitorProps = ViewProps & {
   devId: string;
   channelId: number;
   streamType?: STREAM_TYPE;
