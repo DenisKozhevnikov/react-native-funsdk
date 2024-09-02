@@ -32,17 +32,17 @@ export const MonitorView = forwardRef<
     monitorsList.set(channelId, monRef);
   }, [channelId]);
 
-  // useEffect(() => {
-  //   monRef.current?.playVideo();
-  // }, []);
-
   useEffect(() => {
-    monRef.current?.stopVideo();
     monRef.current?.playVideo();
-  }, [isActive]);
+  }, []);
 
-  const [width, setWidth] = useState(150);
-  const [height, setHeight] = useState((150 / 16) * 9);
+  // useEffect(() => {
+  //   monRef.current?.stopVideo();
+  //   monRef.current?.playVideo();
+  // }, [isActive]);
+
+  const [width, setWidth] = useState(200);
+  const [height, setHeight] = useState((200 / 16) * 9);
 
   useEffect(() => {
     setTimeout(() => {
@@ -50,7 +50,7 @@ export const MonitorView = forwardRef<
       setHeight((300 / 16) * 9);
     }, 3000);
   }, []);
-
+  // console.log('devId: ', devId);
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -69,7 +69,7 @@ export const MonitorView = forwardRef<
         streamType={STREAM_TYPE.EXTRA}
         style={styles.monitor}
         ref={monRef}
-        onLayout={(event) => console.log('event: ', event.nativeEvent)}
+        // onLayout={(event) => console.log('event: ', event.nativeEvent)}
         onStartInit={() => console.log(`START INIT ${channelId} CAMERA`)}
         onMediaPlayState={(obj) => console.log('onMediaPlayState: ', obj)}
         onShowRateAndTime={(obj) => console.log('onShowRateAndTime: ', obj)}

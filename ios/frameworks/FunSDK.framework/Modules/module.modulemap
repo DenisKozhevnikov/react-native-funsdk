@@ -1,0 +1,6 @@
+framework module FunSDK {
+  umbrella header "FunSDK.h"
+  export *
+
+  module * { export * }
+}

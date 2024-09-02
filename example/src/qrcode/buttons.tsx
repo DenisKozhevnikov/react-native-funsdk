@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   FlatList,
-  Image,
+  // Image,
   Text,
   TextInput,
   TouchableOpacity,
@@ -9,17 +9,17 @@ import {
 } from 'react-native';
 import { styles } from '../styles';
 import { askPermissionLocation } from '../utils/permisiion';
-import {
-  // LoadTestPushData,
-  OnAddQRDeviceStatusType,
-  QRCodeListenersEnum,
-  // closePush,
-  // isPushOpen,
-  // openPush,
-  qrCodeEventEmitter,
-  startSetByQRCode,
-  stopSetByQRCode,
-} from 'react-native-funsdk';
+// import {
+//   // LoadTestPushData,
+//   OnAddQRDeviceStatusType,
+//   QRCodeListenersEnum,
+//   // closePush,
+//   // isPushOpen,
+//   // openPush,
+//   qrCodeEventEmitter,
+//   startSetByQRCode,
+//   stopSetByQRCode,
+// } from 'react-native-funsdk';
 
 const Button = ({ onPress, text }: { onPress: () => void; text: string }) => {
   return (
@@ -32,21 +32,21 @@ const Button = ({ onPress, text }: { onPress: () => void; text: string }) => {
 export const Buttons = () => {
   const [ConnectStatus, setConnectStatus] = useState<any[]>([]);
   const [wifiPassword, setWifiPassword] = useState('');
-  const [base64Image, setBase64Image] = useState('');
+  // const [base64Image, setBase64Image] = useState('');
 
   const handleGetQRAndStartFindDevice = async () => {
     setConnectStatus([]);
     await askPermissionLocation();
-    startSetByQRCode({
-      passwordWifi: wifiPassword,
-      isDevDeleteFromOthersUsers: false,
-    });
+    // startSetByQRCode({
+    //   passwordWifi: wifiPassword,
+    //   isDevDeleteFromOthersUsers: false,
+    // });
   };
 
   const stopFindByQRDevice = async () => {
     await askPermissionLocation();
-    const res = await stopSetByQRCode();
-    console.log('res: ', res);
+    // const res = await stopSetByQRCode();
+    // console.log('res: ', res);
     setConnectStatus((prev) => {
       return [...prev, 'поиск остановлен'];
     });
@@ -65,39 +65,39 @@ export const Buttons = () => {
   //   isPushOpen();
   // };
 
-  useEffect(() => {
-    // debug
-    let eventListener = qrCodeEventEmitter.addListener(
-      QRCodeListenersEnum.ON_SET_WIFI,
-      (event) => {
-        console.log('eventListener: ', event); // "someValue"
-        setConnectStatus((prev) => {
-          return [...prev, JSON.stringify(event)];
-        });
-      }
-    );
+  // useEffect(() => {
+  //   // debug
+  //   let eventListener = qrCodeEventEmitter.addListener(
+  //     QRCodeListenersEnum.ON_SET_WIFI,
+  //     (event) => {
+  //       console.log('eventListener: ', event); // "someValue"
+  //       setConnectStatus((prev) => {
+  //         return [...prev, JSON.stringify(event)];
+  //       });
+  //     }
+  //   );
 
-    let eventDeviceListener = qrCodeEventEmitter.addListener(
-      QRCodeListenersEnum.ON_ADD_DEVICE_STATUS,
-      (event: OnAddQRDeviceStatusType) => {
-        if (event.base64Image) {
-          console.log('eventDeviceListener: ', event); // "someValue"
-          setBase64Image(event.base64Image);
-        } else {
-          console.log('eventDeviceListener: ', event); // "someValue"
-          setConnectStatus((prev) => {
-            return [...prev, JSON.stringify(event)];
-          });
-        }
-      }
-    );
+  //   let eventDeviceListener = qrCodeEventEmitter.addListener(
+  //     QRCodeListenersEnum.ON_ADD_DEVICE_STATUS,
+  //     (event: OnAddQRDeviceStatusType) => {
+  //       if (event.base64Image) {
+  //         console.log('eventDeviceListener: ', event); // "someValue"
+  //         setBase64Image(event.base64Image);
+  //       } else {
+  //         console.log('eventDeviceListener: ', event); // "someValue"
+  //         setConnectStatus((prev) => {
+  //           return [...prev, JSON.stringify(event)];
+  //         });
+  //       }
+  //     }
+  //   );
 
-    // Removes the listener once unmounted
-    return () => {
-      eventListener.remove();
-      eventDeviceListener.remove();
-    };
-  }, []);
+  //   // Removes the listener once unmounted
+  //   return () => {
+  //     eventListener.remove();
+  //     eventDeviceListener.remove();
+  //   };
+  // }, []);
 
   return (
     <>
@@ -127,7 +127,7 @@ export const Buttons = () => {
         }}
       />
       {/* base64img */}
-      {base64Image && (
+      {/* {base64Image && (
         <Image
           source={{
             uri: `data:image/jpg;base64,${base64Image}`,
@@ -135,7 +135,7 @@ export const Buttons = () => {
           resizeMode="cover"
           style={{ width: 200, height: 200 }}
         />
-      )}
+      )} */}
       <FlatList
         data={ConnectStatus}
         renderItem={({ item, index }) => {

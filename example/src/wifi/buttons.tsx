@@ -7,11 +7,11 @@ import {
   View,
 } from 'react-native';
 import {
-  WiFiListenersEnum,
+  // WiFiListenersEnum,
   deleteDevice,
-  startSetWiFi,
-  stopSetWiFi,
-  wifiEventEmitter,
+  // startSetWiFi,
+  // stopSetWiFi,
+  // wifiEventEmitter,
 } from 'react-native-funsdk';
 import { styles } from '../styles';
 import { askPermissionLocation } from '../utils/permisiion';
@@ -31,47 +31,45 @@ export const Buttons = () => {
   const handleFindDevice = async () => {
     setWifiConnectStatus([]);
     await askPermissionLocation();
-    startSetWiFi({
-      passwordWifi: wifiPassword,
-      isDevDeleteFromOthersUsers: false,
-    });
+    // startSetWiFi({
+    //   passwordWifi: wifiPassword,
+    //   isDevDeleteFromOthersUsers: false,
+    // });
   };
 
   const stopFindDevice = async () => {
     await askPermissionLocation();
-    const res = await stopSetWiFi();
-    console.log('res: ', res);
+    // const res = await stopSetWiFi();
+    // console.log('res: ', res);
     setWifiConnectStatus((prev) => {
       return [...prev, 'поиск остановлен'];
     });
   };
 
   useEffect(() => {
-    let eventListener = wifiEventEmitter.addListener(
-      WiFiListenersEnum.ON_SET_WIFI,
-      (event) => {
-        console.log('eventListener: ', event); // "someValue"
-        setWifiConnectStatus((prev) => {
-          return [...prev, JSON.stringify(event)];
-        });
-      }
-    );
-
-    let eventDeviceListener = wifiEventEmitter.addListener(
-      WiFiListenersEnum.ON_ADD_DEVICE_STATUS,
-      (event) => {
-        console.log('eventDeviceListener: ', event); // "someValue"
-        setWifiConnectStatus((prev) => {
-          return [...prev, JSON.stringify(event)];
-        });
-      }
-    );
-
+    // let eventListener = wifiEventEmitter.addListener(
+    //   WiFiListenersEnum.ON_SET_WIFI,
+    //   (event) => {
+    //     console.log('eventListener: ', event); // "someValue"
+    //     setWifiConnectStatus((prev) => {
+    //       return [...prev, JSON.stringify(event)];
+    //     });
+    //   }
+    // );
+    // let eventDeviceListener = wifiEventEmitter.addListener(
+    //   WiFiListenersEnum.ON_ADD_DEVICE_STATUS,
+    //   (event) => {
+    //     console.log('eventDeviceListener: ', event); // "someValue"
+    //     setWifiConnectStatus((prev) => {
+    //       return [...prev, JSON.stringify(event)];
+    //     });
+    //   }
+    // );
     // Removes the listener once unmounted
-    return () => {
-      eventListener.remove();
-      eventDeviceListener.remove();
-    };
+    // return () => {
+    //   eventListener.remove();
+    //   eventDeviceListener.remove();
+    // };
   }, []);
 
   return (

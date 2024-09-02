@@ -12,14 +12,14 @@ export enum CUSTOM_PWD_TYPE {
 }
 
 export type FunSDKInitParams = {
-  customPwdType?: CUSTOM_PWD_TYPE | number; // 0
-  customPwd?: string;
-  customServerAddr?: string;
-  customPort?: number;
+  customPwdType: CUSTOM_PWD_TYPE | number; // 0
+  customPwd: string;
+  customServerAddr: string;
+  customPort: number;
 };
 
 // export function funSDKInit(params: FunSDKInitParams): Promise<any> {
-export function funSDKInit(params: FunSDKInitParams = {}): Promise<any> {
+export function funSDKInit(params: FunSDKInitParams): Promise<any> {
   return funsdk.init(params);
 }
 
@@ -52,8 +52,8 @@ export type FunSDKSysSetServerIPPortParams = {
     , 'UPGRADE_SERVER'
     , 'CAPS_SERVER'
  */
-export function funSDKSysSetServerIPPort(
-  params: FunSDKSysSetServerIPPortParams
-) {
-  funsdk.SysSetServerIPPort(params);
-}
+// export function funSDKSysSetServerIPPort(
+//   params: FunSDKSysSetServerIPPortParams
+// ) {
+//   funsdk.SysSetServerIPPort(params);
+// }

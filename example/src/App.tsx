@@ -1,67 +1,48 @@
 import * as React from 'react';
 
-// import {
-//   StyleSheet,
-//   View,
-//   Text,
-//   TouchableOpacity,
-//   ScrollView,
-//   FlatList,
-// } from 'react-native';
+import {
+  ScrollView,
+  //   StyleSheet,
+  //   View,
+  //   Text,
+  TouchableOpacity,
+} from 'react-native';
 // import RNFetchBlob from 'rn-fetch-blob';
 
-// import {
-//   funSDKInit,
-//   getUserId,
-//   getUserName,
-//   loginByAccount,
-//   // logout,
-//   registerByNotBind,
-//   getDeviceList,
-//   addDevice,
-//   Monitor,
-//   RecordPlayer,
-//   updateAllDevStateFromServer,
-//   getDetailDeviceList,
-//   loginDeviceWithCredential,
-//   SearcResultRecordFile,
-//   // hasLogin,
-// } from 'react-native-funsdk';
-import { RecordPage } from './record';
-// import { MonitorPage } from './live';
+// import { RecordPage } from './record';
+import { MonitorPage } from './live';
 // import { WIFIDevice } from './wifi';
+// import { useInit } from './init';
+import {
+  SafeAreaView,
+  // ScrollView,
+  Text,
+} from 'react-native';
 import { useInit } from './init';
-import { ScrollView, Text, TouchableOpacity } from 'react-native';
-// import { Alarms } from './alarms';
-// import { DeviceList } from './list';
+
+// import funsdk from 'react-native-funsdk';
 // import { Share } from './share';
 // import { QRCodeDevice } from './qrcode';
 // import { PushInitLink } from './push';
 
+// Временно используется для тестирования ios
+// По мере добавления в библиотеку методов из ios будет дополняться
 export default function App() {
-  const { isInit, statusText } = useInit();
+  const { isInit, statusText, reinit } = useInit();
   const [showInit, setShowInit] = React.useState(true);
-  // const path = `file://${RNFetchBlob.fs.dirs.PictureDir}`;
 
   return (
-    <>
-      <RecordPage />
-      {/* <MonitorPage isInit={isInit} /> */}
-      {/* <WIFIDevice /> */}
-      {/* <QRCodeDevice /> */}
-      {/* <PushInitLink /> */}
-      {/* <Share /> */}
-      {/* <DeviceList /> */}
-      {/* <Alarms /> */}
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* <Text>some random text2 {String(isInit)}</Text> */}
       <ScrollView
         // pointerEvents="none"
         // contentContainerStyle={{ height: 50 }}
         style={{
           position: 'absolute',
-          top: 0,
+          top: 20,
           left: 0,
           right: 0,
-          opacity: 1,
+          opacity: 0.7,
           backgroundColor: '#ffffff',
         }}
       >
@@ -73,12 +54,68 @@ export default function App() {
           </>
         )}
         <TouchableOpacity
-          style={{ backgroundColor: 'red' }}
+          style={{ backgroundColor: 'red', height: 30 }}
           onPress={() => setShowInit((prev) => !prev)}
         >
           <Text>show/hide</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            backgroundColor: 'red',
+            height: 50,
+            borderWidth: 2,
+            borderColor: 'yellow',
+          }}
+          onPress={() => reinit()}
+        >
+          <Text>somefunc</Text>
+        </TouchableOpacity>
       </ScrollView>
-    </>
+      <MonitorPage isInit={isInit} />
+    </SafeAreaView>
   );
 }
+
+// android
+// export default function App() {
+//   const { isInit, statusText } = useInit();
+//   const [showInit, setShowInit] = React.useState(true);
+//   // const path = `file://${RNFetchBlob.fs.dirs.PictureDir}`;
+
+//   return (
+//     <>
+//       {/* <RecordPage /> */}
+//       <MonitorPage isInit={isInit} />
+//       {/* <WIFIDevice /> */}
+//       {/* <QRCodeDevice /> */}
+//       {/* <PushInitLink /> */}
+//       {/* <Share /> */}
+// <ScrollView
+//   // pointerEvents="none"
+//   // contentContainerStyle={{ height: 50 }}
+//   style={{
+//     position: 'absolute',
+//     top: 0,
+//     left: 0,
+//     right: 0,
+//     opacity: 1,
+//     backgroundColor: '#ffffff',
+//   }}
+// >
+//   {showInit && (
+//     <>
+//       <Text>isInit: {isInit.toString()}</Text>
+//       <Text>text: {statusText?.text}</Text>
+//       <Text>value: {JSON.stringify(statusText?.value)}</Text>
+//     </>
+//   )}
+//   <TouchableOpacity
+//     style={{ backgroundColor: 'red' }}
+//     onPress={() => setShowInit((prev) => !prev)}
+//   >
+//     <Text>show/hide</Text>
+//   </TouchableOpacity>
+// </ScrollView>
+//     </>
+//   );
+// }

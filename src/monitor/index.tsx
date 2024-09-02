@@ -30,8 +30,8 @@ const Commands = {
   updateStreamTypeMonitor: 'updateStreamTypeMonitor',
   setVideoFullScreen: 'setVideoFullScreen',
   capturePicFromDevAndSave: 'capturePicFromDevAndSave',
-  seekToTime: 'seekToTime',
-  changeVideoRatio: 'changeVideoRatio',
+  // seekToTime: 'seekToTime',
+  // changeVideoRatio: 'changeVideoRatio',
 } as const;
 
 export type MonitorViewNativeProps = ViewProps & {
@@ -60,14 +60,14 @@ export const MonitorView =
   requireNativeComponent<MonitorViewNativeProps>('RCTMonitor');
 
 const dispatchCommand = (viewId: number, command: string, args: any[] = []) => {
-  UIManager.dispatchViewManagerCommand(
-    viewId,
-    // we are calling the 'setVideoFlip' command
-    // UIManager.RCTMonitor.Commands.setVideoFlip,
-    // UIManager.RCTMonitor.Commands[command],
-    UIManager.getViewManagerConfig('RCTMonitor').Commands[command] || '',
-    args
-  );
+  const commandId =
+    UIManager.getViewManagerConfig('RCTMonitor').Commands[command];
+
+  if (typeof commandId !== 'number') {
+    return;
+  }
+
+  UIManager.dispatchViewManagerCommand(viewId, commandId, args);
 };
 
 export type MonitorProps = ViewProps & {
@@ -308,15 +308,15 @@ export class Monitor extends React.Component<MonitorProps, any> {
     dispatchCommand(viewId, Commands.capturePicFromDevAndSave);
   }
 
-  changeVideoRatio() {
-    const viewId = findNodeHandle(this.myRef.current);
+  // changeVideoRatio() {
+  //   const viewId = findNodeHandle(this.myRef.current);
 
-    if (typeof viewId !== 'number') {
-      return;
-    }
+  //   if (typeof viewId !== 'number') {
+  //     return;
+  //   }
 
-    dispatchCommand(viewId, Commands.changeVideoRatio);
-  }
+  //   dispatchCommand(viewId, Commands.changeVideoRatio);
+  // }
 
   // seekToTime() {
   //   const viewId = findNodeHandle(this.myRef.current);

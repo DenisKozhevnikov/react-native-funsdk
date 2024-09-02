@@ -23,17 +23,17 @@
 
 export * from './core';
 export * from './register';
-export * from './forget';
-export * from './info';
+// export * from './forget';
+// export * from './info';
 export * from './login';
-export * from './modify';
+// export * from './modify';
 export * from './device';
-export * from './manager';
-export * from './alarms';
+// export * from './manager';
+// export * from './alarms';
 
-// views
+// // views
 export * from './monitor';
-export * from './record';
+// export * from './record';
 
-//types
+// //types
 export * from './types';

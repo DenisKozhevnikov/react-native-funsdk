@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { styles } from '../styles';
-import { InitGoogleFunSDKPush } from 'react-native-funsdk';
+// import { InitGoogleFunSDKPush } from 'react-native-funsdk';
 
 const Button = ({ onPress, text }: { onPress: () => void; text: string }) => {
   return (
@@ -13,19 +13,19 @@ const Button = ({ onPress, text }: { onPress: () => void; text: string }) => {
 
 export const Buttons = () => {
   const HandleInitLinkPUsh = () => {
-    InitGoogleFunSDKPush({
-      token: '',
-      deviceId: '',
-      type: 2,
-    });
+    // InitGoogleFunSDKPush({
+    //   token: '',
+    //   deviceId: '',
+    //   type: 2,
+    // });
   };
 
   const HandleInitLinkPUshV2 = () => {
-    InitGoogleFunSDKPush({
-      token: '',
-      deviceId: '',
-      type: 11,
-    });
+    // InitGoogleFunSDKPush({
+    //   token: '',
+    //   deviceId: '',
+    //   type: 11,
+    // });
   };
 
   return (

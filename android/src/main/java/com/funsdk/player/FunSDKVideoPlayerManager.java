@@ -57,10 +57,10 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
   private static final int COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE_ID = 17;
   private static final String COMMAND_GET_STREAM_TYPE = "getStreamType";
   private static final int COMMAND_GET_STREAM_TYPE_ID = 18;
-  private static final String COMMAND_SEEK_TO_TIME = "seekToTime";
-  private static final int COMMAND_SEEK_TO_TIME_ID = 19;
-  private static final String COMMAND_CHANGE_VIDEO_RATIO = "changeVideoRatio";
-  private static final int COMMAND_CHANGE_VIDEO_RATIO_ID = 20;
+  // private static final String COMMAND_SEEK_TO_TIME = "seekToTime";
+  // private static final int COMMAND_SEEK_TO_TIME_ID = 19;
+  // private static final String COMMAND_CHANGE_VIDEO_RATIO = "changeVideoRatio";
+  // private static final int COMMAND_CHANGE_VIDEO_RATIO_ID = 20;
 
   ReactApplicationContext mCallerContext;
 
@@ -101,7 +101,7 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     commandsMap.put(COMMAND_START_VIDEO_RECORD, COMMAND_START_VIDEO_RECORD_ID);
     commandsMap.put(COMMAND_STOP_VIDEO_RECORD, COMMAND_STOP_VIDEO_RECORD_ID);
     commandsMap.put(COMMAND_GET_STREAM_TYPE, COMMAND_GET_STREAM_TYPE_ID);
-    commandsMap.put(COMMAND_SEEK_TO_TIME, COMMAND_SEEK_TO_TIME_ID);
+    // commandsMap.put(COMMAND_SEEK_TO_TIME, COMMAND_SEEK_TO_TIME_ID);
     commandsMap.put(COMMAND_OPEN_VOICE, COMMAND_OPEN_VOICE_ID);
     commandsMap.put(COMMAND_CLOSE_VOICE, COMMAND_CLOSE_VOICE_ID);
     // commandsMap.put(COMMAND_SET_SPEAKER_TYPE, COMMAND_SET_SPEAKER_TYPE_ID);
@@ -111,9 +111,10 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     commandsMap.put(COMMAND_STOP_DOUBLE_INTERCOM, COMMAND_STOP_DOUBLE_INTERCOM_ID);
     commandsMap.put(COMMAND_SWTICH_STREAM_TYPE_MONITOR, COMMAND_SWTICH_STREAM_TYPE_MONITOR_ID);
     commandsMap.put(COMMAND_UPDATE_STREAM_TYPE_MONITOR, COMMAND_UPDATE_STREAM_TYPE_MONITOR_ID);
-    commandsMap.put(COMMAND_SET_VIDEO_FULLSCREEN, COMMAND_SET_VIDEO_FULLSCREEN_ID);
+    // commandsMap.put(COMMAND_SET_VIDEO_FULLSCREEN,
+    // COMMAND_SET_VIDEO_FULLSCREEN_ID);
     commandsMap.put(COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE, COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE_ID);
-    commandsMap.put(COMMAND_CHANGE_VIDEO_RATIO, COMMAND_CHANGE_VIDEO_RATIO_ID);
+    // commandsMap.put(COMMAND_CHANGE_VIDEO_RATIO, COMMAND_CHANGE_VIDEO_RATIO_ID);
 
     return commandsMap;
   }
@@ -159,9 +160,9 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     if (commandId == COMMAND_GET_STREAM_TYPE_ID) {
       view.sendStreamType();
     }
-    if (commandId == COMMAND_SEEK_TO_TIME_ID) {
-      // view.seekToTime();
-    }
+    // if (commandId == COMMAND_SEEK_TO_TIME_ID) {
+    // view.seekToTime();
+    // }
     if (commandId == COMMAND_OPEN_VOICE_ID) {
       view.openVoice();
     }
@@ -198,9 +199,9 @@ public class FunSDKVideoPlayerManager extends SimpleViewManager<FunSDKVideoView>
     if (commandId == COMMAND_CAPTURE_PIC_FROM_DEV_AND_SAVE_ID) {
       view.capturePicFromDevAndSave();
     }
-    if (commandId == COMMAND_CHANGE_VIDEO_RATIO_ID) {
-      view.changeVideoRatio();
-    }
+    // if (commandId == COMMAND_CHANGE_VIDEO_RATIO_ID) {
+    // view.changeVideoRatio();
+    // }
   }
 
   @ReactProp(name = "devId")

@@ -9,19 +9,19 @@ import {
 import {
   Monitor,
   devicePTZcontrol,
-  getChannelCount,
+  // getChannelCount,
   getChannelInfo,
-  isDeviceFunctionSupport,
-  getDeviceModel,
-  getSoftWareVersion,
-  getBuildTime,
+  // isDeviceFunctionSupport,
+  // getDeviceModel,
+  // getSoftWareVersion,
+  // getBuildTime,
   EPTZCMD,
   DevicePTZControlParams,
   STREAM_TYPE,
-  getHardWare,
-  getUpdataTime,
-  getNetworkMode,
-  getDigChannel,
+  // getHardWare,
+  // getUpdataTime,
+  // getNetworkMode,
+  // getDigChannel,
 } from 'react-native-funsdk';
 import { DEVICE_ID } from '../topsecret';
 import { MonitorView } from './MonitorView';
@@ -30,7 +30,8 @@ import { handleImageSaver } from './ImageSaver';
 export const monitorsList = new Map<number, React.RefObject<Monitor>>();
 
 export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
-  const [numberOfCameras, setNumberOfCameras] = useState<number | null>(null);
+  // const [numberOfCameras, setNumberOfCameras] = useState<number | null>(null);
+  const [numberOfCameras, setNumberOfCameras] = useState<number | null>(5);
   const [activeChannel, setActiveChannel] = useState(0);
   const [PTZSpeed, setPTZSpeed] =
     useState<NonNullable<DevicePTZControlParams['speed']>>(4);
@@ -49,12 +50,13 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
 
   const handleDeviceLogin = async () => {
     try {
-      const digChannelResult = await getDigChannel({ deviceId: DEVICE_ID });
-      if (typeof digChannelResult.value === 'number') {
-        if (digChannelResult.value === 0) {
+      const info = await getChannelInfo({ deviceId: DEVICE_ID });
+      const nChnCount = info?.value?.nChnCount;
+      if (typeof nChnCount === 'number') {
+        if (!nChnCount) {
           setNumberOfCameras(1);
         } else {
-          setNumberOfCameras(digChannelResult.value);
+          setNumberOfCameras(nChnCount);
         }
       }
 
@@ -82,14 +84,14 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
     }
   };
 
-  const loadChannelsCount = async () => {
-    try {
-      const count = await getChannelCount({ deviceId: DEVICE_ID });
-      console.log('channels count is: ', count);
-    } catch (error) {
-      console.log('loadChannelCount error: ', error);
-    }
-  };
+  // const loadChannelsCount = async () => {
+  //   try {
+  //     const count = await getChannelCount({ deviceId: DEVICE_ID });
+  //     console.log('channels count is: ', count);
+  //   } catch (error) {
+  //     console.log('loadChannelCount error: ', error);
+  //   }
+  // };
 
   const devicePTZSend = async (command: number, bStop: boolean) => {
     try {
@@ -106,51 +108,51 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
     }
   };
 
-  const checkDeviceFunctionSupport = async () => {
-    try {
-      const result = await isDeviceFunctionSupport({
-        deviceId: DEVICE_ID,
-        functionName: 'OtherFunction',
-        functionCommandStr: 'SupportPTZTour',
-      });
-      console.log('OtherFunction is: ', result);
-    } catch (error) {
-      console.log('checkDeviceFunctionSupport error: ', error);
-    }
-  };
+  // const checkDeviceFunctionSupport = async () => {
+  //   try {
+  //     const result = await isDeviceFunctionSupport({
+  //       deviceId: DEVICE_ID,
+  //       functionName: 'OtherFunction',
+  //       functionCommandStr: 'SupportPTZTour',
+  //     });
+  //     console.log('OtherFunction is: ', result);
+  //   } catch (error) {
+  //     console.log('checkDeviceFunctionSupport error: ', error);
+  //   }
+  // };
 
-  const loadDeviceModel = async () => {
-    try {
-      const result = await getDeviceModel({
-        deviceId: DEVICE_ID,
-      });
-      console.log('getDeviceModel is: ', result);
-    } catch (error) {
-      console.log('getDeviceModel error: ', error);
-    }
-  };
+  // const loadDeviceModel = async () => {
+  //   try {
+  //     const result = await getDeviceModel({
+  //       deviceId: DEVICE_ID,
+  //     });
+  //     console.log('getDeviceModel is: ', result);
+  //   } catch (error) {
+  //     console.log('getDeviceModel error: ', error);
+  //   }
+  // };
 
-  const loadSoftWareVersion = async () => {
-    try {
-      const result = await getSoftWareVersion({
-        deviceId: DEVICE_ID,
-      });
-      console.log('getDeviceModel is: ', result);
-    } catch (error) {
-      console.log('getDeviceModel error: ', error);
-    }
-  };
+  // const loadSoftWareVersion = async () => {
+  //   try {
+  //     const result = await getSoftWareVersion({
+  //       deviceId: DEVICE_ID,
+  //     });
+  //     console.log('getDeviceModel is: ', result);
+  //   } catch (error) {
+  //     console.log('getDeviceModel error: ', error);
+  //   }
+  // };
 
-  const loadDeviceInfo = async () => {
-    try {
-      const result = await getBuildTime({
-        deviceId: DEVICE_ID,
-      });
-      console.log('getBuildTime is: ', result);
-    } catch (error) {
-      console.log('getDeviceModel error: ', error);
-    }
-  };
+  // const loadDeviceInfo = async () => {
+  //   try {
+  //     const result = await getBuildTime({
+  //       deviceId: DEVICE_ID,
+  //     });
+  //     console.log('getBuildTime is: ', result);
+  //   } catch (error) {
+  //     console.log('getDeviceModel error: ', error);
+  //   }
+  // };
 
   const startPlay = () => {
     console.log('startPlay');
@@ -166,11 +168,11 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
     });
   };
 
-  const handleChangeVideoRatio = () => {
-    handleImageSaver(DEVICE_ID, activeChannel, () => {
-      getMonitor(activeChannel)?.current?.changeVideoRatio();
-    });
-  };
+  // const handleChangeVideoRatio = () => {
+  //   handleImageSaver(DEVICE_ID, activeChannel, () => {
+  //     getMonitor(activeChannel)?.current?.changeVideoRatio();
+  //   });
+  // };
 
   if (!isInit) {
     return null;
@@ -197,7 +199,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
           backgroundColor: 'blue',
         }}
       >
-        {!!numberOfCameras &&
+        {/* {!!numberOfCameras &&
           [...Array(numberOfCameras >= 3 ? 3 : numberOfCameras).keys()].map(
             (val) => (
               <MonitorView
@@ -208,8 +210,8 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
                 onPress={() => setActiveChannel(val)}
               />
             )
-          )}
-        {/* {!!numberOfCameras &&
+          )} */}
+        {!!numberOfCameras &&
           [...Array(numberOfCameras).keys()].map((val) => (
             <MonitorView
               key={val}
@@ -218,15 +220,15 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
               isActive={activeChannel === val}
               onPress={() => setActiveChannel(val)}
             />
-          ))} */}
+          ))}
       </ScrollView>
       <ScrollView>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={handleChangeVideoRatio}
           style={styles.button}
         >
           <Text style={styles.buttonText}>change video ratio</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity onPress={handleCapture} style={styles.button}>
           <Text style={styles.buttonText}>capture image</Text>
         </TouchableOpacity>
@@ -269,7 +271,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
         >
           <Text style={styles.buttonText}>stream type EXTRA (sd)</Text>
         </TouchableOpacity>
-        <Text style={styles.buttonText}>{PTZSpeed}</Text>
+        {/* <Text style={styles.buttonText}>{PTZSpeed}</Text> */}
         <View style={{ flexDirection: 'row' }}>
           <TouchableOpacity
             onPress={() => setPTZSpeed((prev) => (prev + 1 > 8 ? 8 : prev + 1))}
@@ -376,9 +378,9 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
             <Text style={styles.buttonText}>focus near</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={loadChannelsCount} style={styles.button}>
+        {/* <TouchableOpacity onPress={loadChannelsCount} style={styles.button}>
           <Text style={styles.buttonText}>channel count</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity onPress={loadChannelsInfo} style={styles.button}>
           <Text style={styles.buttonText}>channel info</Text>
         </TouchableOpacity>
@@ -388,13 +390,13 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
         <TouchableOpacity onPress={closeVoice} style={styles.button}>
           <Text style={styles.buttonText}>closeVoice</Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={checkDeviceFunctionSupport}
           style={styles.button}
         >
           <Text style={styles.buttonText}>check support func</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={loadDeviceModel} style={styles.button}>
+        </TouchableOpacity> */}
+        {/* <TouchableOpacity onPress={loadDeviceModel} style={styles.button}>
           <Text style={styles.buttonText}>loadDeviceModel</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={loadSoftWareVersion} style={styles.button}>
@@ -402,8 +404,8 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
         </TouchableOpacity>
         <TouchableOpacity onPress={loadDeviceInfo} style={styles.button}>
           <Text style={styles.buttonText}>loadDeviceInfo</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </TouchableOpacity> */}
+        {/* <TouchableOpacity
           onPress={async () => {
             try {
               const result = await getHardWare({
@@ -447,7 +449,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
           style={styles.button}
         >
           <Text style={styles.buttonText}>getNetworkMode</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </ScrollView>
     </View>
   );

@@ -11,12 +11,23 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "11.0" }
+  s.platforms    = { :ios => "12.0" }
   s.source       = { :git => "https://github.com/DenisKozhevnikov/react-native-funsdk.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm}"
 
   s.dependency "React-Core"
+  
+  # frameworks и libraries которые нужны для работы FunSDK.framework
+  s.frameworks = 'AudioToolbox', 'CoreMedia', 'OpenAL', 'VideoToolbox', 'AVKit', 'GLKit', 'MessageUI'
+  s.libraries = 'bz2', 'iconv', 'resolv', 'z'
+  # https://github.com/callstack/react-native-builder-bob/discussions/379
+  # s.vendored_frameworks = "https://gitlab.xmcloud.io/demo/FunSDKDemo_iOS/-/tree/master/FunSDKDemo/XMFunSDKDemo/Supporting/library/FunSDK.framework"
+  s.vendored_frameworks = "ios/frameworks/FunSDK.framework", "ios/frameworks/XMNetInterface.framework", "ios/frameworks/Masonry.framework"
+
+  s.vendored_libraries = 'ios/libs/libfisheye.a', 'ios/libs/libFSCalendar.a', 'ios/libs/libzbar.a'
+
+  s.prefix_header_file = "ios/pch/PrefixHeader.pch"
 
   # Don't install the dependencies when we run `pod install` in the old architecture.
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then

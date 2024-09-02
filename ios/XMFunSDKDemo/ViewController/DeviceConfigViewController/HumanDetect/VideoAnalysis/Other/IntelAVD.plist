@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>灵敏度</key>
+	<dict>
+		<key>说明</key>
+		<string>灵敏度</string>
+		<key>DeviceType</key>
+		<string>0</string>
+		<key>Title</key>
+		<string>灵敏度</string>
+		<key>DetailTitle</key>
+		<string></string>
+		<key>Image</key>
+		<string></string>
+		<key>style</key>
+		<string>CellTypeIndicator</string>
+	</dict>
+</dict>
+</plist>

@@ -37,7 +37,7 @@ export type AddDeviceParams = {
  *  deviceName: string;
  */
 export function addDevice(params: AddDeviceParams): Promise<any> {
-  console.log('params: ', params);
+  // console.log('params: ', params);
   return funsdk.addDev(params);
 }
 

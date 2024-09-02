@@ -6,7 +6,7 @@ import {
   devGetLocalUserName,
   getDevType,
   getFunStrAttr,
-  userQuery,
+  // userQuery,
 } from 'react-native-funsdk';
 import { DEVICE_ID } from '../topsecret';
 
@@ -15,9 +15,8 @@ export const Share = () => {
 
   const findUser = async () => {
     try {
-      const decoded = await userQuery('asd');
-
-      setQueryRes(decoded);
+      // const decoded = await userQuery('asd');
+      // setQueryRes(decoded);
     } catch (error) {
       console.log('error: ', error);
     }
