@@ -29,7 +29,7 @@ export * from './login';
 // export * from './modify';
 export * from './device';
 // export * from './manager';
-// export * from './alarms';
+export * from './alarms';
 
 // // views
 export * from './monitor';

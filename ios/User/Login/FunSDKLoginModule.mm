@@ -113,7 +113,7 @@ RCT_EXPORT_METHOD(loginByAccount:(NSDictionary *)params
                 }
      
                 // 初始化报警服务器
-                [[AlarmManager getInstance] initServer:[[[LoginShowControl getInstance] getPushToken] UTF8String]];
+//                [[AlarmManager getInstance] initServer:[[[LoginShowControl getInstance] getPushToken] UTF8String]];
                 //
                 //
                 //                //用户名登录成功，返回用户名下的设备列表信息，保存到APP缓存和本地存储中

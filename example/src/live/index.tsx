@@ -199,7 +199,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
           backgroundColor: 'blue',
         }}
       >
-        {/* {!!numberOfCameras &&
+        {!!numberOfCameras &&
           [...Array(numberOfCameras >= 3 ? 3 : numberOfCameras).keys()].map(
             (val) => (
               <MonitorView
@@ -210,8 +210,8 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
                 onPress={() => setActiveChannel(val)}
               />
             )
-          )} */}
-        {!!numberOfCameras &&
+          )}
+        {/* {!!numberOfCameras &&
           [...Array(numberOfCameras).keys()].map((val) => (
             <MonitorView
               key={val}
@@ -220,7 +220,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
               isActive={activeChannel === val}
               onPress={() => setActiveChannel(val)}
             />
-          ))}
+          ))} */}
       </ScrollView>
       <ScrollView>
         {/* <TouchableOpacity
@@ -457,6 +457,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 100,
     flex: 1,
     backgroundColor: 'pink',
   },

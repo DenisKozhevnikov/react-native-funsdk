@@ -30,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString*)getSessionID;
 - (NSString *)getPushMSG;
 - (NSString *)getPushMSGType;
+- (NSDictionary *)getDicinfoSelf;
 
 @end
 

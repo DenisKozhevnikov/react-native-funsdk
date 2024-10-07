@@ -10,7 +10,7 @@ import {
 // import RNFetchBlob from 'rn-fetch-blob';
 
 // import { RecordPage } from './record';
-import { MonitorPage } from './live';
+// import { MonitorPage } from './live';
 // import { WIFIDevice } from './wifi';
 // import { useInit } from './init';
 import {
@@ -19,6 +19,7 @@ import {
   Text,
 } from 'react-native';
 import { useInit } from './init';
+import { Alarms } from './alarms';
 
 // import funsdk from 'react-native-funsdk';
 // import { Share } from './share';
@@ -44,6 +45,7 @@ export default function App() {
           right: 0,
           opacity: 0.7,
           backgroundColor: '#ffffff',
+          zIndex: 11111,
         }}
       >
         {showInit && (
@@ -68,10 +70,11 @@ export default function App() {
           }}
           onPress={() => reinit()}
         >
-          <Text>somefunc</Text>
+          <Text>re init</Text>
         </TouchableOpacity>
       </ScrollView>
-      <MonitorPage isInit={isInit} />
+      {/* <MonitorPage isInit={isInit} /> */}
+      <Alarms />
     </SafeAreaView>
   );
 }

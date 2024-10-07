@@ -17,6 +17,7 @@ Pod::Spec.new do |s|
   s.source_files = "ios/**/*.{h,m,mm}"
 
   s.dependency "React-Core"
+  s.dependency "ZXingObjC"
   
   # frameworks и libraries которые нужны для работы FunSDK.framework
   s.frameworks = 'AudioToolbox', 'CoreMedia', 'OpenAL', 'VideoToolbox', 'AVKit', 'GLKit', 'MessageUI'
@@ -25,7 +26,7 @@ Pod::Spec.new do |s|
   # s.vendored_frameworks = "https://gitlab.xmcloud.io/demo/FunSDKDemo_iOS/-/tree/master/FunSDKDemo/XMFunSDKDemo/Supporting/library/FunSDK.framework"
   s.vendored_frameworks = "ios/frameworks/FunSDK.framework", "ios/frameworks/XMNetInterface.framework", "ios/frameworks/Masonry.framework"
 
-  s.vendored_libraries = 'ios/libs/libfisheye.a', 'ios/libs/libFSCalendar.a', 'ios/libs/libzbar.a'
+  s.vendored_libraries = 'ios/libs/libfisheye.a', 'ios/libs/libFSCalendar.a'
 
   s.prefix_header_file = "ios/pch/PrefixHeader.pch"
 

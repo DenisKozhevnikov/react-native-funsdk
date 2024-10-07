@@ -37,7 +37,7 @@
 
 //推送服务器初始化
 - (void)initServer:(const char*)tokenChar {
-    const char *userName = NULL;
+      const char *userName = NULL;
     const char *password = NULL;
     //根据用户名判断当前时什么登陆方式
     if ([[LoginShowControl getInstance] getLoginType] == loginTypeLocal) {
@@ -56,6 +56,8 @@
         language = ELG_ENGLISH;
     }
     SMCInitInfo info = {0};
+  
+  
     STRNCPY(info.token, tokenChar);
     strcpy(info.user, userName);
     strcpy(info.password, password);

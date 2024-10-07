@@ -41,8 +41,8 @@ export const MonitorView = forwardRef<
   //   monRef.current?.playVideo();
   // }, [isActive]);
 
-  const [width, setWidth] = useState(200);
-  const [height, setHeight] = useState((200 / 16) * 9);
+  const [width, setWidth] = useState(300);
+  const [height, setHeight] = useState((300 / 16) * 9);
 
   useEffect(() => {
     setTimeout(() => {
