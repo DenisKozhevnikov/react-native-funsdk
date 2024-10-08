@@ -30,7 +30,7 @@ export type AlarmInfo = {
   // iOS
   ID: string;
   picSize: number;
-  Alarminfo: {
+  AlarmInfo: {
     Status: string | null;
     StartTime: string | null;
     MsgStatus: string;
