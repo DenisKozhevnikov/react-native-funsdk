@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Text,
   ScrollView,
+  RefreshControl,
 } from 'react-native';
 import {
   Monitor,
@@ -29,13 +30,14 @@ import { handleImageSaver } from './ImageSaver';
 
 export const monitorsList = new Map<number, React.RefObject<Monitor>>();
 
-export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
+export const MonitorPage = ({ isAuth }: { isAuth: boolean }) => {
   // const [numberOfCameras, setNumberOfCameras] = useState<number | null>(null);
   const [numberOfCameras, setNumberOfCameras] = useState<number | null>(5);
   const [activeChannel, setActiveChannel] = useState(0);
   const [PTZSpeed, setPTZSpeed] =
     useState<NonNullable<DevicePTZControlParams['speed']>>(4);
-
+  const [isLogged, setIsLogged] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const getMonitor = (channelId: number) => {
     const hasMonitor = monitorsList.has(channelId);
     console.log('hasMonitor: ', hasMonitor);
@@ -46,11 +48,11 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
     return monitorsList.get(channelId);
   };
 
-  const [isLogged, setIsLogged] = useState(false);
-
   const handleDeviceLogin = async () => {
     try {
+      setIsLoading(true);
       const info = await getChannelInfo({ deviceId: DEVICE_ID });
+      console.log('info getChannelInfo: ', info);
       const nChnCount = info?.value?.nChnCount;
       if (typeof nChnCount === 'number') {
         if (!nChnCount) {
@@ -59,11 +61,11 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
           setNumberOfCameras(nChnCount);
         }
       }
-
       setIsLogged(true);
     } catch (error) {
       console.log('error login: ', error);
-      setIsLogged(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -174,7 +176,7 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
   //   });
   // };
 
-  if (!isInit) {
+  if (!isAuth) {
     return null;
   }
 
@@ -191,6 +193,12 @@ export const MonitorPage = ({ isInit }: { isInit: boolean }) => {
   return (
     <View style={styles.container}>
       <ScrollView
+        refreshControl={
+          <RefreshControl
+            onRefresh={handleDeviceLogin}
+            refreshing={isLoading}
+          />
+        }
         style={{
           marginTop: 30,
           flexDirection: 'row',

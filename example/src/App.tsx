@@ -10,7 +10,7 @@ import {
 // import RNFetchBlob from 'rn-fetch-blob';
 
 // import { RecordPage } from './record';
-// import { MonitorPage } from './live';
+import { MonitorPage } from './live';
 // import { WIFIDevice } from './wifi';
 // import { useInit } from './init';
 import {
@@ -29,7 +29,7 @@ import { Alarms } from './alarms';
 // Временно используется для тестирования ios
 // По мере добавления в библиотеку методов из ios будет дополняться
 export default function App() {
-  const { isInit, statusText, reinit } = useInit();
+  const { isInit, isAuth, statusText, reinit, logoutsdk } = useInit();
   const [showInit, setShowInit] = React.useState(true);
 
   return (
@@ -72,9 +72,24 @@ export default function App() {
         >
           <Text>re init</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            backgroundColor: 'red',
+            height: 50,
+            borderWidth: 2,
+            borderColor: 'yellow',
+          }}
+          onPress={() => logoutsdk()}
+        >
+          <Text>logoutsdk</Text>
+        </TouchableOpacity>
       </ScrollView>
-      {/* <MonitorPage isInit={isInit} /> */}
-      <Alarms />
+      {isAuth && (
+        <>
+          {<MonitorPage isAuth={true} />}
+          <Alarms />
+        </>
+      )}
     </SafeAreaView>
   );
 }

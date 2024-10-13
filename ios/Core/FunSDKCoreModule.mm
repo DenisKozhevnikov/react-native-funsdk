@@ -64,11 +64,8 @@ RCT_EXPORT_METHOD(init:(NSDictionary *)params resolver:(RCTPromiseResolveBlock)r
 
     FUN_SetFunStrAttr(EFUN_ATTR_USER_PWD_DB, [[NSString GetDocumentPathWith:@"password.txt"] UTF8String]);
 
-
-    FUN_InitNetSDK();
-    
     FUN_SysInit(SERVER_ADDR, PORT);
-    
+    FUN_InitNetSDK();
     resolve(@(eventId));
 }
 

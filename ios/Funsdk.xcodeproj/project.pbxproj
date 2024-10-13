@@ -350,6 +350,8 @@
 		A21D42132C84DDAD00E6F0E6 /* FunSDKLoginModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D420A2C84DDAD00E6F0E6 /* FunSDKLoginModule.mm */; };
 		A21D42142C84DDAD00E6F0E6 /* FunSDKRegisterModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D420D2C84DDAD00E6F0E6 /* FunSDKRegisterModule.mm */; };
 		A2DE94D92BA5F6FC00F0C71D /* FunSDKCoreModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.mm */; };
+		A2ED05A82CB8638B0049E878 /* FunSDKInfoModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2ED05A72CB8638B0049E878 /* FunSDKInfoModule.mm */; };
+		A2ED05AC2CB865A70049E878 /* FunSDKDevAlarmModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2ED05AA2CB865A70049E878 /* FunSDKDevAlarmModule.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1323,6 +1325,10 @@
 		A21D420D2C84DDAD00E6F0E6 /* FunSDKRegisterModule.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKRegisterModule.mm; sourceTree = "<group>"; };
 		A2DE94D72BA5F65D00F0C71D /* FunSDKCoreModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKCoreModule.h; sourceTree = "<group>"; };
 		A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKCoreModule.mm; sourceTree = "<group>"; };
+		A2ED05A62CB863790049E878 /* FunSDKInfoModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKInfoModule.h; sourceTree = "<group>"; };
+		A2ED05A72CB8638B0049E878 /* FunSDKInfoModule.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = FunSDKInfoModule.mm; sourceTree = "<group>"; };
+		A2ED05A92CB865A70049E878 /* FunSDKDevAlarmModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKDevAlarmModule.h; sourceTree = "<group>"; };
+		A2ED05AA2CB865A70049E878 /* FunSDKDevAlarmModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKDevAlarmModule.mm; sourceTree = "<group>"; };
 		B3E7B5881CC2AC0600A0062D /* Funsdk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Funsdk.h; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* Funsdk.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Funsdk.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -4117,6 +4123,7 @@
 		A21D42082C84DDAD00E6F0E6 /* Device */ = {
 			isa = PBXGroup;
 			children = (
+				A2ED05AB2CB865A70049E878 /* Alarm */,
 				A21D42042C84DDAD00E6F0E6 /* Add */,
 				A21D42072C84DDAD00E6F0E6 /* Status */,
 			);
@@ -4144,6 +4151,7 @@
 		A21D420F2C84DDAD00E6F0E6 /* User */ = {
 			isa = PBXGroup;
 			children = (
+				A2ED05A52CB8634D0049E878 /* Info */,
 				A21D42082C84DDAD00E6F0E6 /* Device */,
 				A21D420B2C84DDAD00E6F0E6 /* Login */,
 				A21D420E2C84DDAD00E6F0E6 /* Register */,
@@ -4158,6 +4166,24 @@
 				A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.mm */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		A2ED05A52CB8634D0049E878 /* Info */ = {
+			isa = PBXGroup;
+			children = (
+				A2ED05A62CB863790049E878 /* FunSDKInfoModule.h */,
+				A2ED05A72CB8638B0049E878 /* FunSDKInfoModule.mm */,
+			);
+			path = Info;
+			sourceTree = "<group>";
+		};
+		A2ED05AB2CB865A70049E878 /* Alarm */ = {
+			isa = PBXGroup;
+			children = (
+				A2ED05A92CB865A70049E878 /* FunSDKDevAlarmModule.h */,
+				A2ED05AA2CB865A70049E878 /* FunSDKDevAlarmModule.mm */,
+			);
+			path = Alarm;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -4224,6 +4250,7 @@
 				A21D418F2C84DD9200E6F0E6 /* DoorUnlockViewController.mm in Sources */,
 				A21D41752C84DD9200E6F0E6 /* CloudphotoDayVController.mm in Sources */,
 				A21D414E2C84DD9200E6F0E6 /* RegisterViewController.mm in Sources */,
+				A2ED05AC2CB865A70049E878 /* FunSDKDevAlarmModule.mm in Sources */,
 				A21D404E2C84DD9200E6F0E6 /* TalkBackControl.mm in Sources */,
 				A21D41C52C84DD9200E6F0E6 /* MyShareListVC.m in Sources */,
 				A21D41672C84DD9200E6F0E6 /* AlarmMessagePicViewController.m in Sources */,
@@ -4366,6 +4393,7 @@
 				A21D41AD2C84DD9200E6F0E6 /* MyNavigationBar.m in Sources */,
 				A21D41F22C84DD9300E6F0E6 /* UILabelOutLined.m in Sources */,
 				A21D41CE2C84DD9200E6F0E6 /* StorageViewController.mm in Sources */,
+				A2ED05A82CB8638B0049E878 /* FunSDKInfoModule.mm in Sources */,
 				A21D41E92C84DD9200E6F0E6 /* PlayMenuView.m in Sources */,
 				A21D416D2C84DD9200E6F0E6 /* AlarmVoiceChoseVC.m in Sources */,
 				A21D403F2C84DD9200E6F0E6 /* StorageSnapshotCfgManager.mm in Sources */,

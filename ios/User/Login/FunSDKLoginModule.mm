@@ -57,6 +57,7 @@ RCT_EXPORT_METHOD(loginByAccount:(NSDictionary *)params
     // Сохраняем блоки resolve и reject в маппинг
     self.resolvers[key] = @{@"resolve": resolve, @"reject": reject};
     
+    FUN_InitNetSDK();
     FUN_SysGetDevList(self.msgHandle, [@(userName) UTF8String] , [@(psw) UTF8String],0);
     
     //暂存登陆模式

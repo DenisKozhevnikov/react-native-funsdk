@@ -6,6 +6,7 @@ import {
   loginByAccount,
   loginDeviceWithCredential,
   updateAllDevStateFromServer,
+  logout,
 } from 'react-native-funsdk';
 import {
   DEVICE_ID,
@@ -26,60 +27,118 @@ const delay = (ms: number) => {
 
 export const useInit = () => {
   const [isInit, setIsInit] = React.useState(false);
+  const [isAuth, setIsAuth] = React.useState(false);
   const [statusText, setStatusText] = React.useState<null | {
     text: string;
     value?: any;
   }>(null);
 
-  const handleSetStatus = (text: string, value?: any) => {
+  const setStatus = (text: string, value?: any) => {
     setStatusText({
       text,
       value,
     });
   };
 
+  const logoutsdk = async () => {
+    try {
+      const res = await logout();
+      setIsAuth(false);
+      console.log('logoutsdk res: ', res);
+    } catch (error) {
+      console.log('logoutsdk error: ', logoutsdk);
+    }
+  };
+
   const reinit = async () => {
     try {
-      // const res = await loginByAccount({
-      //   username: '',
-      //   password: '',
-      // });
+      initSDK();
+      await delay(1000);
       console.log('start somefunc');
-      handleSetStatus('start somefunc');
+      setStatus('start somefunc');
+      someFuncs();
+    } catch (error) {
+      console.log('error in someFuncs: ', error);
+      setStatus('error in someFuncs: ', (error as Error)?.message);
+    }
+  };
+
+  const someFuncs = async () => {
+    try {
+      console.log('start somefunc');
+      setStatus('start somefunc');
       const res = await loginByAccount({
         username: USER_NAME,
         password: USER_PASSWORD,
       });
-      // const res = await registerByNotBind({
-      //   username: '',
-      //   password: '',
-      // });
       console.log('res somefunc: ', res);
-      handleSetStatus('res somefunc: ', res);
-      // await someInfos();
+      setStatus('res somefunc: ', res);
+      setIsAuth(true);
+      await someInfos();
     } catch (error) {
       console.log('error in someFuncs: ', error);
-      handleSetStatus('error in someFuncs: ', (error as Error)?.message);
+      setStatus('error in someFuncs: ', (error as Error)?.message);
+    }
+  };
+  const someInfos = async () => {
+    try {
+      await delay(100);
+
+      await addDeviceTest();
+      const updatedStatus = await updateAllDevStateFromServer();
+      console.log('updatedStatus: ', updatedStatus);
+      setStatus('updatedStatus: ', updatedStatus);
+
+      await delay(100);
+      const detailedList = await getDetailDeviceList();
+      console.log('detailedList: ', JSON.stringify(detailedList, null, 2));
+      setStatus('detailedList: ', detailedList);
+
+      await delay(100);
+      const loginstatus = await loginDeviceWithCredential({
+        deviceId: DEVICE_ID,
+        deviceLogin: DEVICE_LOGIN,
+        devicePassword: DEVICE_PASSWORD,
+      });
+
+      console.log('loginstatus: ', loginstatus);
+      setStatus('loginstatus: ', loginstatus);
+    } catch (error) {
+      console.log('error someInfos: ', error);
+      setStatus('error in someFuncs: ', (error as Error)?.message);
+    } finally {
+      setIsInit(true);
+    }
+  };
+  const addDeviceTest = async () => {
+    try {
+      const addedDevice = await addDevice({
+        deviceId: DEVICE_ID,
+        username: DEVICE_LOGIN,
+        password: DEVICE_PASSWORD,
+        // deviceType: 'no need',
+        deviceName: 'supername2',
+      });
+      console.log('addedDevice: ', addedDevice);
+      // const deviceList = await getDeviceList();
+      // console.log('deviceList: ', deviceList);
+    } catch (error) {
+      console.log('error on add device: ', error);
     }
   };
 
-  React.useEffect(() => {
-    if (isInit) {
-      return;
-    }
-
+  const initSDK = async () => {
     // funSDKInit({});
     if (Platform.OS === 'ios') {
-      funSDKInit({
+      await funSDKInit({
         customPwdType: PWD_TYPE,
         customPwd: PWD,
         customServerAddr: SERVER_ADDR,
         customPort: PORT,
         // TODO: удалить then
-      }).then((res) => {
-        console.log('res: ', res);
-        // setIsInit(true);
       });
+
+      console.log('funsdkinit success');
     }
 
     if (Platform.OS === 'android') {
@@ -88,86 +147,23 @@ export const useInit = () => {
         customPwd: PWD,
         customServerAddr: SERVER_ADDR,
         customPort: PORT,
-        // TODO: удалить then
       });
       // setIsInit(true);
     }
-    const someFuncs = async () => {
-      try {
-        // const res = await loginByAccount({
-        //   username: '',
-        //   password: '',
-        // });
-        console.log('start somefunc');
-        handleSetStatus('start somefunc');
-        const res = await loginByAccount({
-          username: USER_NAME,
-          password: USER_PASSWORD,
-        });
-        // const res = await registerByNotBind({
-        //   username: USER_NAME,
-        //   password: USER_PASSWORD,
-        // });
-        console.log('res somefunc: ', res);
-        handleSetStatus('res somefunc: ', res);
-        await someInfos();
-      } catch (error) {
-        console.log('error in someFuncs: ', error);
-        handleSetStatus('error in someFuncs: ', (error as Error)?.message);
-      }
-    };
-    const someInfos = async () => {
-      try {
-        await delay(100);
-        // const userId = await getUserId();
-        //   const userName = await getUserName();
-        //   const deviceList = await getDeviceList();
-        //   console.log('res someinfos: ', userId, userName, deviceList);
-        //   handleSetStatus('res someinfos: ', { userId, userName, deviceList });
-        await addDeviceTest();
-        const updatedStatus = await updateAllDevStateFromServer();
-        console.log('updatedStatus: ', updatedStatus);
-        handleSetStatus('updatedStatus: ', updatedStatus);
 
-        await delay(100);
-        const detailedList = await getDetailDeviceList();
-        console.log('detailedList: ', detailedList);
-        handleSetStatus('detailedList: ', detailedList);
+    setIsInit(true);
+  };
 
-        const loginstatus = await loginDeviceWithCredential({
-          deviceId: DEVICE_ID,
-          deviceLogin: DEVICE_LOGIN,
-          devicePassword: DEVICE_PASSWORD,
-        });
-        console.log('loginstatus: ', loginstatus);
-        handleSetStatus('loginstatus: ', loginstatus);
-        // setIsInit(true);
-      } catch (error) {
-        console.log('error: ', error);
-      } finally {
-        setIsInit(true);
-      }
-    };
-    const addDeviceTest = async () => {
-      try {
-        const addedDevice = await addDevice({
-          deviceId: DEVICE_ID,
-          username: DEVICE_LOGIN,
-          password: DEVICE_PASSWORD,
-          // deviceType: 'no need',
-          deviceName: 'supername2',
-        });
-        console.log('addedDevice: ', addedDevice);
-        // const deviceList = await getDeviceList();
-        // console.log('deviceList: ', deviceList);
-      } catch (error) {
-        console.log('error on add device: ', error);
-      }
-    };
-    setTimeout(() => {
-      someFuncs();
-    }, 3000);
-  }, [isInit]);
+  // React.useEffect(() => {
+  //   if (isInit) {
+  //     return;
+  //   }
 
-  return { isInit, statusText, reinit };
+  //   initSDK();
+  //   // setTimeout(() => {
+  //   //   someFuncs();
+  //   // }, 3000);
+  // }, [isInit]);
+
+  return { isInit, isAuth, statusText, reinit, logoutsdk };
 };
