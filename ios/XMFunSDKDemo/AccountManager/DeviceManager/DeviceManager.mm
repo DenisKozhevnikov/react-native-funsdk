@@ -427,9 +427,13 @@
 
 #pragma mark - 删除设备
 - (void)deleteDeviceWithDevMac:(NSString *)devMac {
-    NSMutableArray *deviceArray = [[DeviceControl getInstance] currentDeviceArray];
-    DeviceObject *devObj = [[DeviceControl getInstance] GetDeviceObjectBySN:devMac];
-    FUN_SysDelete_Dev(self.msgHandle, [devMac UTF8String], "", "", (int)[deviceArray indexOfObject:devObj]);
+  NSMutableArray *deviceArray = [[DeviceControl getInstance] currentDeviceArray];
+  
+  DeviceObject *devObj = [[DeviceControl getInstance] GetDeviceObjectBySN:devMac];
+  
+  Fun_SysDeleteDevice(self.msgHandle, [devMac UTF8String], (int)[deviceArray indexOfObject:devObj]);
+  
+//    FUN_SysDelete_Dev(self.msgHandle, [devMac UTF8String], "", "", (int)[deviceArray indexOfObject:devObj]);
 }
 
 #pragma mark - 判断是否是主账号
@@ -451,6 +455,11 @@
     }
     //获取到的数组，和本地已经保存的数组进行对比
     [[DeviceControl getInstance] checkDeviceValid];
+}
+
+#pragma mark Очистка массива устройств
+- (void)clearDeviceList{
+  [[DeviceControl getInstance] clearDeviceArray];
 }
 
 #pragma mark 获取被分享的设备
@@ -670,18 +679,18 @@ BOOL canRank = NO;
     NSInteger nAddr = [pParam integerValue];
     MsgContent *msg = (MsgContent *)nAddr;
     
-//    NSLog(@"sender: %d", msg->sender);
-//    NSLog(@"id: %d", msg->id);
-//    NSLog(@"param1: %d", msg->param1);
-//    NSLog(@"param2: %d", msg->param2);
-//    NSLog(@"param3: %d", msg->param3);
-//    NSLog(@"szStr: %s", msg->szStr);
-//    NSLog(@"pObject: %s", msg->pObject);
-//    NSLog(@"nDataLen: %d", msg->nDataLen);
-//    NSLog(@"seq: %d", msg->seq);
-//    NSLog(@"pMsg: %p", msg->pMsg);
-    
-    
+    NSLog(@"sender: %d", msg->sender);
+    NSLog(@"id: %d", msg->id);
+    NSLog(@"param1: %d", msg->param1);
+    NSLog(@"param2: %d", msg->param2);
+    NSLog(@"param3: %d", msg->param3);
+    NSLog(@"szStr: %s", msg->szStr);
+    NSLog(@"pObject: %s", msg->pObject);
+    NSLog(@"nDataLen: %d", msg->nDataLen);
+    NSLog(@"seq: %d", msg->seq);
+    NSLog(@"pMsg: %p", msg->pMsg);
+    NSLog(@"DeviceManager onFunSDKResult");
+
     switch (msg->id) {
         case EMSG_DEV_OPTION:{
             //MARK:串口收到回调
@@ -713,6 +722,8 @@ BOOL canRank = NO;
                 [[DeviceManager getInstance] addDeviceToList:[NSMessage SendMessag:nil obj:msg->pObject p1:msg->param1 p2:0]];
             }
             if (self.delegate && [self.delegate respondsToSelector:@selector(addDeviceResult:)]) {
+              NSLog(@"EMSG_SYS_ADD_DEVICE delegate");
+
                 [self.delegate addDeviceResult:msg->param1];
             }
         }
@@ -840,6 +851,7 @@ BOOL canRank = NO;
         }
         #pragma mark 删除设备回调
         case EMSG_SYS_DELETE_DEV:{   // 删除设备
+            NSLog(@"EMSG_SYS_DELETE_DEV");
             NSMutableArray *deviceArray = [[DeviceControl getInstance] currentDeviceArray];
             if (deviceArray.count <= msg->seq) {
                 return;
@@ -850,7 +862,7 @@ BOOL canRank = NO;
             }
             if (msg->param1 >= 0) {
                 //收到删除成功信息之后，注销设备报警通知
-                [[AlarmManager getInstance] UnlinkAlarm:devObject.deviceMac];
+//                [[AlarmManager getInstance] UnlinkAlarm:devObject.deviceMac];
                 //删除设备之后需要把数据保存本地一遍
                 [deviceArray removeObject:devObject];
                 [[DeviceControl getInstance] saveDeviceList];

@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import {
+  Button,
   ScrollView,
   //   StyleSheet,
   //   View,
@@ -20,6 +21,7 @@ import {
 } from 'react-native';
 import { useInit } from './init';
 import { Alarms } from './alarms';
+import { DeviceList } from './list';
 
 // import funsdk from 'react-native-funsdk';
 // import { Share } from './share';
@@ -29,6 +31,9 @@ import { Alarms } from './alarms';
 // Временно используется для тестирования ios
 // По мере добавления в библиотеку методов из ios будет дополняться
 export default function App() {
+  const [currScreen, setCurrScreen] = React.useState<
+    'DeviceList' | 'MonitorPage' | 'Alarms'
+  >('DeviceList');
   const { isInit, isAuth, statusText, reinit, logoutsdk } = useInit();
   const [showInit, setShowInit] = React.useState(true);
 
@@ -53,6 +58,17 @@ export default function App() {
             <Text>isInit: {isInit.toString()}</Text>
             <Text>text: {statusText?.text}</Text>
             <Text>value: {JSON.stringify(statusText?.value)}</Text>
+            <ScrollView horizontal>
+              <Button
+                title="Device List"
+                onPress={() => setCurrScreen('DeviceList')}
+              />
+              <Button
+                title="MonitorPage"
+                onPress={() => setCurrScreen('MonitorPage')}
+              />
+              <Button title="Alarms" onPress={() => setCurrScreen('Alarms')} />
+            </ScrollView>
           </>
         )}
         <TouchableOpacity
@@ -86,8 +102,9 @@ export default function App() {
       </ScrollView>
       {isAuth && (
         <>
-          {<MonitorPage isAuth={true} />}
-          <Alarms />
+          {currScreen === 'DeviceList' && <DeviceList />}
+          {currScreen === 'MonitorPage' && <MonitorPage isAuth={true} />}
+          {currScreen === 'Alarms' && <Alarms />}
         </>
       )}
     </SafeAreaView>

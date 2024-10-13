@@ -73,6 +73,8 @@
 - (void)resiveDevicelist2:(MsgContent *)msg;
 #pragma mark 获取设备列表和添加设备成功之后放入内存
 - (void)resiveDevicelist:(NSMessage *)msg;
+#pragma mark Очистка массива устройств
+- (void)clearDeviceList;
 #pragma mark 获取被分享的设备
 - (void)getShareToMeList;
 

@@ -465,7 +465,7 @@ export const MonitorPage = ({ isAuth }: { isAuth: boolean }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 100,
+    paddingTop: 130,
     flex: 1,
     backgroundColor: 'pink',
   },

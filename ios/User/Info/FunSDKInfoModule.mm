@@ -57,6 +57,9 @@ RCT_EXPORT_METHOD(logout:(NSDictionary *)params
   if ([[LoginShowControl getInstance] getLoginType] != loginTypeNone) {
       [[LoginShowControl getInstance] setLoginType:loginTypeNone];
   }
+
+  [[DeviceManager getInstance] clearDeviceList];
+//  [[DeviceManager getInstance] addDeviceToList:[NSMessage SendMessag:nil obj:msg->pObject p1:msg->param1 p2:0]];
   
   resolve(nil);
 }
