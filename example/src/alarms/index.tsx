@@ -37,7 +37,7 @@ export const Alarms = () => {
     // 60 - 1 час
     // 24 - 1 сутки
     // 2 - 2 дня
-    const date = Date.now() - 1000 * 60 * 60 * 12 * 10;
+    const date = Date.now() - 1000 * 60 * 60 * 24 * 3;
     // const date = Date.now() - 1000 * 60 * 60;
 
     try {
@@ -60,7 +60,7 @@ export const Alarms = () => {
           deviceChannel: 0,
           alarmType: 0,
           startTime: date,
-          endTime: Date.now() + 1000 * 60 * 60 * 24,
+          endTime: Date.now(),
         });
       }
       console.log('handleSearch res: ', JSON.stringify(res, null, 2));

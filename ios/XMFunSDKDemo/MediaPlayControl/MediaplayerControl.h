@@ -52,6 +52,12 @@ enum MediaSpeedState{
 @protocol MediaplayerControlDelegate <NSObject>
 @optional
 
+-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer didUpdateState:(int)state;
+-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer didShowRateAndTime:(NSString *)time rate:(NSString *)rate;
+-(void)mediaPlayer:(MediaplayerControl *)mediaPlayer didBufferEnd:(BOOL)bufferEnded;
+-(void)mediaPlayer:(MediaplayerControl *)mediaPlayer didFailed:(int)msgId errorId:(int)errorId;
+-(void)mediaPlayer:(MediaplayerControl *)mediaPlayer didMediaPlayState:(int)state;
+
 #pragma mark  开始结果
 -(void)mediaPlayer:(MediaplayerControl*)mediaPlayer startResult:(int)result DSSResult:(int)dssResult;
 

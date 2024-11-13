@@ -1,149 +1,233 @@
-// import React, { useEffect, useState } from 'react';
-// import {
-//   Alert,
-//   FlatList,
-//   Image,
-//   Text,
-//   TouchableOpacity,
-//   View,
-// } from 'react-native';
-// import {
-//   downloadSingleImage,
-//   type RecordPlayerRef,
-//   type SearcResultRecordFile,
-// } from 'react-native-funsdk';
-// import { DEVICE_ID } from '../topsecret';
-// import {
-// createFolderIfNotExist,
-// getListOfFiles
-// } from '../utils/folder';
-// import ReactNativeBlobUtil from 'react-native-blob-util';
-// import {
-// askPermissionReadStorage,
-// askPermissionStorage,
-// } from '../utils/permisiion';
+import React, { useState } from 'react';
+import {
+  Alert,
+  FlatList,
+  Platform,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {
+  downloadSingleFile,
+  downloadSingleImage,
+  SearchDate,
+  type RecordPlayerRef,
+  type SearchDeviceFilesByDateItemResponse,
+} from 'react-native-funsdk';
+import { DEVICE_ID } from '../topsecret';
+import ReactNativeBlobUtil from 'react-native-blob-util';
+import {
+  // askPermissionReadStorage,
+  askPermissionStorage,
+} from '../utils/permisiion';
+import { createFolderIfNotExist, getFilesInFolder } from '../live/ImageSaver';
 
-// const RecordItem = ({}: // fileInfo,
-// index,
-// playerRef,
-// {
-// fileInfo: SearcResultRecordFile;
-// index: number;
-// playerRef: RecordPlayerRef | null;
-// }) => {
-// const [thumbLink, setThumbLink] = useState<string | null>(null);
-// useEffect(() => {
-//   if (thumbLink) {
-//     return;
-//   }
-//   const handleLoadThumb = async () => {
-//     try {
-//       let folder = ReactNativeBlobUtil.fs.dirs.PictureDir;
-//       const res = await createFolderIfNotExist(folder, DEVICE_ID);
-//       if (!res) {
-//         Alert.alert(
-//           'Невозможно создать директорию для сохранения изображений'
-//         );
-//         return;
-//       }
-//       const permissionAccess = await askPermissionStorage();
-//       // const permissionReadAccess = await askPermissionReadStorage();
-//       if (!permissionAccess) {
-//         Alert.alert('Отсутсвует разрешение на сохранение файлов');
-//         return;
-//       }
-//       console.log('fileInfo.startTimeOfYear: ', fileInfo.startTimeOfYear);
-//       const downloadInfo = await downloadSingleImage({
-//         deviceId: DEVICE_ID,
-//         deviceChannel: fileInfo.channel,
-//         imgSizes: {
-//           imgHeight: 90,
-//           imgWidth: 160,
-//         },
-//         timestamp: fileInfo.startTimeOfYear,
-//         mSaveImageDir: `${folder}/${DEVICE_ID}`,
-//         seq: index,
-//       });
-//       console.log('downloadInfo:', downloadInfo);
-//       setThumbLink(downloadInfo.imagePath);
-//     } catch (error) {
-//       console.log('handleLoadThumb error: ', error);
-//     }
-//   };
-//   handleLoadThumb();
-// }, [fileInfo.channel, fileInfo.startTimeOfYear, index, thumbLink]);
-// return (
-//   <View
-//     style={{
-//       paddingHorizontal: 8,
-//       marginVertical: 12,
-//     }}
-//     // key={item.filename}
-//   >
-//     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-//       {thumbLink && (
-//         <Image
-//           source={{ uri: `file://${thumbLink}` }}
-//           style={{ width: 150, aspectRatio: 16 / 9, marginRight: 4 }}
-//         />
-//       )}
-//       <View>
-//         <Text>channel: {fileInfo.channel}</Text>
-//         {/* <Text>filename: {fileInfo.filename}</Text> */}
-//         {/* <Text>filesize: {fileInfo.filesize}</Text> */}
-//         <Text>startDate: {fileInfo.startTimeOfYear}</Text>
-//         {/* <Text>endTimeLong: {fileInfo.endTimeLong}</Text> */}
-//         {/* <Text>streamType: {fileInfo.streamType}</Text> */}
-//       </View>
-//     </View>
-//     <View style={{ flexDirection: 'row' }}>
-//       <TouchableOpacity
-//         style={{ backgroundColor: 'green', margin: 2 }}
-//         onPress={() => playerRef?.startPlayRecord(index)}
-//       >
-//         <Text>start play record</Text>
-//       </TouchableOpacity>
-//       {/* <TouchableOpacity
-//         style={{ backgroundColor: 'green', margin: 2 }}
-//         // onPress={() => console.log('item: ', item)}
-//         onPress={handleLoadThumb}
-//       >
-//         <Text>load thumb image</Text>
-//       </TouchableOpacity> */}
-//     </View>
-//   </View>
-// );
-// };
+const searchDateToString = (date: SearchDate) => {
+  return `${date.day}.${date.month}.${date.year}-${date.hour}:${date.minute}:${date.second}`;
+};
 
-export const RecordList = ({}: // recordList,
-// playerRef,
-{
-  // recordList: SearcResultRecordFile[] | null;
-  // playerRef: RecordPlayerRef | null;
+const RecordItem = ({
+  fileInfo,
+  playerRef,
+}: {
+  fileInfo: SearchDeviceFilesByDateItemResponse;
+  playerRef: RecordPlayerRef | null;
 }) => {
-  // useEffect(() => {
-  //   const loadList = async () => {
-  //     let folder = ReactNativeBlobUtil.fs.dirs.PictureDir;
-  //     const files = await getListOfFiles(folder);
-  //     console.log('files: ', files);
-  //   };
+  const [thumbLink, setThumbLink] = useState<string | null>(null);
 
-  //   loadList();
-  // }, []);
+  const handleLoadThumb = async () => {
+    try {
+      let folder: string;
 
-  return null;
-  // return (
-  //   <FlatList
-  //     style={{ flex: 1 }}
-  //     data={recordList}
-  //     renderItem={({ item, index }) => (
-  //       <RecordItem
-  //         key={DEVICE_ID + item.startTimeOfYear + item.channel}
-  //         fileInfo={item}
-  //         index={index}
-  //         playerRef={playerRef}
-  //       />
-  //     )}
-  //   />
-  // );
+      if (Platform.OS === 'ios') {
+        folder = ReactNativeBlobUtil.fs.dirs.LibraryDir;
+      } else {
+        folder = ReactNativeBlobUtil.fs.dirs.PictureDir;
+      }
+      console.log('folder: ', folder);
+
+      const path = `${folder}/thumbs/${DEVICE_ID}`;
+
+      await createFolderIfNotExist(path);
+
+      const res = await getFilesInFolder(path);
+      console.log('getFilesInFolder res: ', res);
+
+      if (Platform.OS === 'android') {
+        const permissionAccess = await askPermissionStorage();
+        // const permissionReadAccess = await askPermissionReadStorage();
+        if (!permissionAccess) {
+          Alert.alert('Отсутсвует разрешение на сохранение файлов');
+          return;
+        }
+      }
+
+      const pathWithFileName = `${path}/${searchDateToString(
+        fileInfo.startTime
+      )}.jpg`;
+      console.log('pathWithFileName: ', pathWithFileName);
+
+      const downloadInfo = await downloadSingleImage({
+        deviceId: DEVICE_ID,
+        deviceChannel: fileInfo.channel,
+        imgSizes: {
+          imgHeight: 90,
+          imgWidth: 160,
+        },
+        mSaveImageDir: pathWithFileName,
+        time: fileInfo.startTime,
+        seq: 0,
+      });
+      console.log('downloadInfo:', downloadInfo);
+
+      const filesInFolderAfterLoading = await getFilesInFolder(path);
+      console.log('filesInFolderAfterLoading res: ', filesInFolderAfterLoading);
+
+      const pathWithFileNameStat = await ReactNativeBlobUtil.fs.stat(
+        pathWithFileName
+      );
+      console.log('pathWithFileNameStat res: ', pathWithFileNameStat);
+
+      Image.getSize(pathWithFileName, (width, height) => {
+        console.log('Image.getSize width height: ', width, height),
+          (error: any) => {
+            console.log('Image.getSize error: ', error);
+          };
+      });
+
+      setThumbLink(pathWithFileName);
+    } catch (error) {
+      console.log('handleLoadThumb error: ', error);
+    }
+  };
+
+  const handleLoadVideoFile = async () => {
+    try {
+      let folder: string;
+
+      if (Platform.OS === 'ios') {
+        folder = ReactNativeBlobUtil.fs.dirs.LibraryDir;
+      } else {
+        folder = ReactNativeBlobUtil.fs.dirs.MovieDir;
+      }
+      console.log('folder: ', folder);
+
+      const path = `${folder}/video/${DEVICE_ID}`;
+
+      await createFolderIfNotExist(path);
+
+      const res = await getFilesInFolder(path);
+      console.log('getFilesInFolder res: ', res);
+
+      if (Platform.OS === 'android') {
+        const permissionAccess = await askPermissionStorage();
+        // const permissionReadAccess = await askPermissionReadStorage();
+        if (!permissionAccess) {
+          Alert.alert('Отсутсвует разрешение на сохранение файлов');
+          return;
+        }
+      }
+
+      const pathWithFileName = `${path}/${searchDateToString(
+        fileInfo.startTime
+      )}.mp4`;
+      console.log('pathWithFileName: ', pathWithFileName);
+
+      const downloadInfo = await downloadSingleFile({
+        deviceId: DEVICE_ID,
+        deviceChannel: fileInfo.channel,
+        mSaveImageDir: pathWithFileName,
+        startTime: fileInfo.startTime,
+        endTime: fileInfo.endTime,
+        fileName: fileInfo.fileName,
+      });
+      console.log('downloadInfo:', downloadInfo);
+
+      const filesInFolderAfterLoading = await getFilesInFolder(path);
+      console.log('filesInFolderAfterLoading res: ', filesInFolderAfterLoading);
+
+      const pathWithFileNameStat = await ReactNativeBlobUtil.fs.stat(
+        pathWithFileName
+      );
+      console.log('pathWithFileNameStat res: ', pathWithFileNameStat);
+    } catch (error) {
+      console.log('handleLoadVideoFile error: ', error);
+    }
+  };
+
+  return (
+    <View
+      style={{
+        paddingHorizontal: 8,
+        marginVertical: 12,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        {thumbLink && (
+          <Image
+            source={{ uri: `file://${thumbLink}` }}
+            style={{ width: 150, aspectRatio: 16 / 9, marginRight: 4 }}
+          />
+        )}
+        <View>
+          <Text>channel: {fileInfo.channel}</Text>
+          <Text>filename: {fileInfo.fileName}</Text>
+          <Text>filesize: {fileInfo.size}</Text>
+          <Text>startDate: {searchDateToString(fileInfo.startTime)}</Text>
+          <Text>endDate: {searchDateToString(fileInfo.endTime)}</Text>
+          <Text>streamType: {fileInfo.streamType}</Text>
+        </View>
+      </View>
+      <View style={{ flexDirection: 'row' }}>
+        <TouchableOpacity
+          hitSlop={20}
+          style={{ backgroundColor: 'green', margin: 2 }}
+          onPress={() => {
+            console.log('playerRef: ', playerRef);
+            playerRef?.stopPlay();
+            playerRef?.startPlayRecordByTime(
+              fileInfo.startTime,
+              fileInfo.endTime
+            );
+          }}
+        >
+          <Text>start play record</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ backgroundColor: 'green', margin: 2 }}
+          // onPress={() => console.log('item: ', item)}
+          onPress={handleLoadThumb}
+        >
+          <Text>load thumb image</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ backgroundColor: 'green', margin: 2 }}
+          // onPress={() => console.log('item: ', item)}
+          onPress={handleLoadVideoFile}
+        >
+          <Text>load video file</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+export const RecordList = ({
+  recordList,
+  playerRef,
+}: {
+  recordList: SearchDeviceFilesByDateItemResponse[] | null;
+  playerRef: RecordPlayerRef | null;
+}) => {
+  return (
+    <FlatList
+      style={{ flex: 1 }}
+      data={recordList}
+      keyExtractor={(item) => item.fileName + item.size}
+      renderItem={({ item }) => (
+        <RecordItem fileInfo={item} playerRef={playerRef} />
+      )}
+    />
+  );
 };

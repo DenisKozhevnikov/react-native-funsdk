@@ -12,11 +12,14 @@ import type {
   FUNSDK_DOWNLOAD_STATE_ENUM,
   FUNSDK_MEDIA_PLAY_STATE_ENUM,
 } from '../types/stream';
+import type { SearchDate } from '../manager';
 
 const Commands = {
   init: 'init',
-  startPlayRecord: 'startPlayRecord',
-  searchRecordByFile: 'searchRecordByFile',
+  // depreceated on ios, use startPlayRecordByTime
+  // startPlayRecord: 'startPlayRecord',
+  // depreceated on ios, use searchDeviceFilesByDate
+  // searchRecordByFile: 'searchRecordByFile',
   capture: 'capture',
   startRecord: 'startRecord',
   stopRecord: 'stopRecord',
@@ -47,24 +50,24 @@ export enum SearcResultRecordEnum {
   RECORD_TIMELIST = 'recordtimelist',
 }
 
-export type SearcResultRecordFile = {
-  channel: number;
-  filesize: number;
-  filename: string;
-  startDate: string;
-  startTimeOfDay: string;
-  startTimeOfYear: string;
-  startTimeLong: number;
-  endTimeOfDay: string;
-  endTimeOfYear: string;
-  endTimeLong: number;
-  endTimeLong24Hours: number;
-  alarmExFileInfo: string;
-  fileTimeLong: number;
-  streamType: number;
+// export type SearcResultRecordFile = {
+//   channel: number;
+//   filesize: number;
+//   filename: string;
+//   startDate: string;
+//   startTimeOfDay: string;
+//   startTimeOfYear: string;
+//   startTimeLong: number;
+//   endTimeOfDay: string;
+//   endTimeOfYear: string;
+//   endTimeLong: number;
+//   endTimeLong24Hours: number;
+//   alarmExFileInfo: string;
+//   fileTimeLong: number;
+//   streamType: number;
 
-  startTimestamp: string;
-};
+//   startTimestamp: string;
+// };
 
 export type RecordViewNativeProps = ViewProps & {
   onMediaPlayState: (event: {
@@ -74,16 +77,18 @@ export type RecordViewNativeProps = ViewProps & {
     nativeEvent: { time: string; rate: string };
   }) => void;
   onVideoBufferEnd: (event: { nativeEvent: { isBufferEnd: boolean } }) => void;
-  onSearchRecordByFilesResult: (event: {
-    nativeEvent: {
-      type: SearcResultRecordEnum;
-      list: SearcResultRecordFile[];
-    };
-  }) => void;
+  // onSearchRecordByFilesResult: (event: {
+  //   nativeEvent: {
+  //     type: SearcResultRecordEnum;
+  //     list: SearcResultRecordFile[];
+  //   };
+  // }) => void;
   onFailed: (event: {
     nativeEvent: { msgId: number; errorId: number };
   }) => void;
-  onStartInit: (event: { nativeEvent: {} }) => void;
+  onStartInit: (event: {
+    nativeEvent: { status: 'start' | 'initialized' };
+  }) => void;
   onDebugState: (event: { nativeEvent: { state: string } }) => void;
   onDownloadProgress?: (event: { nativeEvent: { progress: number } }) => void;
   onDownloadState?: (event: {
@@ -109,13 +114,13 @@ export type RecordPlayerProps = ViewProps & {
   }) => void;
   onShowRateAndTime?: (obj: { time: string; rate: string }) => void;
   onVideoBufferEnd?: (obj: { isBufferEnd: boolean }) => void;
-  onSearchRecordByFilesResult?: (obj?: {
-    type: SearcResultRecordEnum;
-    list: SearcResultRecordFile[];
-  }) => void;
+  // onSearchRecordByFilesResult?: (obj?: {
+  //   type: SearcResultRecordEnum;
+  //   list: SearcResultRecordFile[];
+  // }) => void;
   // onSearchRecordByTimesResult: (...props: any) => void;
   onFailed?: (obj: { msgId: number; errorId: number }) => void;
-  onStartInit?: () => void;
+  onStartInit?: (obj: { status: 'start' | 'initialized' }) => void;
   onDebugState?: (obj: { state: string }) => void;
   onDownloadProgress?: (obj: { progress: number }) => void;
   onDownloadState?: (obj: {
@@ -126,9 +131,9 @@ export type RecordPlayerProps = ViewProps & {
 
 export type RecordPlayerRef = {
   init: () => void;
-  startPlayRecord: (position: number) => void;
-  startPlayRecordByTime: (startTimestamp: number, endTimestamp: number) => void;
-  searchRecordByFile: (startTimestamp: number, endTimestamp: number) => void;
+  // startPlayRecord: (position: number) => void;
+  startPlayRecordByTime: (start: SearchDate, end: SearchDate) => void;
+  // searchRecordByFile: (startTimestamp: number, endTimestamp: number) => void;
   capture: (path: string) => void;
   startRecord: (path: string) => void;
   stopRecord: () => void;
@@ -141,7 +146,8 @@ export type RecordPlayerRef = {
   destroyPlay: () => void;
   isRecordPlay: () => void;
   downloadFile: (position: number, path: string) => void;
-  setPlaySpeed: (playSpeed: -3 | -2 | -1 | 0 | 1 | 2 | 3 | number) => void;
+  // setPlaySpeed: (playSpeed: -3 | -2 | -1 | 0 | 1 | 2 | 3 | number) => void;
+  setPlaySpeed: (playSpeed: 0 | 1 | 2 | number) => void;
 };
 
 export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
@@ -150,7 +156,7 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
       onMediaPlayState,
       onShowRateAndTime,
       onVideoBufferEnd,
-      onSearchRecordByFilesResult,
+      // onSearchRecordByFilesResult,
       // onSearchRecordByTimesResult,
       onFailed,
       onStartInit,
@@ -183,20 +189,22 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
       onVideoBufferEnd && onVideoBufferEnd(event.nativeEvent);
     };
 
-    const _onSearchRecordByFilesResult = (
-      event: Parameters<RecordViewNativeProps['onSearchRecordByFilesResult']>[0]
-    ) => {
-      onSearchRecordByFilesResult &&
-        onSearchRecordByFilesResult(event.nativeEvent);
-    };
+    // const _onSearchRecordByFilesResult = (
+    //   event: Parameters<RecordViewNativeProps['onSearchRecordByFilesResult']>[0]
+    // ) => {
+    //   onSearchRecordByFilesResult &&
+    //     onSearchRecordByFilesResult(event.nativeEvent);
+    // };
 
     // const _onSearchRecordByTimesResult = (event: any) => {
     //   onSearchRecordByTimesResult &&
     //     onSearchRecordByTimesResult(event.nativeEvent);
     // };
 
-    const _onStartInit = () => {
-      onStartInit && onStartInit();
+    const _onStartInit = (event: {
+      nativeEvent: { status: 'start' | 'initialized' };
+    }) => {
+      onStartInit && onStartInit(event.nativeEvent);
     };
 
     const _onFailed = (event: {
@@ -238,16 +246,16 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
 
             dispatchCommand(viewId, Commands.init, []);
           },
-          startPlayRecord(position: number) {
-            const viewId = findNodeHandle(viewRef.current);
+          // startPlayRecord(position: number) {
+          //   const viewId = findNodeHandle(viewRef.current);
 
-            if (typeof viewId !== 'number') {
-              return;
-            }
+          //   if (typeof viewId !== 'number') {
+          //     return;
+          //   }
 
-            dispatchCommand(viewId, Commands.startPlayRecord, [position]);
-          },
-          startPlayRecordByTime(startTimestamp: number, endTimestamp: number) {
+          //   dispatchCommand(viewId, Commands.startPlayRecord, [position]);
+          // },
+          startPlayRecordByTime(start: SearchDate, end: SearchDate) {
             const viewId = findNodeHandle(viewRef.current);
 
             if (typeof viewId !== 'number') {
@@ -255,22 +263,22 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
             }
 
             dispatchCommand(viewId, Commands.startPlayRecordByTime, [
-              startTimestamp,
-              endTimestamp,
+              start,
+              end,
             ]);
           },
-          searchRecordByFile(startTimestamp: number, endTimestamp: number) {
-            const viewId = findNodeHandle(viewRef.current);
+          // searchRecordByFile(startTimestamp: number, endTimestamp: number) {
+          //   const viewId = findNodeHandle(viewRef.current);
 
-            if (typeof viewId !== 'number') {
-              return;
-            }
+          //   if (typeof viewId !== 'number') {
+          //     return;
+          //   }
 
-            dispatchCommand(viewId, Commands.searchRecordByFile, [
-              startTimestamp,
-              endTimestamp,
-            ]);
-          },
+          //   dispatchCommand(viewId, Commands.searchRecordByFile, [
+          //     startTimestamp,
+          //     endTimestamp,
+          //   ]);
+          // },
 
           capture(path: string) {
             const viewId = findNodeHandle(viewRef.current);
@@ -409,7 +417,7 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
         onMediaPlayState={_onMediaPlayState}
         onShowRateAndTime={_onShowRateAndTime}
         onVideoBufferEnd={_onVideoBufferEnd}
-        onSearchRecordByFilesResult={_onSearchRecordByFilesResult}
+        // onSearchRecordByFilesResult={_onSearchRecordByFilesResult}
         // onSearchRecordByTimesResult={_onSearchRecordByTimesResult}
         onFailed={_onFailed}
         onStartInit={_onStartInit}

@@ -170,81 +170,112 @@
     [self.mediaPlayer StoreSnap];
 }
 
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer startResult:(int)result DSSResult:(int)dssResult {
-    // TODO: add
-}
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer startResult:(int)result DSSResult:(int)dssResult {
+//    // TODO: add
+//}
 
 -(void)mediaPlayer:(MediaplayerControl*)mediaPlayer buffering:(BOOL)isBuffering ratioDetail:(double)ratioDetail {
     if (self.mediaPlayer) {
         self.onVideoBufferEnd(@{
             @"target": self.reactTag,
-            @"isBufferEnd": @(isBuffering)
+            @"isBufferEnd": @(!isBuffering)
         });
     }
 }
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer info1:(int)nInfo info2:(NSString*)strInfo {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer pauseOrResumeResult:(int)result {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer stopResult:(int)result {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl *)mediaPlayer timeInfo:(int)timeinfo {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer DevTime:(NSString *)time {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer refreshPlayResult:(int)result {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer width:(int)width htight:(int)height {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer startRecordResult:(int)result path:(NSString*)path {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer stopRecordResult:(int)result path:(NSString*)path {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer snapImagePath:(NSString *)path result:(int)result {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer thumbnailImagePath:(NSString *)path result:(int)result {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer storeSnapresult:(int)result {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer Hardandsoft:(int)Hardandsoft Hardmodel:(int)Hardmodel {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer width:(int)width height:(int)height pYUV:(unsigned char *)pYUV {
+//    // TODO: add
+//}
+//
+//-(void)centerOffSetX:(MediaplayerControl*)mediaPlayer  offSetx:(short)OffSetx offY:(short)OffSetY  radius:(short)radius width:(short)width height:(short)height {
+//    // TODO: add
+//}
+//
+//-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer AnalyzelLength:(int)length site:(int)type Analyzel:(char*)area {
+//    // TODO: add
+//}
 
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer info1:(int)nInfo info2:(NSString*)strInfo {
-    // TODO: add
+
+- (void)mediaPlayer:(MediaplayerControl*)mediaPlayer didUpdateState:(int)state {
+  self.onMediaPlayState(@{
+    @"target": self.reactTag,
+    @"state": @(state),
+  });
 }
 
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer pauseOrResumeResult:(int)result {
-    // TODO: add
+-(void)mediaPlayer:(MediaplayerControl*)mediaPlayer didShowRateAndTime:(NSString *)time rate:(NSString *)rate {
+  self.onShowRateAndTime(@{
+    @"target": self.reactTag,
+    @"time": time,
+    @"rate": rate,
+  });
 }
 
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer stopResult:(int)result {
-    // TODO: add
+- (void)mediaPlayer:(MediaplayerControl *)mediaPlayer didBufferEnd:(BOOL)bufferEnded {
+  self.onVideoBufferEnd(@{
+    @"target": self.reactTag,
+    @"isBufferEnd": @(bufferEnded)
+  });
 }
 
--(void)mediaPlayer:(MediaplayerControl *)mediaPlayer timeInfo:(int)timeinfo {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer DevTime:(NSString *)time {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer refreshPlayResult:(int)result {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer width:(int)width htight:(int)height {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer startRecordResult:(int)result path:(NSString*)path {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer stopRecordResult:(int)result path:(NSString*)path {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer snapImagePath:(NSString *)path result:(int)result {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer thumbnailImagePath:(NSString *)path result:(int)result {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer storeSnapresult:(int)result {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer Hardandsoft:(int)Hardandsoft Hardmodel:(int)Hardmodel {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer width:(int)width height:(int)height pYUV:(unsigned char *)pYUV {
-    // TODO: add
-}
-
--(void)centerOffSetX:(MediaplayerControl*)mediaPlayer  offSetx:(short)OffSetx offY:(short)OffSetY  radius:(short)radius width:(short)width height:(short)height {
-    // TODO: add
-}
-
--(void)mediaPlayer:(MediaplayerControl*)mediaPlayer AnalyzelLength:(int)length site:(int)type Analyzel:(char*)area {
-    // TODO: add
+-(void)mediaPlayer:(MediaplayerControl *)mediaPlayer didFailed:(int)msgId errorId:(int)errorId {
+  self.onFailed(@{
+    @"target": self.reactTag,
+    @"msgId": @(msgId),
+    @"errorId": @(errorId)
+  });
 }
 
 @end

@@ -56,9 +56,10 @@ public class FunSDKRecordPlayerManager extends SimpleViewManager<FunSDKRecordVie
     view.setChannelId(channelId);
   }
 
-  private static final String COMMAND_INIT_RECORD = "init";
+  private static final String COMMAND_INIT_RECORD = "init"; // +
   private static final int COMMAND_INIT_RECORD_ID = 9999;
-  private static final String COMMAND_START_PLAY_RECORD = "startPlayRecord";
+  // не стоит использовать?
+  private static final String COMMAND_START_PLAY_RECORD = "startPlayRecord"; // +
   private static final int COMMAND_START_PLAY_RECORD_ID = 1;
   private static final String COMMAND_SEARCH_RECORD_BY_FILE = "searchRecordByFile";
   private static final int COMMAND_SEARCH_RECORD_BY_FILE_ID = 2;

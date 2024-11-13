@@ -64,6 +64,26 @@ export enum STREAM_TYPE {
   ALL = 2,
 }
 
+// typedef enum SDK_File_Type
+// {
+//     SDK_RECORD_ALL = 0,         // 全部录像(查询类型:h264/子类型:*)
+//     SDK_RECORD_ALARM = 1,       // 外部报警录像(查询类型:h264/子类型:A)
+//     SDK_RECORD_DETECT = 2,      // 视频侦测录像(查询类型:h264/子类型:M)
+//     SDK_RECORD_REGULAR = 3,     // 普通录像(查询类型:h264/子类型:*)
+//     SDK_RECORD_MANUAL = 4,      // 手动录像(查询类型:h264//子类型:H)
+//     SDK_RECORD_KEY = 5,         // 关键录像(查询类型:h264/子类型:K)
+//     SDK_RECORD_URGENT = 6,      // 紧急录像(查询类型:h264/子类型:V)
+//     SDK_RECORD_ORIGINAL = 7,    // 原始录像(查询类型:mp4/子类型:R)
+//     SDK_PIC_ALL = 10,           // 全部图片(查询类型:jpg/子类型:*）
+//     SDK_PIC_ALARM = 11,         // 外部报警图片(查询类型:jpg/子类型:A）
+//     SDK_PIC_DETECT = 12,    // 视频侦测图片(查询类型:jpg/子类型:M）
+//     SDK_PIC_REGULAR = 13,       // 普通图片(查询类型:jpg/子类型:R）
+//     SDK_PIC_MANUAL = 14,        // 手动图片(查询类型:jpg/子类型:H）
+//     SDK_PIC_IDXIMG = 15,    // 索引图片(查询类型:jpg/子类型:*）
+//   SDK_PIC_KEY = 16,        // 关键图片(查询类型:jpg/子类型:K）
+//   SDK_PIC_INDUCTION = 17,      // 感应图片(查询子类型:P）
+// }SDK_File_Type;
+
 export enum FILE_TYPE {
   SDK_RECORD_ALL = 0,
   SDK_RECORD_ALARM = 1,

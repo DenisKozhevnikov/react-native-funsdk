@@ -38,6 +38,11 @@ export type AlarmInfo = {
     Event: AlarmType;
     DevName: string;
     Pic: string;
+    PicInfo?: {
+      ObjSize: number;
+      ObjName: string;
+      StorageBucket: string;
+    };
   };
 
   // Android

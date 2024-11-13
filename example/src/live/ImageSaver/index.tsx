@@ -13,7 +13,7 @@ import { Permission, PermissionsAndroid, Platform } from 'react-native';
 //       console.log(error);
 //     });
 // }
-const createFolderIfNotExist = async (path: string) => {
+export const createFolderIfNotExist = async (path: string) => {
   const isExists = await ReactNativeBlobUtil.fs.exists(path);
   console.log('createFolderIfNotExist isExists: ', isExists);
   if (!isExists) {
@@ -21,7 +21,7 @@ const createFolderIfNotExist = async (path: string) => {
   }
 };
 
-const getFilesInFolder = async (path: string) => {
+export const getFilesInFolder = async (path: string) => {
   await createFolderIfNotExist(path);
   return await ReactNativeBlobUtil.fs.ls(path);
 };

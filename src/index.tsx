@@ -28,12 +28,12 @@ export * from './info';
 export * from './login';
 // export * from './modify';
 export * from './device';
-// export * from './manager';
+export * from './manager';
 export * from './alarms';
 
 // // views
 export * from './monitor';
-// export * from './record';
+export * from './record';
 
 // //types
 export * from './types';

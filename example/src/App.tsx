@@ -2,6 +2,7 @@ import * as React from 'react';
 
 import {
   Button,
+  Dimensions,
   ScrollView,
   //   StyleSheet,
   //   View,
@@ -10,7 +11,7 @@ import {
 } from 'react-native';
 // import RNFetchBlob from 'rn-fetch-blob';
 
-// import { RecordPage } from './record';
+import { RecordPage } from './record';
 import { MonitorPage } from './live';
 // import { WIFIDevice } from './wifi';
 // import { useInit } from './init';
@@ -32,7 +33,7 @@ import { DeviceList } from './list';
 // По мере добавления в библиотеку методов из ios будет дополняться
 export default function App() {
   const [currScreen, setCurrScreen] = React.useState<
-    'DeviceList' | 'MonitorPage' | 'Alarms'
+    'DeviceList' | 'MonitorPage' | 'Alarms' | 'RecordPage'
   >('DeviceList');
   const { isInit, isAuth, statusText, reinit, logoutsdk } = useInit();
   const [showInit, setShowInit] = React.useState(true);
@@ -54,7 +55,9 @@ export default function App() {
         }}
       >
         {showInit && (
-          <>
+          <ScrollView
+            style={{ maxHeight: Dimensions.get('window').height / 2 }}
+          >
             <Text>isInit: {isInit.toString()}</Text>
             <Text>text: {statusText?.text}</Text>
             <Text>value: {JSON.stringify(statusText?.value)}</Text>
@@ -68,8 +71,12 @@ export default function App() {
                 onPress={() => setCurrScreen('MonitorPage')}
               />
               <Button title="Alarms" onPress={() => setCurrScreen('Alarms')} />
+              <Button
+                title="RecordPage"
+                onPress={() => setCurrScreen('RecordPage')}
+              />
             </ScrollView>
-          </>
+          </ScrollView>
         )}
         <TouchableOpacity
           style={{ backgroundColor: 'red', height: 30 }}
@@ -105,6 +112,7 @@ export default function App() {
           {currScreen === 'DeviceList' && <DeviceList />}
           {currScreen === 'MonitorPage' && <MonitorPage isAuth={true} />}
           {currScreen === 'Alarms' && <Alarms />}
+          {currScreen === 'RecordPage' && <RecordPage />}
         </>
       )}
     </SafeAreaView>

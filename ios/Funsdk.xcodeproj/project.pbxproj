@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A207BC762CD7E8AA0048276A /* FunSDKRecordPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = A207BC752CD7E8AA0048276A /* FunSDKRecordPlayer.mm */; };
+		A207BC792CD7EF510048276A /* FunSDKRecordPlayerManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = A207BC782CD7EF510048276A /* FunSDKRecordPlayerManager.mm */; };
+		A207BC7E2CD814F80048276A /* FunSDKDeviceSearchByTime.mm in Sources */ = {isa = PBXBuildFile; fileRef = A207BC7D2CD814F80048276A /* FunSDKDeviceSearchByTime.mm */; };
 		A21D39382C84DD6100E6F0E6 /* FunSDKVideoPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D39342C84DD6100E6F0E6 /* FunSDKVideoPlayer.mm */; };
 		A21D39392C84DD6100E6F0E6 /* FunSDKVideoPlayerManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D39362C84DD6100E6F0E6 /* FunSDKVideoPlayerManager.mm */; };
 		A21D3FCF2C84DD9200E6F0E6 /* AlarmManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D393B2C84DD9100E6F0E6 /* AlarmManager.mm */; };
@@ -349,6 +352,8 @@
 		A21D42122C84DDAD00E6F0E6 /* FunSDKDevStatusModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D42062C84DDAD00E6F0E6 /* FunSDKDevStatusModule.mm */; };
 		A21D42132C84DDAD00E6F0E6 /* FunSDKLoginModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D420A2C84DDAD00E6F0E6 /* FunSDKLoginModule.mm */; };
 		A21D42142C84DDAD00E6F0E6 /* FunSDKRegisterModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D420D2C84DDAD00E6F0E6 /* FunSDKRegisterModule.mm */; };
+		A2767C5E2CE5459100CA5F83 /* FunSDKDeviceFileSearch.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2767C5D2CE5459100CA5F83 /* FunSDKDeviceFileSearch.mm */; };
+		A2767C622CE545A700CA5F83 /* FunSDKDeviceImageModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2767C602CE545A700CA5F83 /* FunSDKDeviceImageModule.mm */; };
 		A2DE94D92BA5F6FC00F0C71D /* FunSDKCoreModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.mm */; };
 		A2ED05A82CB8638B0049E878 /* FunSDKInfoModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2ED05A72CB8638B0049E878 /* FunSDKInfoModule.mm */; };
 		A2ED05AC2CB865A70049E878 /* FunSDKDevAlarmModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2ED05AA2CB865A70049E878 /* FunSDKDevAlarmModule.mm */; };
@@ -368,6 +373,12 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libFunsdk.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFunsdk.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		A207BC742CD7E8480048276A /* FunSDKRecordPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKRecordPlayer.h; sourceTree = "<group>"; };
+		A207BC752CD7E8AA0048276A /* FunSDKRecordPlayer.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = FunSDKRecordPlayer.mm; sourceTree = "<group>"; };
+		A207BC772CD7EF440048276A /* FunSDKRecordPlayerManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKRecordPlayerManager.h; sourceTree = "<group>"; };
+		A207BC782CD7EF510048276A /* FunSDKRecordPlayerManager.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = FunSDKRecordPlayerManager.mm; sourceTree = "<group>"; };
+		A207BC7C2CD814ED0048276A /* FunSDKDeviceSearchByTime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKDeviceSearchByTime.h; sourceTree = "<group>"; };
+		A207BC7D2CD814F80048276A /* FunSDKDeviceSearchByTime.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = FunSDKDeviceSearchByTime.mm; sourceTree = "<group>"; };
 		A21D39332C84DD6100E6F0E6 /* FunSDKVideoPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FunSDKVideoPlayer.h; sourceTree = "<group>"; };
 		A21D39342C84DD6100E6F0E6 /* FunSDKVideoPlayer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKVideoPlayer.mm; sourceTree = "<group>"; };
 		A21D39352C84DD6100E6F0E6 /* FunSDKVideoPlayerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FunSDKVideoPlayerManager.h; sourceTree = "<group>"; };
@@ -1323,6 +1334,10 @@
 		A21D420A2C84DDAD00E6F0E6 /* FunSDKLoginModule.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKLoginModule.mm; sourceTree = "<group>"; };
 		A21D420C2C84DDAD00E6F0E6 /* FunSDKRegisterModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FunSDKRegisterModule.h; sourceTree = "<group>"; };
 		A21D420D2C84DDAD00E6F0E6 /* FunSDKRegisterModule.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKRegisterModule.mm; sourceTree = "<group>"; };
+		A2767C5C2CE5459100CA5F83 /* FunSDKDeviceFileSearch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKDeviceFileSearch.h; sourceTree = "<group>"; };
+		A2767C5D2CE5459100CA5F83 /* FunSDKDeviceFileSearch.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKDeviceFileSearch.mm; sourceTree = "<group>"; };
+		A2767C5F2CE545A700CA5F83 /* FunSDKDeviceImageModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKDeviceImageModule.h; sourceTree = "<group>"; };
+		A2767C602CE545A700CA5F83 /* FunSDKDeviceImageModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKDeviceImageModule.mm; sourceTree = "<group>"; };
 		A2DE94D72BA5F65D00F0C71D /* FunSDKCoreModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKCoreModule.h; sourceTree = "<group>"; };
 		A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKCoreModule.mm; sourceTree = "<group>"; };
 		A2ED05A62CB863790049E878 /* FunSDKInfoModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKInfoModule.h; sourceTree = "<group>"; };
@@ -1355,14 +1370,47 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				A2DE94D62BA5F60600F0C71D /* Core */,
+				A207BC7A2CD814C50048276A /* Manager */,
 				A21D420F2C84DDAD00E6F0E6 /* User */,
 				A21D3FCE2C84DD9100E6F0E6 /* XMFunSDKDemo */,
+				A207BC722CD7E3930048276A /* RecordPlayer */,
 				A21D39372C84DD6100E6F0E6 /* Player */,
-				A2DE94D62BA5F60600F0C71D /* Core */,
 				B3E7B5881CC2AC0600A0062D /* Funsdk.h */,
 				B3E7B5891CC2AC0600A0062D /* Funsdk.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		A207BC722CD7E3930048276A /* RecordPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				A207BC742CD7E8480048276A /* FunSDKRecordPlayer.h */,
+				A207BC752CD7E8AA0048276A /* FunSDKRecordPlayer.mm */,
+				A207BC772CD7EF440048276A /* FunSDKRecordPlayerManager.h */,
+				A207BC782CD7EF510048276A /* FunSDKRecordPlayerManager.mm */,
+			);
+			path = RecordPlayer;
+			sourceTree = "<group>";
+		};
+		A207BC7A2CD814C50048276A /* Manager */ = {
+			isa = PBXGroup;
+			children = (
+				A2767C612CE545A700CA5F83 /* Image */,
+				A207BC7B2CD814DA0048276A /* Search */,
+			);
+			path = Manager;
+			sourceTree = "<group>";
+		};
+		A207BC7B2CD814DA0048276A /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				A2767C5C2CE5459100CA5F83 /* FunSDKDeviceFileSearch.h */,
+				A2767C5D2CE5459100CA5F83 /* FunSDKDeviceFileSearch.mm */,
+				A207BC7C2CD814ED0048276A /* FunSDKDeviceSearchByTime.h */,
+				A207BC7D2CD814F80048276A /* FunSDKDeviceSearchByTime.mm */,
+			);
+			path = Search;
 			sourceTree = "<group>";
 		};
 		A21D39372C84DD6100E6F0E6 /* Player */ = {
@@ -4159,6 +4207,15 @@
 			path = User;
 			sourceTree = "<group>";
 		};
+		A2767C612CE545A700CA5F83 /* Image */ = {
+			isa = PBXGroup;
+			children = (
+				A2767C5F2CE545A700CA5F83 /* FunSDKDeviceImageModule.h */,
+				A2767C602CE545A700CA5F83 /* FunSDKDeviceImageModule.mm */,
+			);
+			path = Image;
+			sourceTree = "<group>";
+		};
 		A2DE94D62BA5F60600F0C71D /* Core */ = {
 			isa = PBXGroup;
 			children = (
@@ -4285,6 +4342,7 @@
 				A21D41832C84DD9200E6F0E6 /* PictureDownloadViewController.mm in Sources */,
 				A21D41822C84DD9200E6F0E6 /* MonthPictureViewController.mm in Sources */,
 				A21D418B2C84DD9200E6F0E6 /* DoorBellCfgVC.mm in Sources */,
+				A207BC792CD7EF510048276A /* FunSDKRecordPlayerManager.mm in Sources */,
 				A21D40572C84DD9200E6F0E6 /* TimeQuery.m in Sources */,
 				A21D40222C84DD9200E6F0E6 /* VideoFileDownloadConfig.mm in Sources */,
 				A21D3FF82C84DD9200E6F0E6 /* AlarmPIRConfig.mm in Sources */,
@@ -4355,6 +4413,7 @@
 				A21D41E52C84DD9200E6F0E6 /* CYGLKView.m in Sources */,
 				A21D40292C84DD9200E6F0E6 /* OPProCmdConfig.mm in Sources */,
 				A21D40602C84DD9200E6F0E6 /* split.m in Sources */,
+				A2767C5E2CE5459100CA5F83 /* FunSDKDeviceFileSearch.mm in Sources */,
 				A21D40502C84DD9200E6F0E6 /* MediaplayerControl.mm in Sources */,
 				A21D39382C84DD6100E6F0E6 /* FunSDKVideoPlayer.mm in Sources */,
 				A21D41812C84DD9200E6F0E6 /* SystemInfoManager.mm in Sources */,
@@ -4370,6 +4429,7 @@
 				A21D3FD22C84DD9200E6F0E6 /* DeviceLoginTipsManager.mm in Sources */,
 				A21D40422C84DD9200E6F0E6 /* SystemResetConfig.mm in Sources */,
 				A21D41D52C84DD9200E6F0E6 /* WaterMarkViewController.mm in Sources */,
+				A207BC762CD7E8AA0048276A /* FunSDKRecordPlayer.mm in Sources */,
 				A21D41C92C84DD9200E6F0E6 /* ShareToMeVC.m in Sources */,
 				A21D3FE82C84DD9200E6F0E6 /* UIImage+Ex.m in Sources */,
 				A21D414F2C84DD9200E6F0E6 /* UserBindViewController.mm in Sources */,
@@ -4380,6 +4440,7 @@
 				A21D41662C84DD9200E6F0E6 /* AlarmMessageCell.m in Sources */,
 				A21D41C42C84DD9200E6F0E6 /* XMWallSwitchView.m in Sources */,
 				A21D416E2C84DD9200E6F0E6 /* NetCustomRecordVC.mm in Sources */,
+				A207BC7E2CD814F80048276A /* FunSDKDeviceSearchByTime.mm in Sources */,
 				A21D401A2C84DD9200E6F0E6 /* JFDevConfigServiceModel.m in Sources */,
 				A21D3FDA2C84DD9200E6F0E6 /* LoginShowControl.m in Sources */,
 				A21D41BE2C84DD9200E6F0E6 /* UIView+WZLBadge.m in Sources */,
@@ -4528,6 +4589,7 @@
 				A21D40122C84DD9200E6F0E6 /* JFUserAuthorizationManager.m in Sources */,
 				A21D40142C84DD9200E6F0E6 /* TransferModel.mm in Sources */,
 				A21D41C62C84DD9200E6F0E6 /* MyShareVC.m in Sources */,
+				A2767C622CE545A700CA5F83 /* FunSDKDeviceImageModule.mm in Sources */,
 				A21D41612C84DD9200E6F0E6 /* MyRadarView.m in Sources */,
 				A21D41CC2C84DD9200E6F0E6 /* ShareModel.mm in Sources */,
 				A21D417B2C84DD9200E6F0E6 /* EncrypManager.m in Sources */,

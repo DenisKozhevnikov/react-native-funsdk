@@ -186,53 +186,98 @@
     FUN_MediaSetPlaySpeed(self.player, speed, 0);
 }
 
+- (void)updateState:(int)state {
+    if ([self.delegate respondsToSelector:@selector(mediaPlayer:didUpdateState:)]) {
+        [self.delegate mediaPlayer:self didUpdateState:state];
+    }
+}
+
+- (void)showRateAndTime:(NSString *)time rate:(NSString *)rate {
+    if ([self.delegate respondsToSelector:@selector(mediaPlayer:didShowRateAndTime:rate:)]) {
+        [self.delegate mediaPlayer:self didShowRateAndTime:time rate:rate];
+    }
+}
+
+- (void)bufferEnd {
+    if ([self.delegate respondsToSelector:@selector(mediaPlayer:didBufferEnd:)]) {
+        [self.delegate mediaPlayer:self didBufferEnd:true];
+    }
+}
+
+- (void)failed:(int)msgId errorId:(int)errorId {
+    if ([self.delegate respondsToSelector:@selector(mediaPlayer:didFailed:errorId:)]) {
+        [self.delegate mediaPlayer:self didFailed:msgId errorId:errorId];
+    }
+}
+
 #pragma mark FunSDK 结果回调
 -(void)OnFunSDKResult:(NSNumber *)pParam{
     NSInteger nAddr = [pParam integerValue];
     MsgContent *msg = (MsgContent *)nAddr;
     
-//    NSLog(@"sender: %d", msg->sender);
-//    NSLog(@"id: %d", msg->id);
-//    NSLog(@"param1: %d", msg->param1);
-//    NSLog(@"param2: %d", msg->param2);
-//    NSLog(@"param3: %d", msg->param3);
-//    NSLog(@"szStr: %s", msg->szStr);
-//    NSLog(@"pObject: %s", msg->pObject);
-//    NSLog(@"nDataLen: %d", msg->nDataLen);
-//    NSLog(@"seq: %d", msg->seq);
-//    NSLog(@"pMsg: %p", msg->pMsg);
+    NSLog(@"MediaPlayerControl");
+    NSLog(@"sender: %d", msg->sender);
+    NSLog(@"id: %d", msg->id);
+    NSLog(@"param1: %d", msg->param1);
+    NSLog(@"param2: %d", msg->param2);
+    NSLog(@"param3: %d", msg->param3);
+    NSLog(@"szStr: %s", msg->szStr);
+    NSLog(@"pObject: %s", msg->pObject);
+    NSLog(@"nDataLen: %d", msg->nDataLen);
+    NSLog(@"seq: %d", msg->seq);
+    NSLog(@"pMsg: %p", msg->pMsg);
     
     switch ( msg->id ) {
 #pragma mark 收到开始直播结果消息
         case EMSG_START_PLAY:{
-            if (msg->param1==0) {
-                self.status = MediaPlayerStatusBuffering;
-                NSLog(@"播放成功～～");
-            }else{
-                self.status = MediaPlayerStatusStop;
-                NSLog(@"播放失败～～");
-            }
-            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:startResult:DSSResult:)] ) {
-                [self.delegate mediaPlayer:self startResult:msg->param1 DSSResult:msg->param3];
-            }
+          if (msg->param1==0) {
+              self.status = MediaPlayerStatusBuffering;
+              NSLog(@"播放成功～～");
+          }else{
+              self.status = MediaPlayerStatusStop;
+              NSLog(@"播放失败～～");
+          }
+          
+          if (msg->param1 < 0) {
+            // Отправляем данные для onFailed
+            [self failed:(int)msg->id errorId:(int)msg->param1];
+            // Отправляем данные для onMediaPlayState
+            [self updateState:4];
+          }
+          
+//          if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:startResult:DSSResult:)] ) {
+//              [self.delegate mediaPlayer:self startResult:msg->param1 DSSResult:msg->param3];
+//          }
         }
             break;
 #pragma mark 收到暂停播放结果消息
         case EMSG_PAUSE_PLAY:{
+          
             if (msg->param1==2) {
+              // Отправляем данные для onMediaPlayState
+              [self updateState:1];
+              
                 //2为暂停
                 self.status = MediaPlayerStatusPause;
             }else if (msg->param1 == 1){
+              // Отправляем данные для onMediaPlayState
+              [self updateState:0];
+              
+              
                 //1为恢复
                 self.status = MediaPlayerStatusPlaying;
             }
-            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:pauseOrResumeResult:)] ) {
-                [self.delegate mediaPlayer:self pauseOrResumeResult:msg->param1];
-            }
+//            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:pauseOrResumeResult:)] ) {
+//                [self.delegate mediaPlayer:self pauseOrResumeResult:msg->param1];
+//            }
         }
             break;
 #pragma mark 收到开始缓存数据结果消息
         case EMSG_ON_PLAY_BUFFER_BEGIN:{
+          // Отправляем данные для onMediaPlayState
+          [self updateState:2];
+          
+          
             if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:buffering:ratioDetail:)] ) {
                 [self.delegate mediaPlayer:self buffering:YES ratioDetail:0.8];
             }
@@ -240,6 +285,12 @@
             break;
 #pragma mark 收到缓冲结束开始有画面结果消息
         case EMSG_ON_PLAY_BUFFER_END:{
+          // Отправляем данные для onMediaPlayState
+          [self updateState:0];
+          // Отправляем данные для onBufferEnd
+          [self bufferEnd];
+          
+          
             if (msg->param1==0) {
                 self.status = MediaPlayerStatusPlaying;
             }
@@ -254,66 +305,137 @@
                     vHeight = wh[1];
                 }
                 //获取宽高
-                [self.delegate mediaPlayer: self width: vWidth htight:vHeight];
+//                [self.delegate mediaPlayer: self width: vWidth htight:vHeight];
                 [self.delegate mediaPlayer:self buffering:NO ratioDetail:ratioDetail];
             }
         }
             break;
 #pragma mark  媒体通道网络异常断开
         case EMSG_ON_MEDIA_NET_DISCONNECT:{
-            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:startResult:DSSResult:)] ) {
-                [self.delegate mediaPlayer:self startResult:EE_DVR_SUB_CONNECT_ERROR DSSResult:msg->param3];
-            }
+//            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:startResult:DSSResult:)] ) {
+//                [self.delegate mediaPlayer:self startResult:EE_DVR_SUB_CONNECT_ERROR DSSResult:msg->param3];
+//            }
         }
             break;
 #pragma mark 收到抓图回调结果消息
         case EMSG_SAVE_IMAGE_FILE:{
-            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:snapImagePath:result:)] ) {
-                [self.delegate mediaPlayer:self snapImagePath:NSSTR(msg->szStr) result:msg->param1];
-            }
+          if (msg->param1 < 0) {
+            // Отправляем данные для onFailed
+            [self failed:(int)msg->id errorId:(int)msg->param1];
+          } else {
+            // Отправляем данные для onMediaPlayState
+            [self updateState:19];
+          }
+//            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:snapImagePath:result:)] ) {
+//                [self.delegate mediaPlayer:self snapImagePath:NSSTR(msg->szStr) result:msg->param1];
+//            }
         }
             break;
 #pragma mark 收到查询直播信息结果消息
         case EMSG_ON_PLAY_INFO:{
-            if (msg->param1 <0) {
-                //缓冲结束之后播放失败
-                if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:startResult:DSSResult:)] ) {
-                    [self.delegate mediaPlayer:self startResult:msg->param1 DSSResult:msg->param3];
+//          пример того что приходит
+//          sender: 1048589
+//          id: 5508
+//          // timestamp начало
+//          param1: 1731279600
+//          // timestamp текущий
+//          param2: 1731279601
+//          // timestamp конца
+//          param3: 1731283200
+//          // строка с данными
+//          szStr: 2024-11-11 00:00:01;bits=25046;width=960;height=1080
+//          pObject: (null)
+//          nDataLen: 24005312
+//          seq: 0
+//          pMsg: 0x302655560
+          if((int)msg->param1 == EE_DVR_PASSWORD_NOT_VALID) {
+            // Отправляем данные для onMediaPlayState
+            [self updateState:4];
+            // Отправляем данные для onFailed
+            [self failed:(int)msg->id errorId:(int)msg->param1];
+          } else {
+            const char *info=msg->szStr;
+            NSString *str = [NSString stringWithUTF8String:info];
+            
+            NSArray *components = [str componentsSeparatedByString:@";"];
+
+            if (components.count > 1) {
+              NSString *time = components[0];
+              
+              NSMutableDictionary *params = [NSMutableDictionary dictionary];
+              for (NSInteger i = 1; i < components.count; i++) {
+                NSArray *paramComponents = [components[i] componentsSeparatedByString:@"="];
+                if (paramComponents.count == 2) {
+                    NSString *key = paramComponents[0];
+                    NSString *value = paramComponents[1];
+                    params[key] = value;
                 }
-                break;
+              }
+
+              NSString *bits = params[@"bits"];
+//              NSString *width = params[@"width"];
+//              NSString *height = params[@"height"];
+              
+              [self showRateAndTime:time rate:bits];
+              
+//              NSLog(@"Time: %@", time);
+//              NSLog(@"Bits: %@", bits);
+//              NSLog(@"Width: %@", width);
+//              NSLog(@"Height: %@", height);
             }
-            const char *time=msg->szStr;
-            NSString *str = [NSString stringWithUTF8String:time];
-            NSString *devtime;
-            if (str.length >18) {
-                devtime = [str substringToIndex:19];
-            }
-            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:info1:info2:)] ) {
-                //播放信息
-                [self.delegate mediaPlayer:self info1:msg->param1 info2:NSSTR(msg->szStr)];
-            }
-            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:DevTime:)] ) {
-                //设备时间
-                [self.delegate mediaPlayer:self DevTime:devtime];
-            }
-            if ([self.delegate respondsToSelector:@selector(mediaPlayer:timeInfo:)]) {
-                //回放时间
-                [self.delegate mediaPlayer:self timeInfo:msg->param2];
-            }
+          }
+          
+          
+//            if (msg->param1 <0) {
+//                //缓冲结束之后播放失败
+//                if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:startResult:DSSResult:)] ) {
+//                    [self.delegate mediaPlayer:self startResult:msg->param1 DSSResult:msg->param3];
+//                }
+//                break;
+//            }
+//            const char *time=msg->szStr;
+//            NSString *str = [NSString stringWithUTF8String:time];
+//            NSString *devtime;
+//            if (str.length >18) {
+//                devtime = [str substringToIndex:19];
+//            }
+//            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:info1:info2:)] ) {
+//                //播放信息
+//                [self.delegate mediaPlayer:self info1:msg->param1 info2:NSSTR(msg->szStr)];
+//            }
+//            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:DevTime:)] ) {
+//                //设备时间
+//                [self.delegate mediaPlayer:self DevTime:devtime];
+//            }
+//            if ([self.delegate respondsToSelector:@selector(mediaPlayer:timeInfo:)]) {
+//                //回放时间
+//                [self.delegate mediaPlayer:self timeInfo:msg->param2];
+//            }
         }
             break;
 #pragma mark 收到开始录像结果消息
         case EMSG_START_SAVE_MEDIA_FILE:{
-            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:startRecordResult:path:)] ) {
-                [self.delegate mediaPlayer:self startRecordResult:msg->param1 path:[NSString stringWithUTF8String:msg->szStr]];
-            }
+          if (msg->param1 < 0) {
+            // Отправляем данные для onFailed
+            [self failed:(int)msg->id errorId:(int)msg->param1];
+          }
+//            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:startRecordResult:path:)] ) {
+//                [self.delegate mediaPlayer:self startRecordResult:msg->param1 path:[NSString stringWithUTF8String:msg->szStr]];
+//            }
         }
             break;
 #pragma mark 收到停止录像结果消息
         case EMSG_STOP_SAVE_MEDIA_FILE:{
-            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:stopRecordResult:path:)] ) {
-                [self.delegate mediaPlayer:self stopRecordResult:msg->param1 path:[NSString stringWithUTF8String:msg->szStr]];
-            }
+          if (msg->param1 < 0) {
+            // Отправляем данные для onFailed
+            [self failed:(int)msg->id errorId:(int)msg->param1];
+          } else {
+            // Отправляем данные для onMediaPlayState
+            [self updateState:18];
+          }
+//            if ( self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:stopRecordResult:path:)] ) {
+//                [self.delegate mediaPlayer:self stopRecordResult:msg->param1 path:[NSString stringWithUTF8String:msg->szStr]];
+//            }
         }
             break;
 #pragma mark 停止播放
@@ -325,9 +447,9 @@
             break;
 #pragma mark 刷新播放
         case EMSG_REFRESH_PLAY:{
-            if (self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:refreshPlayResult:)]) {
-                [self.delegate mediaPlayer:self refreshPlayResult:msg->param1];
-            }
+//            if (self.delegate && [self.delegate respondsToSelector:@selector(mediaPlayer:refreshPlayResult:)]) {
+//                [self.delegate mediaPlayer:self refreshPlayResult:msg->param1];
+//            }
         }
             break;
 #pragma mark -鱼眼相关处理
@@ -478,6 +600,23 @@
             }
         }
             break;
+        
+        case EMSG_ON_MEDIA_REPLAY:{
+          // Отправляем данные для onMediaPlayState
+          [self updateState:7];
+        }
+          break;
+        case EMSG_ON_PLAY_END:{
+          // Отправляем данные для onMediaPlayState
+          [self updateState:4];
+        }
+          break;
+        case EMSG_MEDIA_SETPLAYVIEW:{
+          // Отправляем данные для onMediaPlayState
+          [self updateState:15];
+        }
+          break;
+        
         default:
             break;
     }

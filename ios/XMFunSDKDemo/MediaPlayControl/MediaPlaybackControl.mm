@@ -35,6 +35,40 @@
     requestInfo.endTime.dwSecond = 59;
     [self start:requestInfo];
 }
+
+//export type SearchDate = {
+//  year: number;
+//  month: number;
+//  day: number;
+//  hour: number;
+//  minute: number;
+//  second: number;
+//};
+#pragma -mark Вызов интерфейса воспроизведения на основе выбранной даты
+-(void)startPlayBack2:(NSDictionary*)beginDate endDate:(NSDictionary*)endDate {
+  struct H264_DVR_FINDINFO requestInfo;
+
+  memset(&requestInfo, 0, sizeof(H264_DVR_FINDINFO));
+
+  requestInfo.nChannelN0 = self.channel;
+  requestInfo.nFileType = 0;
+  requestInfo.startTime.dwYear = [beginDate[@"year"] intValue];
+  requestInfo.startTime.dwMonth = [beginDate[@"month"] intValue];
+  requestInfo.startTime.dwDay = [beginDate[@"day"] intValue];
+  requestInfo.startTime.dwHour = [beginDate[@"hour"] intValue];
+  requestInfo.startTime.dwMinute = [beginDate[@"minute"] intValue];
+  requestInfo.startTime.dwSecond = [beginDate[@"second"] intValue];
+    
+  requestInfo.endTime.dwYear = [endDate[@"year"] intValue];
+  requestInfo.endTime.dwMonth = [endDate[@"month"] intValue];
+  requestInfo.endTime.dwDay = [endDate[@"day"] intValue];
+  requestInfo.endTime.dwHour = [endDate[@"hour"] intValue];
+  requestInfo.endTime.dwMinute = [endDate[@"minute"] intValue];
+  requestInfo.endTime.dwSecond = [endDate[@"second"] intValue];
+
+  [self start:requestInfo];
+}
+
 #pragma mark - 开启
 -(int)start:(H264_DVR_FINDINFO)findInfo{
     Info = findInfo;
@@ -73,6 +107,36 @@
     
     self.player = FUN_MediaCloudRecordPlay(self.msgHandle, SZSTR(self.devID),self.channel, "", beginTimeInt, endTimeInt, (__bridge LP_WND_OBJ)self.renderWnd);
 }
+
+#pragma mark - Воспроизведение облачного видео на основе даты поступления (вы также можете установить период времени самостоятельно, вот воспроизведение облачного видео в течение всего дня)
+- (void)startPlayCloudVideo2:(NSDictionary*)beginDate endDate:(NSDictionary*)endDate {
+  SDK_SYSTEM_TIME beginTime;
+  SDK_SYSTEM_TIME endTime;
+
+  beginTime.year = [beginDate[@"year"] intValue];
+  beginTime.month = [beginDate[@"month"] intValue];
+  beginTime.day = [beginDate[@"day"] intValue];
+  beginTime.hour = [beginDate[@"hour"] intValue];
+  beginTime.minute = [beginDate[@"minute"] intValue];
+  beginTime.second = [beginDate[@"second"] intValue];
+  
+  endTime.year = [endDate[@"year"] intValue];
+  endTime.month = [endDate[@"month"] intValue];
+  endTime.day = [endDate[@"day"] intValue];
+  endTime.hour = [endDate[@"hour"] intValue];
+  endTime.minute = [endDate[@"minute"] intValue];
+  endTime.second = [endDate[@"second"] intValue];
+    
+  time_t ToTime_t(SDK_SYSTEM_TIME *time);
+  int beginTimeInt = (int)ToTime_t(&beginTime);
+  
+  time_t ToTime_t(SDK_SYSTEM_TIME *time);
+  int endTimeInt = (int)ToTime_t(&endTime);
+  
+  self.player = FUN_MediaCloudRecordPlay(self.msgHandle, SZSTR(self.devID), self.channel, "", beginTimeInt, endTimeInt, (__bridge LP_WND_OBJ)self.renderWnd);
+}
+
+
 #pragma mark - 停止
 -(int)stop{
     

@@ -27,9 +27,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) id<MediaPlayBackControlDelegate> playbackDelegate;  //代理
 #pragma -mark 根据选择的日期调用回放接口
 -(void)startPlayBack:(NSDate *)date;
+-(void)startPlayBack2:(NSDictionary*)beginDate endDate:(NSDictionary*)endDate;
 
 #pragma mark - 根据传入的日期进行云视频回放（也可以自己设置时间段，这里是播放全天的云视频）
 - (void)startPlayCloudVideo:(NSDate*)date;
+- (void)startPlayCloudVideo2:(NSDictionary*)beginDate endDate:(NSDictionary*)endDate;
+
 
 #pragma mark - 停止
 -(int)stop;
