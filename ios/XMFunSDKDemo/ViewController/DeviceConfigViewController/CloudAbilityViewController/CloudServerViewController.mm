@@ -182,42 +182,42 @@
 
 #pragma mark  webView请求
 -(void)requestURL {
-    char szUserID[128] = {0};
-    FUN_GetFunStrAttr(EFUN_ATTR_LOGIN_USER_ID, szUserID, 128);
-    NSString *URLString;
-    NSArray *languages = [NSLocale preferredLanguages];
-    NSString *currentLanguage = [languages objectAtIndex:0];
-    //准备跳转到云存储
-    self.jumpSign = @"xmc.css";
-    ChannelObject *channel = [[DeviceControl getInstance] getSelectChannel];
-    DeviceObject *device = [[DeviceControl getInstance] GetDeviceObjectBySN:channel.deviceMac];
-    if ([currentLanguage containsString:@"zh-Hans"] || [currentLanguage containsString:@"zh-Hant"]) {
-        if (self.jumpSign.length > 0) {
-            URLString = [NSString stringWithFormat:@"https://boss2.xmcsrv.net/index.do?user_id=%s&uuid=%@&hardware=%@&software=%@&lan=zh-CN&appKey=%@&devName=%@&goods=%@",szUserID,device.deviceMac,device.info.hardWare,device.info.softWareVersion,OCSTR(APPKEY),device.deviceName,self.jumpSign];
-        }else{
-            URLString = [NSString stringWithFormat:@"https://boss2.xmcsrv.net/index.do?user_id=%s&uuid=%@&hardware=%@&software=%@&lan=zh-CN&appKey=%@&devName=%@",szUserID,device.deviceMac,device.info.hardWare,device.info.softWareVersion,OCSTR(APPKEY),device.deviceName];
-        }
-
-
-    }else{
-        if (self.jumpSign.length > 0) {
-            URLString = [NSString stringWithFormat:@"https://boss2.xmcsrv.net/index.do?user_id=%s&uuid=%@&hardware=%@&software=%@&lan=en&appKey=%@&devName=%@&goods=%@",szUserID,device.deviceMac,device.info.hardWare,device.info.softWareVersion,OCSTR(APPKEY),device.deviceName,self.jumpSign];
-        }else{
-            URLString = [NSString stringWithFormat:@"https://boss2.xmcsrv.net/index.do?user_id=%s&uuid=%@&hardware=%@&software=%@&lan=en&appKey=%@&devName=%@",szUserID,device.deviceMac,device.info.hardWare,device.info.softWareVersion,OCSTR(APPKEY),device.deviceName];
-        }
-
-    }
-
-    // url中文处理
-    NSString *encodedString = (NSString *)
-    CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
-                                                              (CFStringRef)URLString,
-                                                              (CFStringRef)@"!$&'()*+,-./:;=?@_~%#[]",
-                                                              NULL,
-                                                              kCFStringEncodingUTF8));
- 
-    self.webURLRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:encodedString] cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10.0];
-    [self.webView loadRequest:self.webURLRequest];
+//    char szUserID[128] = {0};
+//    FUN_GetFunStrAttr(EFUN_ATTR_LOGIN_USER_ID, szUserID, 128);
+//    NSString *URLString;
+//    NSArray *languages = [NSLocale preferredLanguages];
+//    NSString *currentLanguage = [languages objectAtIndex:0];
+//    //准备跳转到云存储
+//    self.jumpSign = @"xmc.css";
+//    ChannelObject *channel = [[DeviceControl getInstance] getSelectChannel];
+//    DeviceObject *device = [[DeviceControl getInstance] GetDeviceObjectBySN:channel.deviceMac];
+//    if ([currentLanguage containsString:@"zh-Hans"] || [currentLanguage containsString:@"zh-Hant"]) {
+//        if (self.jumpSign.length > 0) {
+//            URLString = [NSString stringWithFormat:@"https://boss2.xmcsrv.net/index.do?user_id=%s&uuid=%@&hardware=%@&software=%@&lan=zh-CN&appKey=%@&devName=%@&goods=%@",szUserID,device.deviceMac,device.info.hardWare,device.info.softWareVersion,OCSTR(APPKEY),device.deviceName,self.jumpSign];
+//        }else{
+//            URLString = [NSString stringWithFormat:@"https://boss2.xmcsrv.net/index.do?user_id=%s&uuid=%@&hardware=%@&software=%@&lan=zh-CN&appKey=%@&devName=%@",szUserID,device.deviceMac,device.info.hardWare,device.info.softWareVersion,OCSTR(APPKEY),device.deviceName];
+//        }
+//
+//
+//    }else{
+//        if (self.jumpSign.length > 0) {
+//            URLString = [NSString stringWithFormat:@"https://boss2.xmcsrv.net/index.do?user_id=%s&uuid=%@&hardware=%@&software=%@&lan=en&appKey=%@&devName=%@&goods=%@",szUserID,device.deviceMac,device.info.hardWare,device.info.softWareVersion,OCSTR(APPKEY),device.deviceName,self.jumpSign];
+//        }else{
+//            URLString = [NSString stringWithFormat:@"https://boss2.xmcsrv.net/index.do?user_id=%s&uuid=%@&hardware=%@&software=%@&lan=en&appKey=%@&devName=%@",szUserID,device.deviceMac,device.info.hardWare,device.info.softWareVersion,OCSTR(APPKEY),device.deviceName];
+//        }
+//
+//    }
+//
+//    // url中文处理
+//    NSString *encodedString = (NSString *)
+//    CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
+//                                                              (CFStringRef)URLString,
+//                                                              (CFStringRef)@"!$&'()*+,-./:;=?@_~%#[]",
+//                                                              NULL,
+//                                                              kCFStringEncodingUTF8));
+// 
+//    self.webURLRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:encodedString] cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:10.0];
+//    [self.webView loadRequest:self.webURLRequest];
 }
 
 #pragma mark - 模拟加载动画

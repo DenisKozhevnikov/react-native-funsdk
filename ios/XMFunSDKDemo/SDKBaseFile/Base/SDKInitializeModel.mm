@@ -16,11 +16,11 @@
 
 + (void)SDKInit {
     //1、初始化底层库和底层库的语言以及国际化语言文件
-    [self initLanguage];
-    //2、初始化app证书,和云服务有关
-    [self initPlatform];
-    //3、初始化一些必须的底层配置
-    [self configParam];
+    // [self initLanguage];
+    // //2、初始化app证书,和云服务有关
+    // [self initPlatform];
+    // //3、初始化一些必须的底层配置
+    // [self configParam];
 }
 
 
@@ -59,7 +59,7 @@
     /*
      <!--应用证书,以下4个字段必须要在开放平台注册应用之后替换掉，测试Key会不定期更换，如果未替换则可能会出现各种问题>
      */
-    FUN_XMCloundPlatformInit(APPUUID, APPKEY, APPSECRET, MOVECARD);
+//    FUN_XMCloundPlatformInit(APPUUID, APPKEY, APPSECRET, MOVECARD);
 }
 //3、初始化一些必须的底层配置
 //说明；这些配置是设置APP的SDK各种缓存或者保存文件的位置，在沙盒中创建对应的文件夹

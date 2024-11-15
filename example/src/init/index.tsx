@@ -7,11 +7,16 @@ import {
   loginDeviceWithCredential,
   updateAllDevStateFromServer,
   logout,
+  registerByNotBind,
 } from 'react-native-funsdk';
 import {
+  APPKEY,
+  APPSECRET,
+  APPUUID,
   DEVICE_ID,
   DEVICE_LOGIN,
   DEVICE_PASSWORD,
+  MOVECARD,
   PORT,
   PWD,
   PWD_TYPE,
@@ -78,6 +83,18 @@ export const useInit = () => {
     } catch (error) {
       console.log('error in someFuncs: ', error);
       setStatus('error in someFuncs: ', (error as Error)?.message);
+
+      // Пользователь не зареган?
+      if ((error as Error)?.message.includes('-604025')) {
+        const res = await registerByNotBind({
+          username: USER_NAME,
+          password: USER_PASSWORD,
+        }).then(() => {
+          console.log('res registerByNotBind: ', res);
+          setStatus('res registerByNotBind: ', res);
+          someFuncs();
+        });
+      }
     }
   };
   const someInfos = async () => {
@@ -135,6 +152,10 @@ export const useInit = () => {
         customPwd: PWD,
         customServerAddr: SERVER_ADDR,
         customPort: PORT,
+        APPUUID,
+        APPKEY,
+        APPSECRET,
+        MOVECARD,
         // TODO: удалить then
       });
 

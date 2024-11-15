@@ -16,6 +16,11 @@ export type FunSDKInitParams = {
   customPwd: string;
   customServerAddr: string;
   customPort: number;
+  // iOS
+  APPUUID?: string;
+  APPKEY?: string;
+  APPSECRET?: string;
+  MOVECARD?: number;
 };
 
 // export function funSDKInit(params: FunSDKInitParams): Promise<any> {

@@ -33,10 +33,10 @@
 #import "JFRouterSettingController.h"
 
 //开放平台App信息，需要在开放平台上面创建APP来生成，每一个APP对应一组不同并且唯一的平台信息，不能重复,如果直接使用下面参数，则后续可能会出现各种问题
-#define APPUUID "e0534f3240274897821a126be19b6d46"   //客户唯一标识
-#define APPKEY "caae4d4cebd842d99b86263533b8c50b"   //APP唯一标识
-#define APPSECRET "3cb982572d4b4ff998a27e442fc60a16"   //内容保护参数
-#define MOVECARD 4   //内容保护参数
+//#define APPUUID "e0534f3240274897821a126be19b6d46"   //客户唯一标识
+//#define APPKEY "caae4d4cebd842d99b86263533b8c50b"   //APP唯一标识
+//#define APPSECRET "3cb982572d4b4ff998a27e442fc60a16"   //内容保护参数
+//#define MOVECARD 4   //内容保护参数
 
 
 typedef NS_ENUM(int,XM_DEV_NET_CNN_TYPE){

@@ -23,8 +23,19 @@ RCT_EXPORT_METHOD(init:(NSDictionary *)params resolver:(RCTPromiseResolveBlock)r
     const char *PWD = [params[@"customPwd"] UTF8String];
     const char *SERVER_ADDR = [params[@"customServerAddr"] UTF8String];
     int PORT = [params[@"customPort"] intValue];
+  
+    const char *APPUUID = [params[@"APPUUID"] UTF8String];
+    const char *APPKEY = [params[@"APPKEY"] UTF8String];
+    const char *APPSECRET = [params[@"APPSECRET"] UTF8String];
+    int MOVECARD = [params[@"MOVECARD"] intValue];
+  
+    NSLog(@"APPUUID2: %s", APPUUID);
+    NSLog(@"APPKEY2: %s", APPKEY);
+    NSLog(@"APPSECRET2: %s", APPSECRET);
+    NSLog(@"MOVECARD2: %d", MOVECARD);
+  
     
-//    RCTLogInfo(@"Pretending to create an event");
+    RCTLogInfo(@"pokli po");
     
     SInitParam pa;
     

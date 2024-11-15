@@ -70,8 +70,8 @@
     NSString * bodyString = [NSString stringWithFormat:@"uname=%@&upass=%@&shareUuid=%@&acceptId=%@&powers=%@&permissions=%@",self.uName,self.uPassword,dev.deviceMac,[self xmURLEncodedString:userID],[self xmURLEncodedString:devInfo],[self xmURLEncodedString:permissions]];
     request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
-    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
+//    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
+//    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
     
     NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -131,8 +131,8 @@
     NSString * bodyString = [NSString stringWithFormat:@"uname=%@&upass=%@&search=%@",self.uName,self.uPassword,[self xmURLEncodedString:userName]];
     request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
-    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
+//    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
+//    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
     
     NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -190,8 +190,8 @@
     NSString * bodyString = [NSString stringWithFormat:@"uname=%@&upass=%@&shareId=%@&permissions=%@",self.uName,self.uPassword,sharedID,[self xmURLEncodedString:permission]];
     request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
-    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
+//    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
+//    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
     
     NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -251,8 +251,8 @@
     NSString * bodyString = [NSString stringWithFormat:@"uname=%@&upass=%@&devId=%@",self.uName,self.uPassword,shareDeviceID];
     request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
-    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
+//    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
+//    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
     
     NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -310,8 +310,8 @@
     NSString * bodyString = [NSString stringWithFormat:@"uname=%@&upass=%@&shareUuid=%@",self.uName,self.uPassword,devID];
     request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
-    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
+//    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
+//    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
     
     NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -368,8 +368,8 @@
     NSString * bodyString = [NSString stringWithFormat:@"uname=%@&upass=%@",self.uName,self.uPassword];
     request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
-    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
+//    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
+//    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
     
     NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -432,8 +432,8 @@
     NSString * bodyString = [NSString stringWithFormat:@"uname=%@&upass=%@&devId=%@",self.uName,self.uPassword,devID];
     request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
-    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
+//    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
+//    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
     
     NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -490,8 +490,8 @@
     NSString * bodyString = [NSString stringWithFormat:@"uname=%@&upass=%@&devId=%@",self.uName,self.uPassword,devID];
     request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
-    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
+//    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
+//    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
     
     NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -548,8 +548,8 @@
     NSString * bodyString = [NSString stringWithFormat:@"uname=%@&upass=%@&shareUuid=%@&acceptId=%@&powers=&permissions=%@",self.uName,self.uPassword,devID,shareAccountID,permissions];
     request.HTTPBody = [bodyString dataUsingEncoding:NSUTF8StringEncoding];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
-    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
+//    [request setValue:[NSString stringWithUTF8String:APPUUID] forHTTPHeaderField:@"uuid"];
+//    [request setValue:[NSString stringWithUTF8String:APPKEY] forHTTPHeaderField:@"appKey"];
     
     NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -644,47 +644,50 @@
 }
 
 - (NSString *)getMD5EncryptSignatureTimeMills:(NSString *)timeMillis{
-    NSString *content = [NSString stringWithFormat:@"%@%@%@%@",[NSString stringWithUTF8String:APPUUID],[NSString stringWithUTF8String:APPKEY],[NSString stringWithUTF8String:APPSECRET],timeMillis];
-
-    //移位
-    int moveCard = MOVECARD;
-    NSData *dataChange = [content dataUsingEncoding:NSUTF8StringEncoding];
-    Byte *changeByte = (Byte *)[dataChange bytes];
-    Byte temp;
-    for (int i = 0; i < [dataChange length]; i++) {
-        temp = ((i % moveCard) > (([dataChange length] - i) % moveCard)) ? changeByte[i] : changeByte[[dataChange length] - (i + 1)];
-        changeByte[i] = changeByte[[dataChange length] - (i + 1)];
-        changeByte[[dataChange length] - (i + 1)] = temp;
-    }
-    
-    //合并
-    NSData *dataMerge = [content dataUsingEncoding:NSUTF8StringEncoding];
-    Byte *mergeByte = (Byte *)[dataMerge bytes];
-    int encryptLength = (int)[dataMerge length];
-    int encryptLength2 = encryptLength * 2;
-    Byte *mergeTemp = (Byte *)malloc(encryptLength2);
-    
-    for (int i = 0; i < [dataMerge length]; i++) {
-        mergeTemp[i] = mergeByte[i];
-        mergeTemp[encryptLength2 - 1 - i] = changeByte[i];
-    }
-    
-    //byte数组 md5加密
-    NSData *strdata = [[NSData alloc] initWithBytes:mergeTemp length:encryptLength2];
-    NSString *valueStr = [[NSString alloc] initWithData:strdata encoding:NSUTF8StringEncoding];
-    
-    const char *value = [valueStr UTF8String];
-    
-    unsigned char outputBuffer[CC_MD5_DIGEST_LENGTH];
-    CC_MD5(value, (CC_LONG)strlen(value), outputBuffer);
-    
-    NSMutableString *outputString = [[NSMutableString alloc] initWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
-    for(NSInteger count = 0; count < CC_MD5_DIGEST_LENGTH; count++){
-        [outputString appendFormat:@"%02x",outputBuffer[count]];
-    }
-    
-    free(mergeTemp);
-    return outputString;
+//    NSString *content = [NSString stringWithFormat:@"%@%@%@%@",[NSString stringWithUTF8String:APPUUID],[NSString stringWithUTF8String:APPKEY],[NSString stringWithUTF8String:APPSECRET],timeMillis];
+//
+//    //移位
+//    int moveCard = MOVECARD;
+//    NSData *dataChange = [content dataUsingEncoding:NSUTF8StringEncoding];
+//    Byte *changeByte = (Byte *)[dataChange bytes];
+//    Byte temp;
+//    for (int i = 0; i < [dataChange length]; i++) {
+//        temp = ((i % moveCard) > (([dataChange length] - i) % moveCard)) ? changeByte[i] : changeByte[[dataChange length] - (i + 1)];
+//        changeByte[i] = changeByte[[dataChange length] - (i + 1)];
+//        changeByte[[dataChange length] - (i + 1)] = temp;
+//    }
+//    
+//    //合并
+//    NSData *dataMerge = [content dataUsingEncoding:NSUTF8StringEncoding];
+//    Byte *mergeByte = (Byte *)[dataMerge bytes];
+//    int encryptLength = (int)[dataMerge length];
+//    int encryptLength2 = encryptLength * 2;
+//    Byte *mergeTemp = (Byte *)malloc(encryptLength2);
+//    
+//    for (int i = 0; i < [dataMerge length]; i++) {
+//        mergeTemp[i] = mergeByte[i];
+//        mergeTemp[encryptLength2 - 1 - i] = changeByte[i];
+//    }
+//    
+//    //byte数组 md5加密
+//    NSData *strdata = [[NSData alloc] initWithBytes:mergeTemp length:encryptLength2];
+//    NSString *valueStr = [[NSString alloc] initWithData:strdata encoding:NSUTF8StringEncoding];
+//    
+//    const char *value = [valueStr UTF8String];
+//    
+//    unsigned char outputBuffer[CC_MD5_DIGEST_LENGTH];
+//    CC_MD5(value, (CC_LONG)strlen(value), outputBuffer);
+//    
+//    NSMutableString *outputString = [[NSMutableString alloc] initWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
+//    for(NSInteger count = 0; count < CC_MD5_DIGEST_LENGTH; count++){
+//        [outputString appendFormat:@"%02x",outputBuffer[count]];
+//    }
+//    
+//    free(mergeTemp);
+//    return outputString;
+  
+  NSString *zaglushka = @"zaglushka";
+  return zaglushka;
 }
 
 -(NSString *)convertToJsonData:(NSDictionary *)dict
