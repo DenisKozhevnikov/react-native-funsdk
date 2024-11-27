@@ -174,6 +174,13 @@
     FUN_MediaSeekToTime(self.player, (int)addtime, 0, 0);
 }
 
+-(void)seekToTime:(NSInteger)addtime nAbsTime:(NSInteger)nAbsTime
+{
+    FUN_MediaSeekToTime(self.player, (int)addtime, (int)nAbsTime, 0);
+}
+
+
+
 #pragma mark - 设置播放速度(可设置1倍、2倍 、4倍，对应speed为0、1、2)
 -(void)setPlaySpeed:(int)speed
 {

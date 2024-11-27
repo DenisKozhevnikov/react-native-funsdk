@@ -51,6 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
 -(int)stopIntelPlay;
 #pragma mark - 拖动时间轴切换播放时间
 -(void)seekToTime:(NSInteger)addtime;
+
+-(void)seekToTime:(NSInteger)addtime nAbsTime:(NSInteger)nAbsTime;
 #pragma mark - 设置播放速度(可设置1倍、2倍 、4倍，对应speed为0、1、2)
 -(void)setPlaySpeed:(int)speed;
 @end

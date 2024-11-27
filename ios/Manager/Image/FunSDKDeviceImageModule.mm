@@ -76,7 +76,7 @@ RCT_EXPORT_METHOD(downloadSingleImage:(NSDictionary *)params
   FUN_DownloadRecordBImage(self.msgHandle, CSTR(deviceId), [deviceChannel intValue], (int)ToTime_t(&nTime), CSTR(mSaveImageDir), 0, [key intValue]);
 }
 
-#pragma - mark Загрузка видео на устройство
+#pragma - mark Загрузка видео на устройство по имени файла
 RCT_EXPORT_METHOD(downloadSingleFile:(NSDictionary *)params
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
@@ -123,6 +123,69 @@ RCT_EXPORT_METHOD(downloadSingleFile:(NSDictionary *)params
   
 //  FUN_HANDLE FUN_DevDowonLoadByFile(UI_HANDLE hUser, const char *szDevId, H264_DVR_FILE_DATA *pH264_DVR_FILE_DATA, const char *szFileName, int nSeq = 0);
   FUN_DevDowonLoadByFile(self.msgHandle,CSTR(deviceId), &info,  CSTR(mSaveImageDir), [key intValue]);
+}
+
+
+#pragma - mark Загрузка видео на устройство по выбранному времени
+RCT_EXPORT_METHOD(downloadSingleFileByTime:(NSDictionary *)params
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSString *deviceId = params[@"deviceId"];
+  NSNumber *deviceChannel = params[@"deviceChannel"];
+  NSString *mSaveImageDir = params[@"mSaveImageDir"];
+  NSDictionary *start = params[@"startTime"];
+  NSDictionary *end = params[@"endTime"];
+  NSNumber *streamType = params[@"streamType"];
+  NSNumber *fileType = params[@"fileType"];
+
+ NSNumber *key = [self generateRequestKeyWithResolver:resolve rejecter:reject saveImageDir:mSaveImageDir];
+
+  // // Информация о файле
+  H264_DVR_FINDINFO info;
+  memset(&info, 0, sizeof(info));
+
+  H264_DVR_TIME startTime;
+  memset(&startTime, 0, sizeof(startTime));
+  startTime.dwYear = [start[@"year"] intValue];
+  startTime.dwMonth = [start[@"month"] intValue];
+  startTime.dwDay = [start[@"day"] intValue];
+  startTime.dwHour = [start[@"hour"] intValue];;
+  startTime.dwMinute = [start[@"minute"] intValue];
+  startTime.dwSecond = [start[@"second"] intValue];
+  // Начало
+  info.startTime = startTime;
+  
+  H264_DVR_TIME endTime = {0};
+  endTime.dwYear = [end[@"year"] intValue];
+  endTime.dwMonth = [end[@"month"] intValue];
+  endTime.dwDay = [end[@"day"] intValue];
+  endTime.dwHour = [end[@"hour"] intValue];
+  endTime.dwMinute = [end[@"minute"] intValue];
+  endTime.dwSecond = [end[@"second"] intValue];
+  // Окончание
+  info.endTime = endTime;
+  
+  // тип качества 0 (основной) или 1 (вспомогательный)
+  info.StreamType = [streamType intValue];
+  
+  // тип файла
+  info.nFileType = [fileType intValue];
+  
+  // // Имя файла
+  // strncpy(info.sFileName, [fileName UTF8String], sizeof(info.sFileName));
+  
+  // // Номер канала
+  info.nChannelN0 = [deviceChannel intValue];
+  
+  //  FUN_HANDLE FUN_DevDowonLoadByTime(
+  //      UI_HANDLE hUser,
+  //      const char*szDevId,
+  //      H264_DVR_FINDINFO *pH264_DVR_FINDINFO,
+  //      const char *szFileName,
+  //      int nSeq = 0
+  //  );
+  FUN_DevDowonLoadByTime(self.msgHandle, CSTR(deviceId), &info,  CSTR(mSaveImageDir), [key intValue]);
 }
 
 
@@ -182,6 +245,24 @@ RCT_EXPORT_METHOD(downloadSingleFile:(NSDictionary *)params
     }
       break;
     case EMSG_ON_FILE_DOWNLOAD:
+    {
+      NSNumber *key = @(msg->seq);
+      NSDictionary *callbacks = self.resolvers[key];
+      
+      RCTPromiseResolveBlock resolve = callbacks[@"resolve"];
+      RCTPromiseRejectBlock reject = callbacks[@"reject"];
+      
+      int result = msg->param1;
+      if (result < 0) {
+        // error
+        if (reject) {
+          NSString *errorString = [NSString stringWithFormat:@"%d %d", (int)msg->id, (int)msg->param1];
+          reject(@"EMSG_ON_FILE_DLD_COMPLETE_error", errorString, [NSError errorWithDomain:@"FunSDK" code:msg->param1 userInfo:nil]);
+        }
+        
+        [self.resolvers removeObjectForKey:key];
+      }
+    }
       break;
     case EMSG_ON_FILE_DLD_POS:
       break;

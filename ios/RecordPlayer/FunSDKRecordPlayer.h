@@ -51,6 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) setPlaySpeed:(int)speed;
 
 - (void) startPlayRecordByTime:(NSDictionary *)start end:(NSDictionary *)end;
+- (void) seekToTime:(NSNumber *)addtime nAbsTime:(NSNumber *)nAbsTime;
 //- (void) updateStreamTypeMonitor:(NSNumber *)streamType;
 //- (void) setVideoFullScreen:(BOOL)isFullScreen;
 //- (void) capturePicFromDevAndSave;

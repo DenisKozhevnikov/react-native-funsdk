@@ -34,15 +34,18 @@ const Commands = {
   downloadFile: 'downloadFile',
   setPlaySpeed: 'setPlaySpeed',
   startPlayRecordByTime: 'startPlayRecordByTime',
+  seekToTime: 'seekToTime',
 } as const;
 
 const dispatchCommand = (viewId: number, command: string, args: any[] = []) => {
-  UIManager.dispatchViewManagerCommand(
-    viewId,
-    UIManager.getViewManagerConfig('RCTDevRecordMonitor').Commands[command] ||
-      '',
-    args
-  );
+  const commandId = UIManager.getViewManagerConfig('RCTDevRecordMonitor')
+    .Commands[command];
+
+  if (typeof commandId !== 'number') {
+    return;
+  }
+
+  UIManager.dispatchViewManagerCommand(viewId, commandId, args);
 };
 
 export enum SearcResultRecordEnum {
@@ -148,6 +151,7 @@ export type RecordPlayerRef = {
   downloadFile: (position: number, path: string) => void;
   // setPlaySpeed: (playSpeed: -3 | -2 | -1 | 0 | 1 | 2 | 3 | number) => void;
   setPlaySpeed: (playSpeed: 0 | 1 | 2 | number) => void;
+  seekToTime: (addTime: number, absTime: number) => void;
 };
 
 export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
@@ -403,6 +407,15 @@ export const RecordPlayer = forwardRef<RecordPlayerRef, RecordPlayerProps>(
             }
 
             dispatchCommand(viewId, Commands.setPlaySpeed, [playSpeed]);
+          },
+          seekToTime(addTime: number, absTime: number): void {
+            const viewId = findNodeHandle(viewRef.current);
+
+            if (typeof viewId !== 'number') {
+              return;
+            }
+
+            dispatchCommand(viewId, Commands.seekToTime, [addTime, absTime]);
           },
         };
       },

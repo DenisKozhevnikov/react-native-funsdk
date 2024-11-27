@@ -149,4 +149,11 @@ RCT_EXPORT_METHOD(startPlayRecordByTime:(nonnull NSNumber *)reactTag start:(nonn
     }];
 }
 
+//- (void) seekToTime:(NSInteger)addtime nAbsTime:(NSInteger)nAbsTime
+RCT_EXPORT_METHOD(seekToTime:(nonnull NSNumber *)reactTag addtime:(nonnull NSNumber *)addtime nAbsTime:(nonnull NSNumber *)nAbsTime) {
+    [self performActionOnFunSDKVideoPlayerWithTag:reactTag action:^(FunSDKRecordPlayer *view) {
+      [view seekToTime:addtime nAbsTime:nAbsTime];
+    }];
+}
+
 @end

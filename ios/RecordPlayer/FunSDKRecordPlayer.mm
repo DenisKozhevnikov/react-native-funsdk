@@ -119,8 +119,8 @@
   [self.mediaPlayer startPlayBack2:start endDate:end];
 }
 
-- (void)seekToTime:(NSInteger)addtime {
-  [self.mediaPlayer seekToTime:addtime];
+- (void) seekToTime:(NSNumber *)addtime nAbsTime:(NSNumber *)nAbsTime {
+  [self.mediaPlayer seekToTime:[addtime integerValue] nAbsTime:[nAbsTime integerValue]];
 }
 
 - (void)refresh {

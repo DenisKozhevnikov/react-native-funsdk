@@ -1,5 +1,6 @@
 import { NativeModules } from 'react-native';
 import type { SearchDate } from '../search';
+import { FILE_TYPE, STREAM_TYPE } from '../../types/stream';
 
 const funsdk = NativeModules.FunSDKDeviceImageModule;
 
@@ -48,4 +49,24 @@ export const downloadSingleFile = (
   params: DownloadSingleFileParams
 ): Promise<DownloadSingleFileResponse> => {
   return funsdk.downloadSingleFile(params);
+};
+
+export type DownloadSingleFileByTimeParams = {
+  deviceId: string;
+  deviceChannel: number;
+  mSaveImageDir: string;
+  startTime: SearchDate;
+  endTime: SearchDate;
+  streamType?: STREAM_TYPE;
+  fileType?: FILE_TYPE;
+};
+
+export const downloadSingleFileByTime = (
+  params: DownloadSingleFileByTimeParams
+): Promise<DownloadSingleFileResponse> => {
+  return funsdk.downloadSingleFileByTime({
+    fileType: FILE_TYPE.SDK_RECORD_ALL,
+    streamType: STREAM_TYPE.MAIN,
+    ...params,
+  });
 };
