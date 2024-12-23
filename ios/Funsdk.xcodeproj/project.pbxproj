@@ -10,6 +10,7 @@
 		A207BC762CD7E8AA0048276A /* FunSDKRecordPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = A207BC752CD7E8AA0048276A /* FunSDKRecordPlayer.mm */; };
 		A207BC792CD7EF510048276A /* FunSDKRecordPlayerManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = A207BC782CD7EF510048276A /* FunSDKRecordPlayerManager.mm */; };
 		A207BC7E2CD814F80048276A /* FunSDKDeviceSearchByTime.mm in Sources */ = {isa = PBXBuildFile; fileRef = A207BC7D2CD814F80048276A /* FunSDKDeviceSearchByTime.mm */; };
+		A20D8E2C2D061603004123D5 /* FunSDKDevQuickConnectModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A20D8E2B2D061600004123D5 /* FunSDKDevQuickConnectModule.mm */; };
 		A21D39382C84DD6100E6F0E6 /* FunSDKVideoPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D39342C84DD6100E6F0E6 /* FunSDKVideoPlayer.mm */; };
 		A21D39392C84DD6100E6F0E6 /* FunSDKVideoPlayerManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D39362C84DD6100E6F0E6 /* FunSDKVideoPlayerManager.mm */; };
 		A21D3FCF2C84DD9200E6F0E6 /* AlarmManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D393B2C84DD9100E6F0E6 /* AlarmManager.mm */; };
@@ -379,6 +380,8 @@
 		A207BC782CD7EF510048276A /* FunSDKRecordPlayerManager.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = FunSDKRecordPlayerManager.mm; sourceTree = "<group>"; };
 		A207BC7C2CD814ED0048276A /* FunSDKDeviceSearchByTime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKDeviceSearchByTime.h; sourceTree = "<group>"; };
 		A207BC7D2CD814F80048276A /* FunSDKDeviceSearchByTime.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = FunSDKDeviceSearchByTime.mm; sourceTree = "<group>"; };
+		A20D8E2A2D0615F3004123D5 /* FunSDKDevQuickConnectModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKDevQuickConnectModule.h; sourceTree = "<group>"; };
+		A20D8E2B2D061600004123D5 /* FunSDKDevQuickConnectModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKDevQuickConnectModule.mm; sourceTree = "<group>"; };
 		A21D39332C84DD6100E6F0E6 /* FunSDKVideoPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FunSDKVideoPlayer.h; sourceTree = "<group>"; };
 		A21D39342C84DD6100E6F0E6 /* FunSDKVideoPlayer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKVideoPlayer.mm; sourceTree = "<group>"; };
 		A21D39352C84DD6100E6F0E6 /* FunSDKVideoPlayerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FunSDKVideoPlayerManager.h; sourceTree = "<group>"; };
@@ -1411,6 +1414,15 @@
 				A207BC7D2CD814F80048276A /* FunSDKDeviceSearchByTime.mm */,
 			);
 			path = Search;
+			sourceTree = "<group>";
+		};
+		A20D8E292D0615E5004123D5 /* Quick */ = {
+			isa = PBXGroup;
+			children = (
+				A20D8E2B2D061600004123D5 /* FunSDKDevQuickConnectModule.mm */,
+				A20D8E2A2D0615F3004123D5 /* FunSDKDevQuickConnectModule.h */,
+			);
+			path = Quick;
 			sourceTree = "<group>";
 		};
 		A21D39372C84DD6100E6F0E6 /* Player */ = {
@@ -4153,6 +4165,7 @@
 		A21D42042C84DDAD00E6F0E6 /* Add */ = {
 			isa = PBXGroup;
 			children = (
+				A20D8E292D0615E5004123D5 /* Quick */,
 				A21D42002C84DDAD00E6F0E6 /* List */,
 				A21D42032C84DDAD00E6F0E6 /* Sn */,
 			);
@@ -4423,6 +4436,7 @@
 				A21D41772C84DD9200E6F0E6 /* CloudPhotoViewController.mm in Sources */,
 				A21D41732C84DD9200E6F0E6 /* BuzzerViewController.mm in Sources */,
 				A21D41B42C84DD9200E6F0E6 /* AlarmSwitchCell.m in Sources */,
+				A20D8E2C2D061603004123D5 /* FunSDKDevQuickConnectModule.mm in Sources */,
 				A21D3FE12C84DD9200E6F0E6 /* NSString+Category.m in Sources */,
 				A21D41B72C84DD9200E6F0E6 /* DeviceRandomSetViewController.m in Sources */,
 				A21D41D82C84DD9200E6F0E6 /* ItemTableviewCell.m in Sources */,

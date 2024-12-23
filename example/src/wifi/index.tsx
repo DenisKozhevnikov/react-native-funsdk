@@ -5,7 +5,7 @@ import { styles } from '../styles';
 
 export const WIFIDevice = () => {
   return (
-    <ScrollView style={styles.scrollView}>
+    <ScrollView style={styles.container}>
       <Buttons />
     </ScrollView>
   );

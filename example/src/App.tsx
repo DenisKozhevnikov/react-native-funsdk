@@ -13,7 +13,7 @@ import {
 
 import { RecordPage } from './record';
 import { MonitorPage } from './live';
-// import { WIFIDevice } from './wifi';
+import { WIFIDevice } from './wifi';
 // import { useInit } from './init';
 import {
   SafeAreaView,
@@ -33,7 +33,7 @@ import { DeviceList } from './list';
 // По мере добавления в библиотеку методов из ios будет дополняться
 export default function App() {
   const [currScreen, setCurrScreen] = React.useState<
-    'DeviceList' | 'MonitorPage' | 'Alarms' | 'RecordPage'
+    'DeviceList' | 'MonitorPage' | 'Alarms' | 'RecordPage' | 'WIFIDevice'
   >('DeviceList');
   const { isInit, isAuth, statusText, reinit, logoutsdk } = useInit();
   const [showInit, setShowInit] = React.useState(true);
@@ -75,6 +75,10 @@ export default function App() {
                 title="RecordPage"
                 onPress={() => setCurrScreen('RecordPage')}
               />
+              <Button
+                title="WIFIDevice"
+                onPress={() => setCurrScreen('WIFIDevice')}
+              />
             </ScrollView>
           </ScrollView>
         )}
@@ -113,6 +117,7 @@ export default function App() {
           {currScreen === 'MonitorPage' && <MonitorPage isAuth={true} />}
           {currScreen === 'Alarms' && <Alarms />}
           {currScreen === 'RecordPage' && <RecordPage />}
+          {currScreen === 'WIFIDevice' && <WIFIDevice />}
         </>
       )}
     </SafeAreaView>

@@ -3,6 +3,8 @@ import { NativeEventEmitter, NativeModules } from 'react-native';
 const funsdk = NativeModules.FunSDKDevQuickConnectModule;
 
 export type StartSetWiFiParams = {
+  // ssidWifi обязательно для iOS, в Android используется текущий
+  ssidWifi: string;
   passwordWifi: string;
   isDevDeleteFromOthersUsers: boolean;
 };
@@ -44,7 +46,11 @@ export type OnAddDeviceStatusType = {
     cloudCryNum: string;
   } | null;
 };
-
+console.log(
+  'NativeModules.FunSDKDevQuickConnectModule: ',
+  NativeModules.FunSDKDevQuickConnectModule,
+  funsdk
+);
 export const wifiEventModule = funsdk;
 export const wifiEventEmitter = new NativeEventEmitter(funsdk);
 
