@@ -41,15 +41,15 @@ RCT_EXPORT_METHOD(logout:(NSDictionary *)params
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
      
-//  if (!self.resolvers) {
-//    self.resolvers = [NSMutableDictionary dictionary];
-//  }
-//
-//  self.requestCounter++;
-//  NSNumber *key = @(_requestCounter);
-//  
-//  // Сохраняем блоки resolve и reject в маппинг
-//  self.resolvers[key] = @{@"resolve": resolve, @"reject": reject};
+  if (!self.resolvers) {
+    self.resolvers = [NSMutableDictionary dictionary];
+  }
+
+  self.requestCounter++;
+  NSNumber *key = @(_requestCounter);
+  
+  // Сохраняем блоки resolve и reject в маппинг
+  self.resolvers[key] = @{@"resolve": resolve, @"reject": reject};
   
   FUN_UnInitNetSDK();
 //  FUN_SysLogout(self.msgHandle, [key intValue]);
@@ -59,7 +59,6 @@ RCT_EXPORT_METHOD(logout:(NSDictionary *)params
   }
 
   [[DeviceManager getInstance] clearDeviceList];
-//  [[DeviceManager getInstance] addDeviceToList:[NSMessage SendMessag:nil obj:msg->pObject p1:msg->param1 p2:0]];
   
   resolve(nil);
 }

@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import * as React from 'react';
 
 import {
@@ -23,11 +24,33 @@ import {
 import { useInit } from './init';
 import { Alarms } from './alarms';
 import { DeviceList } from './list';
+import {
+  USER_NAME,
+  USER_NAME2,
+  USER_PASSWORD,
+  USER_PASSWORD2,
+} from './topsecret';
 
 // import funsdk from 'react-native-funsdk';
 // import { Share } from './share';
 // import { QRCodeDevice } from './qrcode';
 // import { PushInitLink } from './push';
+
+const Btn = ({ onPress, text }: { onPress: () => void; text: string }) => {
+  return (
+    <TouchableOpacity
+      style={{
+        backgroundColor: 'red',
+        height: 40,
+        borderWidth: 2,
+        borderColor: 'yellow',
+      }}
+      onPress={onPress}
+    >
+      <Text>{text}</Text>
+    </TouchableOpacity>
+  );
+};
 
 // Временно используется для тестирования ios
 // По мере добавления в библиотеку методов из ios будет дополняться
@@ -35,13 +58,15 @@ export default function App() {
   const [currScreen, setCurrScreen] = React.useState<
     'DeviceList' | 'MonitorPage' | 'Alarms' | 'RecordPage' | 'WIFIDevice'
   >('DeviceList');
-  const { isInit, isAuth, statusText, reinit, logoutsdk } = useInit();
+  const { isInit, statusText, reinit, logoutsdk } = useInit();
   const [showInit, setShowInit] = React.useState(true);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       {/* <Text>some random text2 {String(isInit)}</Text> */}
       <ScrollView
+        bounces={false}
+        scrollEnabled={false}
         // pointerEvents="none"
         // contentContainerStyle={{ height: 50 }}
         style={{
@@ -54,13 +79,20 @@ export default function App() {
           zIndex: 11111,
         }}
       >
+        <TouchableOpacity
+          style={{ backgroundColor: 'red', height: 40 }}
+          onPress={() => setShowInit((prev) => !prev)}
+        >
+          <Text>toggle</Text>
+        </TouchableOpacity>
         {showInit && (
           <ScrollView
-            style={{ maxHeight: Dimensions.get('window').height / 2 }}
+            bounces={false}
+            style={{ maxHeight: Dimensions.get('window').height / 1.2 }}
           >
             <Text>isInit: {isInit.toString()}</Text>
             <Text>text: {statusText?.text}</Text>
-            <Text>value: {JSON.stringify(statusText?.value)}</Text>
+            <Text>value: {JSON.stringify(statusText?.value, null, 2)}</Text>
             <ScrollView horizontal>
               <Button
                 title="Device List"
@@ -80,46 +112,33 @@ export default function App() {
                 onPress={() => setCurrScreen('WIFIDevice')}
               />
             </ScrollView>
+            <>
+              <Btn
+                onPress={() =>
+                  reinit({ username: USER_NAME, password: USER_PASSWORD })
+                }
+                text="re init by user1"
+              />
+              <Btn
+                onPress={() =>
+                  reinit({ username: USER_NAME2, password: USER_PASSWORD2 })
+                }
+                text="re init by user2"
+              />
+              <Btn onPress={() => logoutsdk()} text="logoutsdk" />
+            </>
           </ScrollView>
         )}
-        <TouchableOpacity
-          style={{ backgroundColor: 'red', height: 30 }}
-          onPress={() => setShowInit((prev) => !prev)}
-        >
-          <Text>show/hide</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            backgroundColor: 'red',
-            height: 50,
-            borderWidth: 2,
-            borderColor: 'yellow',
-          }}
-          onPress={() => reinit()}
-        >
-          <Text>re init</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            backgroundColor: 'red',
-            height: 50,
-            borderWidth: 2,
-            borderColor: 'yellow',
-          }}
-          onPress={() => logoutsdk()}
-        >
-          <Text>logoutsdk</Text>
-        </TouchableOpacity>
       </ScrollView>
-      {isAuth && (
-        <>
-          {currScreen === 'DeviceList' && <DeviceList />}
-          {currScreen === 'MonitorPage' && <MonitorPage isAuth={true} />}
-          {currScreen === 'Alarms' && <Alarms />}
-          {currScreen === 'RecordPage' && <RecordPage />}
-          {currScreen === 'WIFIDevice' && <WIFIDevice />}
-        </>
-      )}
+      {/* {isAuth && ( */}
+      <>
+        {currScreen === 'DeviceList' && <DeviceList />}
+        {currScreen === 'MonitorPage' && <MonitorPage isAuth={true} />}
+        {currScreen === 'Alarms' && <Alarms />}
+        {currScreen === 'RecordPage' && <RecordPage />}
+        {currScreen === 'WIFIDevice' && <WIFIDevice />}
+      </>
+      {/* )} */}
     </SafeAreaView>
   );
 }

@@ -140,3 +140,10 @@ export function captureFromDeviceAndSaveToDevice(
 ): Promise<DeviceManagerPromiseSuccessType> {
   return funsdk.captureFromDeviceAndSaveToDevice(params);
 }
+
+// ios
+// export function getTime(
+//   params: DeviceIdParams & { timeout?: number }
+// ): Promise<true> {
+//   return funsdk.getTime({ timeout: 10000, ...params });
+// }

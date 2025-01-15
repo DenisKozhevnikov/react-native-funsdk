@@ -21,10 +21,13 @@ import {
   PWD,
   PWD_TYPE,
   SERVER_ADDR,
-  USER_NAME,
-  USER_PASSWORD,
 } from '../topsecret';
 import { Platform } from 'react-native';
+
+type Credentials = {
+  username: string;
+  password: string;
+};
 
 const delay = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -55,26 +58,28 @@ export const useInit = () => {
     }
   };
 
-  const reinit = async () => {
+  const reinit = async (credentials: Credentials) => {
     try {
       initSDK();
       await delay(1000);
       console.log('start somefunc');
       setStatus('start somefunc');
-      someFuncs();
+      someFuncs(credentials);
     } catch (error) {
       console.log('error in someFuncs: ', error);
       setStatus('error in someFuncs: ', (error as Error)?.message);
     }
   };
 
-  const someFuncs = async () => {
+  const someFuncs = async (credentials: Credentials) => {
+    const { username, password } = credentials;
+
     try {
       console.log('start somefunc');
       setStatus('start somefunc');
       const res = await loginByAccount({
-        username: USER_NAME,
-        password: USER_PASSWORD,
+        username,
+        password,
       });
       console.log('res somefunc: ', res);
       setStatus('res somefunc: ', res);
@@ -87,12 +92,12 @@ export const useInit = () => {
       // Пользователь не зареган?
       if ((error as Error)?.message.includes('-604025')) {
         const res = await registerByNotBind({
-          username: USER_NAME,
-          password: USER_PASSWORD,
+          username,
+          password,
         }).then(() => {
           console.log('res registerByNotBind: ', res);
           setStatus('res registerByNotBind: ', res);
-          someFuncs();
+          someFuncs(credentials);
         });
       }
     }

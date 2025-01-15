@@ -353,6 +353,7 @@
 		A21D42122C84DDAD00E6F0E6 /* FunSDKDevStatusModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D42062C84DDAD00E6F0E6 /* FunSDKDevStatusModule.mm */; };
 		A21D42132C84DDAD00E6F0E6 /* FunSDKLoginModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D420A2C84DDAD00E6F0E6 /* FunSDKLoginModule.mm */; };
 		A21D42142C84DDAD00E6F0E6 /* FunSDKRegisterModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A21D420D2C84DDAD00E6F0E6 /* FunSDKRegisterModule.mm */; };
+		A241CEE72D382F9C00660D27 /* FunSDKDevConfigModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A241CEE62D382F9400660D27 /* FunSDKDevConfigModule.mm */; };
 		A2767C5E2CE5459100CA5F83 /* FunSDKDeviceFileSearch.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2767C5D2CE5459100CA5F83 /* FunSDKDeviceFileSearch.mm */; };
 		A2767C622CE545A700CA5F83 /* FunSDKDeviceImageModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2767C602CE545A700CA5F83 /* FunSDKDeviceImageModule.mm */; };
 		A2DE94D92BA5F6FC00F0C71D /* FunSDKCoreModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = A2DE94D82BA5F6FC00F0C71D /* FunSDKCoreModule.mm */; };
@@ -1337,6 +1338,8 @@
 		A21D420A2C84DDAD00E6F0E6 /* FunSDKLoginModule.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKLoginModule.mm; sourceTree = "<group>"; };
 		A21D420C2C84DDAD00E6F0E6 /* FunSDKRegisterModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FunSDKRegisterModule.h; sourceTree = "<group>"; };
 		A21D420D2C84DDAD00E6F0E6 /* FunSDKRegisterModule.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKRegisterModule.mm; sourceTree = "<group>"; };
+		A241CEE52D382F8600660D27 /* FunSDKDevConfigModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKDevConfigModule.h; sourceTree = "<group>"; };
+		A241CEE62D382F9400660D27 /* FunSDKDevConfigModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKDevConfigModule.mm; sourceTree = "<group>"; };
 		A2767C5C2CE5459100CA5F83 /* FunSDKDeviceFileSearch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKDeviceFileSearch.h; sourceTree = "<group>"; };
 		A2767C5D2CE5459100CA5F83 /* FunSDKDeviceFileSearch.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FunSDKDeviceFileSearch.mm; sourceTree = "<group>"; };
 		A2767C5F2CE545A700CA5F83 /* FunSDKDeviceImageModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FunSDKDeviceImageModule.h; sourceTree = "<group>"; };
@@ -4184,6 +4187,7 @@
 		A21D42082C84DDAD00E6F0E6 /* Device */ = {
 			isa = PBXGroup;
 			children = (
+				A241CEE42D382F7B00660D27 /* Config */,
 				A2ED05AB2CB865A70049E878 /* Alarm */,
 				A21D42042C84DDAD00E6F0E6 /* Add */,
 				A21D42072C84DDAD00E6F0E6 /* Status */,
@@ -4218,6 +4222,15 @@
 				A21D420E2C84DDAD00E6F0E6 /* Register */,
 			);
 			path = User;
+			sourceTree = "<group>";
+		};
+		A241CEE42D382F7B00660D27 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				A241CEE52D382F8600660D27 /* FunSDKDevConfigModule.h */,
+				A241CEE62D382F9400660D27 /* FunSDKDevConfigModule.mm */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		A2767C612CE545A700CA5F83 /* Image */ = {
@@ -4514,6 +4527,7 @@
 				A21D401D2C84DD9200E6F0E6 /* PictureFileDownloadConfig.mm in Sources */,
 				A21D42102C84DDAD00E6F0E6 /* FunSDKDevListConnectModule.mm in Sources */,
 				A21D41F02C84DD9300E6F0E6 /* FishEyeVideoVC.mm in Sources */,
+				A241CEE72D382F9C00660D27 /* FunSDKDevConfigModule.mm in Sources */,
 				A21D41722C84DD9200E6F0E6 /* BaseConfigVC.mm in Sources */,
 				A21D405C2C84DD9200E6F0E6 /* qrencode.m in Sources */,
 				A21D41CA2C84DD9200E6F0E6 /* DeviceShareManager.mm in Sources */,

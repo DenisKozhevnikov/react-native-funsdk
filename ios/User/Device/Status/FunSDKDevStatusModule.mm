@@ -100,6 +100,39 @@ RCT_EXPORT_METHOD(getChannelInfo:(NSDictionary *)params
     FUN_DevGetChnName(self.msgHandle, SZSTR(deviceId), "", "", [key intValue]);
 }
 
+#pragma - mark Логаут с устройства
+RCT_EXPORT_METHOD(logoutDevice:(NSDictionary *)params
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSString *deviceId = params[@"deviceId"];
+  FUN_DevLogout(self.msgHandle, [deviceId UTF8String]);
+  
+  resolve(@(true));
+}
+
+
+//#pragma - mark Получение времени у камеры
+//RCT_EXPORT_METHOD(getTime:(NSDictionary *)params
+//                  resolver:(RCTPromiseResolveBlock)resolve
+//                  rejecter:(RCTPromiseRejectBlock)reject)
+//{
+//  if (!self.resolvers) {
+//      self.resolvers = [NSMutableDictionary dictionary];
+//  }
+//  
+//  self.requestCounter++;
+//  NSNumber *key = @(_requestCounter);
+//  
+//  // Сохраняем блоки resolve и reject в маппинг
+//  self.resolvers[key] = @{@"resolve": resolve, @"reject": reject};
+//  
+//  
+//  NSString *deviceId = params[@"deviceId"];
+//  NSNumber *timeout = params[@"timeout"];
+//  
+//  FUN_DevCmdGeneral(self.msgHandle, [deviceId UTF8String], 1452, "OPTimeQuery", 0, [timeout intValue], NULL, 0, -1, [key intValue]);
+//}
 
 #pragma mark - получение результатов OnFunSDKResult
 - (void)OnFunSDKResult:(NSNumber *) pParam {
@@ -130,7 +163,7 @@ RCT_EXPORT_METHOD(getChannelInfo:(NSDictionary *)params
                 if (msg->param1 < 0) {
                     if (reject) {
                         NSString *errorString = [NSString stringWithFormat:@"%d %d", (int)msg->id, (int)msg->param1];
-                        reject(@"loginDeviceWithCredential_error", errorString, [NSError errorWithDomain:@"FunSDK" code:msg->param1 userInfo:nil]);
+                        reject(@"EMSG_DEV_GET_CONFIG_JSON_error", errorString, [NSError errorWithDomain:@"FunSDK" code:msg->param1 userInfo:nil]);
                     }
                 } else {
                     if (resolve) {
