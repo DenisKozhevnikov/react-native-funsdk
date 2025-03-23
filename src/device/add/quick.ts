@@ -46,11 +46,7 @@ export type OnAddDeviceStatusType = {
     cloudCryNum: string;
   } | null;
 };
-console.log(
-  'NativeModules.FunSDKDevQuickConnectModule: ',
-  NativeModules.FunSDKDevQuickConnectModule,
-  funsdk
-);
+
 export const wifiEventModule = funsdk;
 export const wifiEventEmitter = new NativeEventEmitter(funsdk);
 

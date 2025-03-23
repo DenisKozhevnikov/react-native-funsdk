@@ -6,6 +6,7 @@ import type {
   DeviceManagerPromiseSuccessType,
   EPTZCMD,
 } from './types';
+import type { networkMode } from './info';
 
 const funsdk = NativeModules.FunSDKDevStatusModule;
 
@@ -16,7 +17,12 @@ export function loginDevice(
 }
 
 export type LoginDeviceWithCredentialResponse =
-  DeviceManagerPromiseSuccessType & { value: DeviceInfoType };
+  DeviceManagerPromiseSuccessType & {
+    value: DeviceInfoType & {
+      // только на ios
+      networkMode: networkMode;
+    };
+  };
 
 export function loginDeviceWithCredential(
   params: DeviceCredentialParams

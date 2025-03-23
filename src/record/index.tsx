@@ -12,7 +12,7 @@ import type {
   FUNSDK_DOWNLOAD_STATE_ENUM,
   FUNSDK_MEDIA_PLAY_STATE_ENUM,
 } from '../types/stream';
-import type { SearchDate } from '../manager';
+import type { SearchDate } from '../types/common';
 
 const Commands = {
   init: 'init',

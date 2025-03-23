@@ -1,16 +1,8 @@
 import { NativeModules } from 'react-native';
 import type { FILE_TYPE, STREAM_TYPE } from '../../types/stream';
+import type { SearchDate } from '../../types/common';
 
 const funsdk = NativeModules.FunSDKDeviceFileSearch;
-
-export type SearchDate = {
-  year: number;
-  month: number;
-  day: number;
-  hour: number;
-  minute: number;
-  second: number;
-};
 
 export type SearchDeviceFilesByDateParams = {
   deviceChannel: number;

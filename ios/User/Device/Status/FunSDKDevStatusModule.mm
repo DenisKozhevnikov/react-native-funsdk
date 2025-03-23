@@ -177,8 +177,9 @@ RCT_EXPORT_METHOD(logoutDevice:(NSDictionary *)params
                         NSError *error;
                         NSDictionary *jsonDic = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableLeaves error:&error];
                         
-                        NSDictionary *dicInfo = [jsonDic objectForKey:@"SystemInfo"];
-
+                        NSMutableDictionary *dicInfo = [[jsonDic objectForKey:@"SystemInfo"] mutableCopy];
+                        dicInfo[@"networkMode"] = @(msg->param2);
+                        
                         NSDictionary *responseObject = @{
                             @"i": @(1),
                             @"s": dicInfo[@"SerialNo"],

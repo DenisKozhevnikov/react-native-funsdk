@@ -1,6 +1,7 @@
 // ios
 import { NativeModules } from 'react-native';
 import type { DeviceManagerPromiseSuccessType } from '../manager';
+export * from './types/@index';
 
 const funsdk = NativeModules.FunSDKDevConfigModule;
 
@@ -19,7 +20,7 @@ export function getDevCmdGeneral(params: DevCmdGeneralParams): Promise<any> {
   return funsdk.getDevCmdGeneral(params);
 }
 
-type GetDevConfigParams = {
+export type GetDevConfigParams = {
   deviceId: string;
   name: string; // имя запрашиваемой конфигурации
   nOutBufLen: number; // 0
@@ -31,7 +32,7 @@ export function getDevConfig(params: GetDevConfigParams): Promise<any> {
   return funsdk.getDevConfig(params);
 }
 
-type SetDevConfigParams = {
+export type SetDevConfigParams = {
   deviceId: string;
   name: string;
   param: string; // json преобразованный в строку

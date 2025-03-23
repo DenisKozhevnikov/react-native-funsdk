@@ -1,6 +1,6 @@
 import { NativeModules } from 'react-native';
-import type { SearchDate } from '../search';
 import { FILE_TYPE, STREAM_TYPE } from '../../types/stream';
+import type { SearchDate } from '../../types/common';
 
 const funsdk = NativeModules.FunSDKDeviceImageModule;
 

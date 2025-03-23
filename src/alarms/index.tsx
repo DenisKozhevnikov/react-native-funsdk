@@ -1,6 +1,7 @@
 import { NativeModules, Platform } from 'react-native';
 import type { AlarmType } from '../types/alarm';
 import type { DeviceManagerPromiseSuccessType } from '../../src/device';
+import type { SearchDate } from '../types/common';
 
 const funsdk = NativeModules.FunSDKDevAlarmModule;
 
@@ -185,12 +186,298 @@ export function linkAlarm(params: LinkAlarmParams): Promise<any> {
   return funsdk.linkAlarm(params);
 }
 
+export type LinkDevGeneralParams = {
+  deviceId: string;
+  deviceName: string;
+  voice: string;
+  devUserName: string;
+  devUserPwd: string;
+  appToken: string;
+  appType: string;
+};
+
+export function linkDevGeneral(params: LinkDevGeneralParams): Promise<any> {
+  return funsdk.linkDevGeneral(params);
+}
+
+export type LinkDevsBatchParams = {
+  deviceIds: string;
+  devName: string;
+  voice: string;
+  devUserName: string;
+  devUserPwd: string;
+  appToken: string;
+  appType: string;
+};
+
+export function linkDevsBatch(params: LinkDevsBatchParams): Promise<any> {
+  return funsdk.linkDevsBatch(params);
+}
+
+export type DevAlarmSubscribeParams = {
+  deviceId: string;
+  deviceName: string;
+  rules: string;
+  voice: string;
+  appToken: string;
+  appType: string;
+};
+
+export function devAlarmSubscribe(
+  params: DevAlarmSubscribeParams
+): Promise<any> {
+  return funsdk.devAlarmSubscribe(params);
+}
+
+export type DevAlarmSubscribeBatchParams = {
+  deviceIds: string;
+  deviceName: string;
+  rules: string;
+  voice: string;
+  appToken: string;
+  appType: string;
+};
+
+export function devAlarmSubscribeBatch(
+  params: DevAlarmSubscribeBatchParams
+): Promise<any> {
+  return funsdk.devAlarmSubscribeBatch(params);
+}
+
 export type UnlinkAlarmParams = {
   deviceId: string;
 };
 
 export function unlinkAlarm(params: UnlinkAlarmParams): Promise<any> {
   return funsdk.unlinkAlarm(params);
+}
+
+export type UnlinkDevGeneralParams = {
+  deviceId: string;
+  appToken: string;
+  flag?: number; // 0 ??
+};
+
+export function unlinkDevGeneral(params: UnlinkDevGeneralParams): Promise<any> {
+  return funsdk.unlinkDevGeneral({
+    flag: 0,
+    ...params,
+  });
+}
+
+export type UnlinkAllAccountsOfDevParams = {
+  deviceId: string;
+};
+
+export function unlinkAllAccountsOfDev(
+  params: UnlinkAllAccountsOfDevParams
+): Promise<any> {
+  return funsdk.unlinkAllAccountsOfDev(params);
+}
+
+export type UnlinkDevsBatchParams = {
+  deviceId: string;
+  appToken: string;
+  flag: number;
+};
+
+export function unlinkDevsBatch(params: UnlinkDevsBatchParams): Promise<any> {
+  return funsdk.unlinkDevsBatch(params);
+}
+
+export type UnlinkDevAbnormalParams = {
+  deviceId: string;
+  appToken: string;
+  flag: number;
+};
+
+export function unlinkDevAbnormal(
+  params: UnlinkDevAbnormalParams
+): Promise<any> {
+  return funsdk.unlinkDevAbnormal(params);
+}
+
+export type GetDevAlarmSubStatusByTypeParams = {
+  deviceIds: string;
+  appToken: string;
+};
+
+export function getDevAlarmSubStatusByType(
+  params: GetDevAlarmSubStatusByTypeParams
+): Promise<any> {
+  return funsdk.getDevAlarmSubStatusByType(params);
+}
+
+export type GetDevAlarmSubStatusByTokenParams = {
+  deviceId: string;
+  appTokens: string;
+};
+
+export function getDevAlarmSubStatusByToken(
+  params: GetDevAlarmSubStatusByTokenParams
+): Promise<any> {
+  return funsdk.getDevAlarmSubStatusByToken(params);
+}
+
+export type SearchAlarmPicParams = {
+  deviceId: string;
+  fileName: string;
+  uId: string; // alarm id?
+  res: string; // max 31 character, example - _176x144.jpeg
+};
+
+export function searchAlarmPic(params: SearchAlarmPicParams): Promise<any> {
+  return funsdk.searchAlarmPic(params);
+}
+
+export type DownloadAlarmImageParams = {
+  deviceId: string;
+  path: string;
+  picInfoJSONstring: string; // информация об изображении в json строке
+  width?: number;
+  height?: number;
+};
+
+export function downloadAlarmImage(
+  params: DownloadAlarmImageParams
+): Promise<any> {
+  return funsdk.downloadAlarmImage({
+    width: 0,
+    height: 0,
+    ...params,
+  });
+}
+
+export function stopDownloadAlarmImages(): Promise<any> {
+  return funsdk.stopDownloadAlarmImages({});
+}
+
+export type SearchAlarmByMothParams = {
+  deviceId: string;
+  deviceChannel: number;
+  streamType?: string; // ""
+  date: SearchDate;
+};
+
+export function searchAlarmByMoth(params: SearchAlarmPicParams): Promise<any> {
+  return funsdk.searchAlarmByMoth({
+    streamType: '',
+    ...params,
+  });
+}
+
+export type SearchAlarmLastTimeByTypeParams = {
+  deviceId: string;
+  deviceChannel: number;
+  streamType?: string; // ""
+  alarmType?: string; // ""
+};
+
+export function searchAlarmLastTimeByType(
+  params: SearchAlarmLastTimeByTypeParams
+): Promise<any> {
+  return funsdk.searchAlarmLastTimeByType({
+    streamType: '',
+    alarmType: '',
+    ...params,
+  });
+}
+
+export enum ESortType {
+  E_SORT_TYPE_ORDER,
+  E_SORT_TYPE_REVERSE_ORDER,
+}
+
+export type QueryDevsStatusHistoryRecordParams = {
+  deviceId: string;
+  startTime: number;
+  endTime: number;
+  queryCount: number; // max 500
+  sortType: ESortType;
+};
+
+export function queryDevsStatusHistoryRecord(
+  params: QueryDevsStatusHistoryRecordParams
+): Promise<any> {
+  return funsdk.queryDevsStatusHistoryRecord(params);
+}
+
+export type AlarmLinkByUserIDParams = {
+  userId: string;
+  voice?: string;
+  appToken: string;
+  appType: string;
+};
+
+export function alarmLinkByUserID(
+  params: AlarmLinkByUserIDParams
+): Promise<any> {
+  return funsdk.alarmLinkByUserID({
+    voice: '',
+    ...params,
+  });
+}
+
+export type AlarmUnLinkByUserIDParams = {
+  userId: string;
+  appToken: string;
+  clearFlag?: number; // 1 - удаляет все подписки, appToken не требуется
+};
+
+export function alarmUnLinkByUserID(
+  params: AlarmUnLinkByUserIDParams
+): Promise<any> {
+  return funsdk.alarmUnLinkByUserID({
+    clearFlag: 0,
+    ...params,
+  });
+}
+
+export type SetAlarmMsgReadFlagParams = {
+  deviceId: string;
+  alarmIds: string; // строки из id разделенных знаком ";"
+};
+
+export function setAlarmMsgReadFlag(
+  params: SetAlarmMsgReadFlagParams
+): Promise<any> {
+  return funsdk.setAlarmMsgReadFlag(params);
+}
+
+export type BatchDevAlarmMsgQueryParams = {
+  deviceIds: string; // строки из id разделенных знаком ";"
+  deviceChannel: number; // - 1 = все каналы
+  startTime: number;
+  endTime: number;
+  maxNumber: number;
+  pageIndex: number;
+  alarmType?: string | null;
+};
+
+export function batchDevAlarmMsgQuery(
+  params: BatchDevAlarmMsgQueryParams
+): Promise<any> {
+  return funsdk.batchDevAlarmMsgQuery({
+    alarmType: null,
+    ...params,
+  });
+}
+
+export type DevAlarmMsgQueryParams = {
+  deviceId: string;
+  startTime: number;
+  endTime: number;
+  deviceChannel: number;
+  pageNum: number;
+  pageSize: number;
+  alarmType?: string;
+};
+
+export function devAlarmMsgQuery(params: DevAlarmMsgQueryParams): Promise<any> {
+  return funsdk.devAlarmMsgQuery({
+    alarmType: '',
+    ...params,
+  });
 }
 
 export enum EMSGLANGUAGE {
@@ -200,9 +487,12 @@ export enum EMSGLANGUAGE {
   ELG_JAPANESE = 3,
 }
 
-export enum ALARM_PUSH_TYPE {
+export enum EAPPTYPE {
+  EXMFamily = 1,
+  EFamilyCenter = 2,
+  EXMEye = 3, // ProductionType = 3 ??
+  EFamily_BaiAn = 4,
   DevelopmentType = 200,
-  ProductionType = 3,
 }
 
 export type InitAlarmServerParams = {
@@ -210,14 +500,34 @@ export type InitAlarmServerParams = {
   password: string;
   token: string;
   language?: EMSGLANGUAGE;
-  pushType?: ALARM_PUSH_TYPE;
-  pushThirdServerURL?: string;
+  pushType?: EAPPTYPE;
+  szAppType?: string; // XXXXXX Third party subscription alarm URL
 };
 
 export function initAlarmServer(params: InitAlarmServerParams): Promise<any> {
   return funsdk.initAlarmServer({
     language: EMSGLANGUAGE.ELG_ENGLISH,
-    pushType: ALARM_PUSH_TYPE.DevelopmentType,
+    pushType: EAPPTYPE.DevelopmentType,
+    ...params,
+  });
+}
+
+export type InitAlarmServerV2Params = {
+  username: string;
+  password: string;
+  userId: string;
+  token: string;
+  language?: EMSGLANGUAGE;
+  pushType?: EAPPTYPE;
+  szAppType?: string; // XXXXXX Third party subscription alarm URL
+};
+
+export function initAlarmServerV2(
+  params: InitAlarmServerV2Params
+): Promise<any> {
+  return funsdk.initAlarmServerV2({
+    language: EMSGLANGUAGE.ELG_ENGLISH,
+    pushType: EAPPTYPE.DevelopmentType,
     ...params,
   });
 }
