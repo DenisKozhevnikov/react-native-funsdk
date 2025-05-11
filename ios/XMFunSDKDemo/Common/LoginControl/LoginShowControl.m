@@ -69,4 +69,23 @@ NSString *tokenStr = @"";
 - (NSString *)getPushToken {
     return tokenStr;
 }
+
+#pragma mark - FUN_SysInit szIP
+NSString *serverAddrStr = @"";
+- (void)setServerAddr:(NSString *)serverAddr {
+  serverAddrStr = serverAddr;
+}
+- (NSString *)getServerAddr {
+    return serverAddrStr;
+}
+
+#pragma mark - FUN_SysInit nPort
+static int port = 0;
+- (void)setPort:(int)newPort {
+  port = newPort;
+}
+- (int)getPort {
+  return port;
+}
+
 @end

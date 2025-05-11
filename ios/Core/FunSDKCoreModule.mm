@@ -5,6 +5,7 @@
 #import "NSString+Path.h"
 #import "DataEncrypt.h"
 #import <XMNetInterface/Reachability.h>
+#import "LoginShowControl.h"
 
 @implementation FunSDKCoreModule
 
@@ -17,12 +18,14 @@ RCT_EXPORT_METHOD(init:(NSDictionary *)params resolver:(RCTPromiseResolveBlock)r
     
 //    int PWD_TYPE = 0; // Используем тип данных int для PWD_TYPE
 //    const char *PWD = ""; // Строки C используются для передачи в функции C
-//    const char *SERVER_ADDR = "p2p-s1.red-dst.ru";
+//    const char *SERVER_ADDR = "example.com";
 //    int PORT = 8000;
     int PWD_TYPE = [params[@"customPwdType"] intValue];
     const char *PWD = [params[@"customPwd"] UTF8String];
     const char *SERVER_ADDR = [params[@"customServerAddr"] UTF8String];
+    [[LoginShowControl getInstance] setServerAddr:params[@"customServerAddr"]];
     int PORT = [params[@"customPort"] intValue];
+    [[LoginShowControl getInstance] setPort:PORT];
   
     const char *APPUUID = [params[@"APPUUID"] UTF8String];
     const char *APPKEY = [params[@"APPKEY"] UTF8String];
@@ -33,9 +36,6 @@ RCT_EXPORT_METHOD(init:(NSDictionary *)params resolver:(RCTPromiseResolveBlock)r
     NSLog(@"APPKEY2: %s", APPKEY);
     NSLog(@"APPSECRET2: %s", APPSECRET);
     NSLog(@"MOVECARD2: %d", MOVECARD);
-  
-    
-    RCTLogInfo(@"pokli po");
     
     SInitParam pa;
     
@@ -75,8 +75,8 @@ RCT_EXPORT_METHOD(init:(NSDictionary *)params resolver:(RCTPromiseResolveBlock)r
 
     FUN_SetFunStrAttr(EFUN_ATTR_USER_PWD_DB, [[NSString GetDocumentPathWith:@"password.txt"] UTF8String]);
 
-    FUN_SysInit(SERVER_ADDR, PORT);
-    FUN_InitNetSDK();
+//    FUN_SysInit(SERVER_ADDR, PORT);
+//    FUN_InitNetSDK();
     resolve(@(eventId));
 }
 

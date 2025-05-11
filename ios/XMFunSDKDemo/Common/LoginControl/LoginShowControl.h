@@ -45,4 +45,12 @@ typedef enum {
 #pragma mark - 推送token
 - (void)setPushToken:(NSString *)token;
 - (NSString *)getPushToken;
+
+#pragma mark - FUN_SysInit szIP
+- (void)setServerAddr:(NSString *)serverAddr;
+- (NSString *)getServerAddr;
+
+#pragma mark - FUN_SysInit nPort
+- (void)setPort:(int)newPort;
+- (int)getPort;
 @end

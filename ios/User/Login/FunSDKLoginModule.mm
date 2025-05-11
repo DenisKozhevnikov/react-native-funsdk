@@ -57,12 +57,14 @@ RCT_EXPORT_METHOD(loginByAccount:(NSDictionary *)params
     // Сохраняем блоки resolve и reject в маппинг
     self.resolvers[key] = @{@"resolve": resolve, @"reject": reject};
     
+    NSString *SERVER_ADDR = [[LoginShowControl getInstance] getServerAddr];
+    int PORT = [[LoginShowControl getInstance] getPort];
+  
+    FUN_SysInit([SERVER_ADDR UTF8String], PORT);
     FUN_InitNetSDK();
     FUN_SysGetDevList(self.msgHandle, [@(userName) UTF8String] , [@(psw) UTF8String],0);
     
-    //暂存登陆模式
     [[LoginShowControl getInstance] setLoginType:loginTypeCloud];
-//    //云登陆需要暂存登陆账号密码
     [[LoginShowControl getInstance] setLoginUserName: @(userName) password:@(psw)];
     
     FunMsgListener *listener = [[FunMsgListener alloc]init];
