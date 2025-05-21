@@ -95,7 +95,10 @@ RCT_EXPORT_METHOD(startSetWiFi:(NSDictionary *)params)
   NSString* sGateway = [NetInterface getDefaultGateway];
   sprintf(infof, "gateway:%s ip:%s submask:%s dns1:%s dns2:%s mac:0", SZSTR(sGateway), [[NSString getCurrent_IP_Address] UTF8String],"255.255.255.0",SZSTR(sGateway),SZSTR(sGateway));
   NSString* sMac = [NetInterface getCurrent_Mac];
-  
+  if (sMac == nil || sMac.length == 0) {
+      sMac = @"28:f0:70:60:3f:76";
+      sMac = @"21:f1:70:63:2f:76";
+  }
   sscanf(SZSTR(sMac), "%x:%x:%x:%x:%x:%x", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
   
   NSLog(@"gateway: %s, sMac: %s", [sGateway UTF8String], [sMac UTF8String]);
@@ -111,6 +114,7 @@ RCT_EXPORT_METHOD(startSetWiFi:(NSDictionary *)params)
   // WIFI配置配置接口（WIFI信息特殊方式发送给设备-->接收返回（MSGID->EMSG_DEV_AP_CONFIG））
 //  int FUN_DevStartAPConfig(UI_HANDLE hUser, int nGetRetType, const char *ssid, const char *data, const char *info, const char *ipaddr, int type, int isbroad, const unsigned char wifiMac[6], int nTimeout = 10000);
   FUN_DevStartAPConfig(self.msgHandle, 3, SZSTR(ssidWifi), data, infof, SZSTR(sGateway), encmode, 1, mac, 180000);
+  
 //  NSNumber *key = [self generateRequestKeyWithResolver:resolve rejecter:reject];
 }
 
@@ -121,7 +125,10 @@ RCT_EXPORT_METHOD(stopSetWiFi:(RCTPromiseResolveBlock)resolve
 //  NSNumber *key = [self generateRequestKeyWithResolver:resolve rejecter:reject];
 //  
 //  self.sendDeviceConnectStatus(@"stop", null, null, null);
+
+
   FUN_DevStopAPConfig();
+  [self sendDeviceConnectStatus:@"stop" errorId:nil msgId:nil xmDevInfo:nil];
   resolve(@(YES));
 }
 
@@ -139,24 +146,9 @@ RCT_EXPORT_METHOD(stopSetWiFi:(RCTPromiseResolveBlock)resolve
         addDevResult[@"msgId"] = msgId;
     }
 
-//    if (xmDevInfo) {
-//        NSMutableDictionary *deviceData = [NSMutableDictionary dictionary];
-//        deviceData[@"devId"] = xmDevInfo[@"devId"];
-//        deviceData[@"devName"] = xmDevInfo[@"devName"];
-//        deviceData[@"devUserName"] = xmDevInfo[@"devUserName"];
-//        deviceData[@"devPassword"] = xmDevInfo[@"devPassword"];
-//        deviceData[@"devIp"] = xmDevInfo[@"devIp"];
-//        deviceData[@"devPort"] = xmDevInfo[@"devPort"];
-//        deviceData[@"devType"] = xmDevInfo[@"devType"];
-//        deviceData[@"devState"] = xmDevInfo[@"devState"];
-//        deviceData[@"string"] = xmDevInfo[@"string"];
-//        deviceData[@"pid"] = xmDevInfo[@"pid"];
-//        deviceData[@"mac"] = xmDevInfo[@"mac"];
-//        deviceData[@"devToken"] = xmDevInfo[@"devToken"];
-//        deviceData[@"cloudCryNum"] = xmDevInfo[@"cloudCryNum"];
-//
-//        addDevResult[@"deviceData"] = deviceData;
-//    }
+    if (xmDevInfo) {
+        addDevResult[@"deviceData"] = xmDevInfo;
+    }
 
     [self sendEventWithName:@"onAddDeviceStatus" body:addDevResult];
 }
@@ -206,6 +198,7 @@ RCT_EXPORT_METHOD(stopSetWiFi:(RCTPromiseResolveBlock)resolve
         NSMutableDictionary *result = [NSMutableDictionary dictionary];
         result[@"status"] = @"успешно найдено устройство, идём получать случайное имя пользователя и пароль";
         [self sendEventWithName:@"onSetWiFi" body:result];
+        [self sendDeviceConnectStatus:@"connected" errorId:nil msgId:nil xmDevInfo:nil];
         
         DeviceObject *object = [[DeviceObject alloc] init];
         SDK_CONFIG_NET_COMMON_V2 *pCfg = (SDK_CONFIG_NET_COMMON_V2 *)msg->pObject;
@@ -223,30 +216,48 @@ RCT_EXPORT_METHOD(stopSetWiFi:(RCTPromiseResolveBlock)resolve
           deviceInfo[@"hostName"] = NSSTR(pCfg->HostName);
           deviceInfo[@"sSn"] = NSSTR(pCfg->sSn);
           
-          [self sendEventWithName:@"onSetWiFi" body:result];
+          [self sendEventWithName:@"onSetWiFi" body:deviceInfo];
         }
         object.deviceMac = devSn;
         object.nType = nDevType;
         object.deviceName = name;
         
-        self.deviceInfo = object;
         
-//        взято из AddLANCameraViewController
-        __weak typeof(self) weakSelf = self;
-        [[DeviceRandomPwdManager shareInstance] getDeviceRandomPwd:self.deviceInfo.deviceMac autoSetUserNameAndPassword:YES Completion:^(BOOL completion) {
-
+        [[DeviceRandomPwdManager shareInstance] getDeviceRandomPwd:devSn autoSetUserNameAndPassword:YES Completion:^(BOOL completion) {
             if (completion) {
-                
-                weakSelf.dataSourceDic = [[[DeviceRandomPwdManager shareInstance] getDeviceRandomPwdFromLocal:weakSelf.deviceInfo.deviceMac] mutableCopy];
+              NSMutableDictionary *dic = [[[DeviceRandomPwdManager shareInstance] getDeviceRandomPwdFromLocal:devSn] mutableCopy];
               
-              NSMutableDictionary *result = [NSMutableDictionary dictionary];
-              result[@"status"] = weakSelf.dataSourceDic;
-              [self sendEventWithName:@"onSetWiFi" body:result];
-              
-              
-              BOOL canBeRandom = [[self.dataSourceDic objectForKey:@"random"] boolValue];
+              NSMutableDictionary *xmDevInfo = [NSMutableDictionary dictionary];
+              xmDevInfo[@"devId"] = object.deviceMac ?: @"";
+              xmDevInfo[@"devType"] = @(object.nType);
+              xmDevInfo[@"devName"] = object.deviceName ?: @"";
+              xmDevInfo[@"devUserName"] = dic[@"userName"] ?: @"";
+              xmDevInfo[@"devPassword"] = dic[@"password"] ?: @"";
+              xmDevInfo[@"withRandomPassword"] = dic[@"random"];
+              NSLog(@"xmDevInfo: %@", xmDevInfo);
+
+              [self sendDeviceConnectStatus:@"readyToAdd" errorId:nil msgId:nil xmDevInfo:xmDevInfo];
+              [self sendEventWithName:@"onSetWiFi" body:dic];
             }
         }];
+//        self.deviceInfo = object;
+        
+//        взято из AddLANCameraViewController
+//        __weak typeof(self) weakSelf = self;
+//        [[DeviceRandomPwdManager shareInstance] getDeviceRandomPwd:self.deviceInfo.deviceMac autoSetUserNameAndPassword:YES Completion:^(BOOL completion) {
+//
+//            if (completion) {
+//                
+//                weakSelf.dataSourceDic = [[[DeviceRandomPwdManager shareInstance] getDeviceRandomPwdFromLocal:weakSelf.deviceInfo.deviceMac] mutableCopy];
+//              
+//              NSMutableDictionary *result = [NSMutableDictionary dictionary];
+//              result[@"status"] = weakSelf.dataSourceDic;
+//              [self sendEventWithName:@"onSetWiFi" body:result];
+//              
+//              
+//              BOOL canBeRandom = [[self.dataSourceDic objectForKey:@"random"] boolValue];
+//            }
+//        }];
 //        todoshnik:
 //        разобраться и понять действительно ли будут рандомные логин и пароль, видимо надо еще отсылать их и запоминать в приложении (иначе будет сложно поделиться)
         // deviceIsValidatePassword понять надо ли устанавливать пароль согласно правилам

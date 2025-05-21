@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import {
   WiFiListenersEnum,
+  addDevice,
   // deleteDevice,
   startSetWiFi,
   stopSetWiFi,
@@ -16,6 +17,7 @@ import {
 } from 'react-native-funsdk';
 import { styles } from '../styles';
 import { askPermissionLocation } from '../utils/permisiion';
+import { WIFI_PASSWORD, WIFI_SSID } from '../topsecret';
 
 const Button = ({ onPress, text }: { onPress: () => void; text: string }) => {
   return (
@@ -27,8 +29,8 @@ const Button = ({ onPress, text }: { onPress: () => void; text: string }) => {
 
 export const Buttons = () => {
   const [wifiConnectStatus, setWifiConnectStatus] = useState<any[]>([]);
-  const [wifiPassword, setWifiPassword] = useState('');
-  const [wifiSSID, setWifiSSID] = useState('');
+  const [wifiPassword, setWifiPassword] = useState(WIFI_PASSWORD);
+  const [wifiSSID, setWifiSSID] = useState(WIFI_SSID);
 
   const startFindDevice = async () => {
     setWifiConnectStatus([]);
@@ -67,6 +69,28 @@ export const Buttons = () => {
       WiFiListenersEnum.ON_ADD_DEVICE_STATUS,
       (event) => {
         console.log('eventDeviceListener: ', event);
+        if (event.status === 'readyToAdd' && event?.deviceData) {
+          const { deviceData } = event;
+          addDevice({
+            deviceId: deviceData?.devId || '',
+            username: deviceData?.devUserName || '',
+            password: deviceData?.devPassword || '',
+            // deviceType: 'no need',
+            deviceName: deviceData?.devId || '',
+          })
+            .then((res) => {
+              console.log('🚀 ~ :82 ~ useEffect ~ res:', res);
+              setWifiConnectStatus((prev) => {
+                return [...prev, { status: 'success', xmDevInfo: deviceData }];
+              });
+            })
+            .catch((err) => {
+              console.log('🚀 ~ :89 ~ useEffect ~ err:', err);
+              setWifiConnectStatus((prev) => {
+                return [...prev, { status: 'error', xmDevInfo: deviceData }];
+              });
+            });
+        }
         setWifiConnectStatus((prev) => {
           return [...prev, JSON.stringify(event)];
         });
@@ -113,7 +137,7 @@ export const Buttons = () => {
         renderItem={({ item, index }) => {
           return (
             <Text>
-              {index} {item}
+              {index} {JSON.stringify(item, null, 2)}
             </Text>
           );
         }}

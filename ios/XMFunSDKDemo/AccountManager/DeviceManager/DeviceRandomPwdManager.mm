@@ -81,6 +81,18 @@
 -(void)OnFunSDKResult:(NSNumber *)pParam{
     NSInteger nAddr = [pParam integerValue];
     MsgContent *msg = (MsgContent *)nAddr;
+  
+    NSLog(@"sender: %d", msg->sender);
+    NSLog(@"id: %d", msg->id);
+    NSLog(@"param1: %d", msg->param1);
+    NSLog(@"param2: %d", msg->param2);
+    NSLog(@"param3: %d", msg->param3);
+    NSLog(@"szStr: %s", msg->szStr);
+    NSLog(@"pObject: %s", msg->pObject);
+    NSLog(@"nDataLen: %d", msg->nDataLen);
+    NSLog(@"seq: %d", msg->seq);
+    NSLog(@"pMsg: %p", msg->pMsg);
+    
     switch (msg->id) {
         case EMSG_DEV_CONFIG_JSON_NOT_LOGIN:{
             if ([OCSTR(msg->szStr) isEqualToString:@"ChangeRandomUser"]) {
