@@ -73,7 +73,7 @@ RCT_EXPORT_METHOD(initAlarmServer:(NSDictionary *)params
   // Сохраняем блоки resolve и reject в маппинг
   self.resolvers[key] = @{@"resolve": resolve, @"reject": reject};
   
-  MC_Init(self.msgHandle, &info, 0);
+  MC_Init(self.msgHandle, &info, [key intValue]);
 }
 
 #pragma - mark Инициализация сервера тревожных сообщений V2
@@ -136,7 +136,6 @@ RCT_EXPORT_METHOD(linkAlarm:(NSDictionary *)params
   
   // Сохраняем блоки resolve и reject в маппинг
   self.resolvers[key] = @{@"resolve": resolve, @"reject": reject};
-  
   
   MC_LinkDev(self.msgHandle, SZSTR(deviceId), SZSTR(deviceLogin), SZSTR(devicePassword), [key intValue], SZSTR(deviceName));
 }

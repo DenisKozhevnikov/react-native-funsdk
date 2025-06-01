@@ -81,13 +81,15 @@ export const Buttons = () => {
             .then((res) => {
               console.log('🚀 ~ :82 ~ useEffect ~ res:', res);
               setWifiConnectStatus((prev) => {
-                return [...prev, { status: 'success', xmDevInfo: deviceData }];
+                const state = { status: 'success', xmDevInfo: deviceData };
+                return [...prev, JSON.stringify(state, null, 2)];
               });
             })
             .catch((err) => {
               console.log('🚀 ~ :89 ~ useEffect ~ err:', err);
               setWifiConnectStatus((prev) => {
-                return [...prev, { status: 'error', xmDevInfo: deviceData }];
+                const state = { status: 'error', xmDevInfo: deviceData };
+                return [...prev, JSON.stringify(state, null, 2)];
               });
             });
         }

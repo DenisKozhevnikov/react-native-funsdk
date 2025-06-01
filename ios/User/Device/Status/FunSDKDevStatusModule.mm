@@ -77,6 +77,8 @@ RCT_EXPORT_METHOD(devicePTZControl:(NSDictionary *)params
     NSNumber *speed = params[@"speed"];
     
     FUN_DevPTZControl(self.msgHandle, SZSTR(deviceId), [channelId intValue], [nPTZCommand intValue], bStop, [speed intValue], 0);
+  
+    resolve(@(true));
 }
 
 #pragma - mark Получении информации о channels
