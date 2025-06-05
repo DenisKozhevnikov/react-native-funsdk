@@ -30,6 +30,7 @@ import {
   USER_PASSWORD,
   USER_PASSWORD2,
 } from './topsecret';
+import { SearchLanDevices } from './lan';
 
 // import funsdk from 'react-native-funsdk';
 // import { Share } from './share';
@@ -56,7 +57,12 @@ const Btn = ({ onPress, text }: { onPress: () => void; text: string }) => {
 // По мере добавления в библиотеку методов из ios будет дополняться
 export default function App() {
   const [currScreen, setCurrScreen] = React.useState<
-    'DeviceList' | 'MonitorPage' | 'Alarms' | 'RecordPage' | 'WIFIDevice'
+    | 'DeviceList'
+    | 'MonitorPage'
+    | 'Alarms'
+    | 'RecordPage'
+    | 'WIFIDevice'
+    | 'SearchLanDevices'
   >('DeviceList');
   const { isInit, statusText, reinit, logoutsdk } = useInit();
   const [showInit, setShowInit] = React.useState(true);
@@ -111,6 +117,10 @@ export default function App() {
                 title="WIFIDevice"
                 onPress={() => setCurrScreen('WIFIDevice')}
               />
+              <Button
+                title="SearchLanDevices"
+                onPress={() => setCurrScreen('SearchLanDevices')}
+              />
             </ScrollView>
             <>
               <Btn
@@ -130,15 +140,14 @@ export default function App() {
           </ScrollView>
         )}
       </ScrollView>
-      {/* {isAuth && ( */}
       <>
         {currScreen === 'DeviceList' && <DeviceList />}
         {currScreen === 'MonitorPage' && <MonitorPage isAuth={true} />}
         {currScreen === 'Alarms' && <Alarms />}
         {currScreen === 'RecordPage' && <RecordPage />}
         {currScreen === 'WIFIDevice' && <WIFIDevice />}
+        {currScreen === 'SearchLanDevices' && <SearchLanDevices />}
       </>
-      {/* )} */}
     </SafeAreaView>
   );
 }
