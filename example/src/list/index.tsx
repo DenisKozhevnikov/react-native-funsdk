@@ -1,6 +1,13 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { Button, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Button,
+  DeviceEventEmitter,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   DetailDeviceType,
   getDetailDeviceList,
@@ -926,6 +933,14 @@ export const DeviceList = () => {
 
   useEffect(() => {
     loadDevList();
+    // Android: Обновляем список при событии удаления устройства из native
+    const sub = DeviceEventEmitter.addListener('ON_DEVICE_DELETED', (evt) => {
+      console.log('ON_DEVICE_DELETED event:', evt);
+      loadDevList();
+    });
+    return () => {
+      sub.remove();
+    };
   }, []);
 
   return (

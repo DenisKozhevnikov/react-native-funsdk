@@ -7,6 +7,8 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.File;
@@ -16,12 +18,15 @@ import android.util.Log;
 import com.basic.G;
 import com.lib.sdk.struct.SDBDeviceInfo;
 import com.manager.account.AccountManager;
+import com.manager.account.BaseAccountManager;
 import com.manager.db.XMDevInfo;
 
 import com.funsdk.utils.Constants;
 import com.funsdk.utils.ReactParamsCheck;
+import com.funsdk.utils.EventSender;
 
 public class FunSDKDevSnConnectModule extends ReactContextBaseJavaModule {
+  private static final String ON_DEVICE_DELETED = "ON_DEVICE_DELETED";
   public FunSDKDevSnConnectModule(ReactApplicationContext context) {
     super(context);
   }
@@ -122,8 +127,43 @@ public class FunSDKDevSnConnectModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void deleteDev(ReadableMap params, Promise promise) {
     if (ReactParamsCheck.checkParams(new String[] { Constants.DEVICE_ID }, params)) {
-      AccountManager.getInstance().deleteDev(params.getString(Constants.DEVICE_ID),
-          Constants.getResultCallback(promise));
+      final String devId = params.getString(Constants.DEVICE_ID);
+      AccountManager.getInstance().deleteDev(devId,
+          new BaseAccountManager.OnAccountManagerListener() {
+            @Override
+            public void onSuccess(int msgId) {
+              // Emit RN event about deletion
+              WritableMap map = Arguments.createMap();
+              map.putString("deviceId", devId);
+              map.putInt("msgId", msgId);
+              EventSender.sendEvent(getReactApplicationContext(), ON_DEVICE_DELETED, map);
+
+              // trigger device state refresh to sync native caches
+              try {
+                AccountManager.getInstance().updateAllDevStateFromServer(
+                    AccountManager.getInstance().getDevList(),
+                    new BaseAccountManager.OnDevStateListener() {
+                      @Override
+                      public void onUpdateDevState(String id) {}
+
+                      @Override
+                      public void onUpdateCompleted() {}
+                    });
+              } catch (Exception ignored) {}
+
+              promise.resolve(msgId);
+            }
+
+            @Override
+            public void onFailed(int msgId, int errorId) {
+              promise.reject(msgId + " " + errorId);
+            }
+
+            @Override
+            public void onFunSDKResult(android.os.Message message, com.lib.MsgContent msgContent) {
+              // no-op
+            }
+          });
     }
   }
 }
