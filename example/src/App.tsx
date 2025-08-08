@@ -14,7 +14,7 @@ import {
 
 import { RecordPage } from './record';
 import { MonitorPage } from './live';
-import { WIFIDevice } from './wifi';
+import { WIFIDevice, WIFIDeviceSearch } from './wifi';
 // import { useInit } from './init';
 import {
   SafeAreaView,
@@ -63,6 +63,7 @@ export default function App() {
     | 'RecordPage'
     | 'WIFIDevice'
     | 'SearchLanDevices'
+    | 'WIFIDevice2'
   >('DeviceList');
   const { isInit, statusText, reinit, logoutsdk } = useInit();
   const [showInit, setShowInit] = React.useState(true);
@@ -118,6 +119,10 @@ export default function App() {
                 onPress={() => setCurrScreen('WIFIDevice')}
               />
               <Button
+                title="WIFIDevice2"
+                onPress={() => setCurrScreen('WIFIDevice2')}
+              />
+              <Button
                 title="SearchLanDevices"
                 onPress={() => setCurrScreen('SearchLanDevices')}
               />
@@ -146,6 +151,7 @@ export default function App() {
         {currScreen === 'Alarms' && <Alarms />}
         {currScreen === 'RecordPage' && <RecordPage />}
         {currScreen === 'WIFIDevice' && <WIFIDevice />}
+        {currScreen === 'WIFIDevice2' && <WIFIDeviceSearch />}
         {currScreen === 'SearchLanDevices' && <SearchLanDevices />}
       </>
     </SafeAreaView>
