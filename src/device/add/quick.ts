@@ -21,6 +21,71 @@ export function stopSetWiFi(): Promise<boolean> {
   return funsdk.stopSetWiFi();
 }
 
+// Параметры для поиска устройств
+export interface QuickSearchDeviceParams {
+  ssidWifi: string;
+  passwordWifi: string;
+}
+
+// Данные найденного устройства
+export interface FoundDeviceData {
+  devId: string; // deviceMac
+  devType: number; // deviceType
+  devName: string; // deviceName
+  devUserName: string; // loginName
+  devPassword: string; // loginPassword
+  withRandomPassword: boolean;
+  randomUserData?: {
+    userName: string;
+    password: string;
+    random: boolean;
+  };
+  // deviceMac: string;
+  // deviceName: string;
+  // deviceType: number;
+  // loginName: string;
+  // loginPassword: string;
+  // withRandomPassword: boolean;
+}
+
+// Параметры для добавления устройства
+export interface AddFoundDeviceParams {
+  deviceMac: string;
+  deviceName?: string;
+  loginName?: string;
+  loginPassword?: string;
+  deviceType?: number;
+}
+
+// Результат добавления устройства
+export interface AddFoundDeviceResult {
+  success: boolean;
+  deviceMac: string;
+  deviceName: string;
+  message: string;
+}
+/**
+ * Поиск устройств через WiFi конфигурацию
+ * @param params Параметры для поиска устройств
+ * @returns Promise с данными найденного устройства
+ */
+export function startQuickDeviceSearch(
+  params: QuickSearchDeviceParams
+): Promise<FoundDeviceData> {
+  return funsdk.startDeviceSearch(params);
+}
+
+/**
+ * Добавление найденного устройства
+ * @param deviceInfo Данные устройства для добавления
+ * @returns Promise с результатом добавления
+ */
+export function addFoundDevice(
+  deviceInfo: AddFoundDeviceParams
+): Promise<AddFoundDeviceResult> {
+  return funsdk.addFoundDevice(deviceInfo);
+}
+
 export enum WiFiListenersEnum {
   ON_SET_WIFI = 'onSetWiFi',
   ON_ADD_DEVICE_STATUS = 'onAddDeviceStatus',

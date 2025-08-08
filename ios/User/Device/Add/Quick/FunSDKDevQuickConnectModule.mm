@@ -132,6 +132,141 @@ RCT_EXPORT_METHOD(stopSetWiFi:(RCTPromiseResolveBlock)resolve
   resolve(@(YES));
 }
 
+#pragma - mark Поиск устройств (новый метод)
+RCT_EXPORT_METHOD(startDeviceSearch:(NSDictionary *)params)
+{
+  NSString *passwordWifi = params[@"passwordWifi"];
+  NSString *ssidWifi = params[@"ssidWifi"];
+
+  char data[128] = {0};
+  char infof[256] = {0};
+  int encmode = 1;
+  unsigned char mac[6] = {0};
+  sprintf(data, "S:%sP:%sT:%d", [ssidWifi UTF8String], SZSTR(passwordWifi), encmode);
+  NSString* sGateway = [NetInterface getDefaultGateway];
+  sprintf(infof, "gateway:%s ip:%s submask:%s dns1:%s dns2:%s mac:0", SZSTR(sGateway), [[NSString getCurrent_IP_Address] UTF8String],"255.255.255.0",SZSTR(sGateway),SZSTR(sGateway));
+  NSString* sMac = [NetInterface getCurrent_Mac];
+  if (sMac == nil || sMac.length == 0) {
+      sMac = @"28:f0:70:60:3f:76";
+      sMac = @"21:f1:70:63:2f:76";
+  }
+  sscanf(SZSTR(sMac), "%x:%x:%x:%x:%x:%x", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
+
+  NSLog(@"gateway: %s, sMac: %s", [sGateway UTF8String], [sMac UTF8String]);
+  NSLog(@"mac: %02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+  NSMutableDictionary *result = [NSMutableDictionary dictionary];
+  result[@"status"] = @"поиск начат";
+  [self sendEventWithName:@"onSetWiFi" body:result];
+
+  [self sendDeviceConnectStatus:@"start" errorId:nil msgId:nil xmDevInfo:nil];
+
+  // Быстрая конфигурация
+  FUN_DevStartAPConfig(self.msgHandle, 3, SZSTR(ssidWifi), data, infof, SZSTR(sGateway), encmode, 1, mac, 180000);
+}
+
+#pragma - mark Добавление найденного устройства (новый метод)
+RCT_EXPORT_METHOD(addFoundDevice:(NSDictionary *)deviceInfo
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  if (!self.resolvers) {
+    self.resolvers = [NSMutableDictionary dictionary];
+  }
+  
+  // Сохраняем resolve и reject для добавления
+  NSNumber *addKey = @(EMSG_SYS_ADD_DEVICE);
+  self.resolvers[addKey] = @{@"resolve": resolve, @"reject": reject};
+  
+  NSString *deviceMac = deviceInfo[@"deviceMac"];
+  NSString *deviceName = deviceInfo[@"deviceName"];
+  NSString *loginName = deviceInfo[@"loginName"];
+  NSString *loginPassword = deviceInfo[@"loginPassword"];
+  NSNumber *deviceType = deviceInfo[@"deviceType"];
+  
+  if (!deviceMac) {
+    reject(@"invalid_params", @"deviceMac обязателен", [NSError errorWithDomain:@"FunSDK" code:-1 userInfo:nil]);
+    return;
+  }
+  
+  // Создаем объект устройства
+  DeviceObject *object = [[DeviceObject alloc] init];
+  object.deviceMac = deviceMac;
+  object.deviceName = deviceName ?: deviceMac;
+  object.nType = deviceType ? [deviceType intValue] : 0;
+  
+  self.deviceInfo = object;
+    
+  // Получаем случайные учетные данные
+  __weak typeof(self) weakSelf = self;
+  [[DeviceRandomPwdManager shareInstance] getDeviceRandomPwd:deviceMac autoSetUserNameAndPassword:YES Completion:^(BOOL completion) {
+    
+    if (completion) {
+      NSMutableDictionary *dic = [[[DeviceRandomPwdManager shareInstance] getDeviceRandomPwdFromLocal:deviceMac] mutableCopy];
+      
+      // Проверяем, нужны ли случайные учетные данные
+      if ([[dic objectForKey:@"random"] boolValue]) {
+        // Устройство с случайными учетными данными
+        NSString *finalLoginName = loginName ?: dic[@"userName"] ?: @"admin";
+        NSString *finalPassword = loginPassword ?: dic[@"password"] ?: @"";
+        
+        // Изменяем случайные учетные данные
+        [[DeviceRandomPwdManager shareInstance] ChangeRandomUserWithDevID:deviceMac newUser:finalLoginName newPassword:finalPassword result:^(int result, NSString *adminToken, NSString *guestToken) {
+          if (result >= 0) {
+            [weakSelf addDeviceWithDeviceName:deviceName ?: deviceMac loginName:finalLoginName loginPassword:finalPassword deviceType:object.nType];
+          } else {
+            NSDictionary *callbacks = weakSelf.resolvers[addKey];
+            if (callbacks) {
+              RCTPromiseRejectBlock reject = callbacks[@"reject"];
+              reject(@"random_user_error", [NSString stringWithFormat:@"Ошибка изменения случайных учетных данных: %d", result], [NSError errorWithDomain:@"FunSDK" code:result userInfo:nil]);
+              [weakSelf.resolvers removeObjectForKey:addKey];
+            }
+          }
+        }];
+      } else {
+        // Обычное устройство
+        NSString *finalLoginName = loginName ?: @"admin";
+        NSString *finalPassword = loginPassword ?: @"";
+        
+        [weakSelf addDeviceWithDeviceName:deviceName ?: deviceMac loginName:finalLoginName loginPassword:finalPassword deviceType:object.nType];
+      }
+    } else {
+      NSDictionary *callbacks = weakSelf.resolvers[addKey];
+      if (callbacks) {
+        RCTPromiseRejectBlock reject = callbacks[@"reject"];
+        reject(@"random_pwd_error", @"Не удалось получить случайные учетные данные", [NSError errorWithDomain:@"FunSDK" code:-1 userInfo:nil]);
+        [weakSelf.resolvers removeObjectForKey:addKey];
+      }
+    }
+  }];
+}
+
+// Вспомогательный метод для добавления устройства
+- (void)addDeviceWithDeviceName:(NSString *)deviceName 
+                     loginName:(NSString *)loginName 
+                 loginPassword:(NSString *)loginPassword 
+                   deviceType:(int)deviceType {
+  
+  SDBDeviceInfo devInfo = {0};
+  STRNCPY(devInfo.Devname, SZSTR(deviceName));
+  STRNCPY(devInfo.Devmac, SZSTR(self.deviceInfo.deviceMac));
+  STRNCPY(devInfo.loginName, SZSTR(loginName));
+  STRNCPY(devInfo.loginPsw, SZSTR(loginPassword));
+  devInfo.nType = deviceType;
+  devInfo.nPort = 34567;
+  
+  // Создаем DeviceManager для добавления устройства
+  DeviceManager *deviceManager = [[DeviceManager alloc] init];
+  deviceManager.delegate = self;
+  
+  // Добавляем устройство через WiFi конфигурацию
+  [deviceManager addDeviceByWiFiConfig:self.deviceInfo.deviceMac 
+                             deviceName:deviceName 
+                              loginName:loginName 
+                          loginPassword:loginPassword 
+                                devType:deviceType];
+}
+
 - (void)sendDeviceConnectStatus:(NSString *)status
                         errorId:(nullable id)errorId
                           msgId:(nullable id)msgId
@@ -187,19 +322,19 @@ RCT_EXPORT_METHOD(stopSetWiFi:(RCTPromiseResolveBlock)resolve
     // Результат от FUN_DevStartAPConfig
     case EMSG_DEV_AP_CONFIG: {
       if (msg->param1 < 0) {
+        // Ошибка поиска
         NSMutableDictionary *result = [NSMutableDictionary dictionary];
         result[@"status"] = @"ошибка при поиске";
         result[@"error"] = [NSString stringWithFormat:@"errorId: %@", @(msg->param1)];
         [self sendEventWithName:@"onSetWiFi" body:result];
-        
         [self sendDeviceConnectStatus:@"error" errorId:@(msg->param1) msgId:nil xmDevInfo:nil];
-        
       } else {
+        // Успешный поиск
         NSMutableDictionary *result = [NSMutableDictionary dictionary];
-        result[@"status"] = @"успешно найдено устройство, идём получать случайное имя пользователя и пароль";
+        result[@"status"] = @"успешно найдено устройство";
         [self sendEventWithName:@"onSetWiFi" body:result];
         [self sendDeviceConnectStatus:@"connected" errorId:nil msgId:nil xmDevInfo:nil];
-        
+
         DeviceObject *object = [[DeviceObject alloc] init];
         SDK_CONFIG_NET_COMMON_V2 *pCfg = (SDK_CONFIG_NET_COMMON_V2 *)msg->pObject;
         NSString* devSn = @"";
@@ -210,23 +345,21 @@ RCT_EXPORT_METHOD(stopSetWiFi:(RCTPromiseResolveBlock)resolve
           name = NSSTR(pCfg->HostName);
           devSn = NSSTR(pCfg->sSn);
           nDevType = pCfg->DeviceType;
-          
           NSMutableDictionary *deviceInfo = [NSMutableDictionary dictionary];
           deviceInfo[@"status"] = @"полученные данные";
           deviceInfo[@"hostName"] = NSSTR(pCfg->HostName);
           deviceInfo[@"sSn"] = NSSTR(pCfg->sSn);
-          
           [self sendEventWithName:@"onSetWiFi" body:deviceInfo];
         }
         object.deviceMac = devSn;
         object.nType = nDevType;
         object.deviceName = name;
-        
-        
+
+        // Получаем случайные учетные данные
+        __weak typeof(self) weakSelf = self;
         [[DeviceRandomPwdManager shareInstance] getDeviceRandomPwd:devSn autoSetUserNameAndPassword:YES Completion:^(BOOL completion) {
             if (completion) {
               NSMutableDictionary *dic = [[[DeviceRandomPwdManager shareInstance] getDeviceRandomPwdFromLocal:devSn] mutableCopy];
-              
               NSMutableDictionary *xmDevInfo = [NSMutableDictionary dictionary];
               xmDevInfo[@"devId"] = object.deviceMac ?: @"";
               xmDevInfo[@"devType"] = @(object.nType);
@@ -240,57 +373,75 @@ RCT_EXPORT_METHOD(stopSetWiFi:(RCTPromiseResolveBlock)resolve
               [self sendEventWithName:@"onSetWiFi" body:dic];
             }
         }];
-//        self.deviceInfo = object;
-        
-//        взято из AddLANCameraViewController
-//        __weak typeof(self) weakSelf = self;
-//        [[DeviceRandomPwdManager shareInstance] getDeviceRandomPwd:self.deviceInfo.deviceMac autoSetUserNameAndPassword:YES Completion:^(BOOL completion) {
-//
-//            if (completion) {
-//                
-//                weakSelf.dataSourceDic = [[[DeviceRandomPwdManager shareInstance] getDeviceRandomPwdFromLocal:weakSelf.deviceInfo.deviceMac] mutableCopy];
-//              
-//              NSMutableDictionary *result = [NSMutableDictionary dictionary];
-//              result[@"status"] = weakSelf.dataSourceDic;
-//              [self sendEventWithName:@"onSetWiFi" body:result];
-//              
-//              
-//              BOOL canBeRandom = [[self.dataSourceDic objectForKey:@"random"] boolValue];
-//            }
-//        }];
-//        todoshnik:
-//        разобраться и понять действительно ли будут рандомные логин и пароль, видимо надо еще отсылать их и запоминать в приложении (иначе будет сложно поделиться)
-        // deviceIsValidatePassword понять надо ли устанавливать пароль согласно правилам
-        // понять как подгтовить данные чтобы успнш отправить в addDeviceWithDeviceName
       }
     }
-//      example
-//    case EMSG_DEV_GET_CONFIG_JSON:{
-//      NSNumber *key = @(msg->seq);
-//      NSDictionary *callbacks = self.resolvers[key];
-//      
-//      RCTPromiseResolveBlock resolve = callbacks[@"resolve"];
-//      RCTPromiseRejectBlock reject = callbacks[@"reject"];
-//      
-//      if (msg->param1 < 0) {
-//          if (reject) {
-//              NSString *errorString = [NSString stringWithFormat:@"%d %d", (int)msg->id, (int)msg->param1];
-//              reject(@"loginDeviceWithCredential_error", errorString, [NSError errorWithDomain:@"FunSDK" code:msg->param1 userInfo:nil]);
-//          }
-//      } else {
-//        if (resolve) {
-          
-//          NSDictionary *responseObject = @{
-//              @"i": @(1),
-//              @"s": dicInfo[@"SerialNo"],
-//              @"value": dicInfo
-//          };
-//          resolve();
-//        }
-//      }
-//      [self.resolvers removeObjectForKey:key];
-//    }
-//      break;
+      break;
+      
+    // Результат добавления устройства
+    case EMSG_SYS_ADD_DEVICE: {
+      NSNumber *addKey = @(EMSG_SYS_ADD_DEVICE);
+      NSDictionary *addCallbacks = self.resolvers[addKey];
+      
+      if (msg->param1 < 0) {
+        // Ошибка добавления устройства
+        NSString *errorMessage;
+        if (msg->param1 == -99992 || msg->param1 == -604101) {
+          errorMessage = @"Устройство уже существует";
+        } else {
+          errorMessage = [NSString stringWithFormat:@"Ошибка добавления устройства: %d", msg->param1];
+        }
+        
+        if (addCallbacks) {
+          RCTPromiseRejectBlock reject = addCallbacks[@"reject"];
+          reject(@"add_device_error", errorMessage, [NSError errorWithDomain:@"FunSDK" code:msg->param1 userInfo:nil]);
+          [self.resolvers removeObjectForKey:addKey];
+        }
+      } else {
+        // Успешное добавление устройства
+        SDBDeviceInfo *pDevInfo = (SDBDeviceInfo *)msg->pObject;
+        
+        if (addCallbacks) {
+          RCTPromiseResolveBlock resolve = addCallbacks[@"resolve"];
+          NSMutableDictionary *result = [NSMutableDictionary dictionary];
+          result[@"success"] = @(YES);
+          result[@"deviceMac"] = self.deviceInfo.deviceMac;
+          result[@"deviceName"] = self.deviceInfo.deviceName;
+          result[@"message"] = @"Устройство успешно добавлено";
+          resolve(result);
+          [self.resolvers removeObjectForKey:addKey];
+        }
+      }
+    }
+      break;
+  }
+}
+
+#pragma mark - DeviceManagerDelegate
+
+- (void)addDeviceResult:(int)result {
+  NSNumber *addKey = @(EMSG_SYS_ADD_DEVICE);
+  NSDictionary *addCallbacks = self.resolvers[addKey];
+  
+  if (result >= 0) {
+    // Успешное добавление
+    if (addCallbacks) {
+      RCTPromiseResolveBlock resolve = addCallbacks[@"resolve"];
+      NSMutableDictionary *resultDict = [NSMutableDictionary dictionary];
+      resultDict[@"success"] = @(YES);
+      resultDict[@"deviceMac"] = self.deviceInfo.deviceMac;
+      resultDict[@"deviceName"] = self.deviceInfo.deviceName;
+      resultDict[@"message"] = @"Устройство успешно добавлено";
+      resolve(resultDict);
+      [self.resolvers removeObjectForKey:addKey];
+    }
+  } else {
+    // Ошибка добавления
+    if (addCallbacks) {
+      RCTPromiseRejectBlock reject = addCallbacks[@"reject"];
+      NSString *errorMessage = [NSString stringWithFormat:@"Ошибка добавления устройства: %d", result];
+      reject(@"add_device_error", errorMessage, [NSError errorWithDomain:@"FunSDK" code:result userInfo:nil]);
+      [self.resolvers removeObjectForKey:addKey];
+    }
   }
 }
           
