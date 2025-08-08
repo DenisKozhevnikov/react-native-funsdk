@@ -40,12 +40,6 @@ export interface FoundDeviceData {
     password: string;
     random: boolean;
   };
-  // deviceMac: string;
-  // deviceName: string;
-  // deviceType: number;
-  // loginName: string;
-  // loginPassword: string;
-  // withRandomPassword: boolean;
 }
 
 // Параметры для добавления устройства
@@ -67,11 +61,8 @@ export interface AddFoundDeviceResult {
 /**
  * Поиск устройств через WiFi конфигурацию
  * @param params Параметры для поиска устройств
- * @returns Promise с данными найденного устройства
  */
-export function startQuickDeviceSearch(
-  params: QuickSearchDeviceParams
-): Promise<FoundDeviceData> {
+export function startQuickDeviceSearch(params: QuickSearchDeviceParams): void {
   return funsdk.startDeviceSearch(params);
 }
 
