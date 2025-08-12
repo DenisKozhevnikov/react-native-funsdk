@@ -626,7 +626,43 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
         } else if (abilityKey instanceof Long) {
           map.putDouble("value", (Long) abilityKey);
         } else {
-          map.putMap("value", DataConverter.parseToWritableMap(abilityKey));
+          // Convert arbitrary object to map
+          com.facebook.react.bridge.WritableMap valueMap = DataConverter.parseToWritableMap(abilityKey);
+          // Align Android behavior with iOS: decode st_channelTitle from base64 to UTF-8 and trim by nChnCount
+          try {
+            if (valueMap != null && valueMap.hasKey("st_channelTitle")) {
+              com.facebook.react.bridge.ReadableArray titles = valueMap.getArray("st_channelTitle");
+              if (titles != null) {
+                int limit = titles.size();
+                if (valueMap.hasKey("nChnCount")) {
+                  try {
+                    int n = valueMap.getInt("nChnCount");
+                    if (n >= 0) {
+                      limit = Math.min(limit, n);
+                    }
+                  } catch (Exception ignored) {
+                  }
+                }
+                com.facebook.react.bridge.WritableArray decoded = com.facebook.react.bridge.Arguments.createArray();
+                for (int idx = 0; idx < limit; idx++) {
+                  String raw = titles.getString(idx);
+                  String decodedStr = raw != null ? raw : "";
+                  try {
+                    if (raw != null) {
+                      byte[] bytes = android.util.Base64.decode(raw, android.util.Base64.DEFAULT);
+                      decodedStr = new String(bytes, java.nio.charset.StandardCharsets.UTF_8).replace("\u0000", "");
+                    }
+                  } catch (Exception ignored) {
+                    // Keep original string if decoding fails
+                  }
+                  decoded.pushString(decodedStr);
+                }
+                valueMap.putArray("st_channelTitle", decoded);
+              }
+            }
+          } catch (Exception ignored) {
+          }
+          map.putMap("value", valueMap);
         }
 
         promise.resolve(map);
