@@ -35,6 +35,15 @@ const RecordItem = ({
   playerRef: RecordPlayerRef | null;
 }) => {
   const [thumbLink, setThumbLink] = useState<string | null>(null);
+  React.useEffect(() => {
+    console.log('[RecordItem] mount', {
+      file: fileInfo?.fileName,
+      channel: fileInfo?.channel,
+    });
+    return () => {
+      console.log('[RecordItem] unmount', { file: fileInfo?.fileName });
+    };
+  }, [fileInfo?.fileName, fileInfo?.channel]);
 
   const handleLoadThumb = async () => {
     try {
@@ -79,7 +88,7 @@ const RecordItem = ({
         time: fileInfo.startTime,
         seq: 0,
       });
-      console.log('downloadInfo:', downloadInfo);
+      console.log('[RecordItem] downloadSingleImage result:', downloadInfo);
 
       const filesInFolderAfterLoading = await getFilesInFolder(path);
       console.log('filesInFolderAfterLoading res: ', filesInFolderAfterLoading);
@@ -89,12 +98,15 @@ const RecordItem = ({
       );
       console.log('pathWithFileNameStat res: ', pathWithFileNameStat);
 
-      Image.getSize(pathWithFileName, (width, height) => {
-        console.log('Image.getSize width height: ', width, height),
-          (error: any) => {
-            console.log('Image.getSize error: ', error);
-          };
-      });
+      Image.getSize(
+        pathWithFileName,
+        (width, height) => {
+          console.log('Image.getSize width height: ', width, height);
+        },
+        (error: any) => {
+          console.log('Image.getSize error: ', error);
+        }
+      );
 
       setThumbLink(pathWithFileName);
     } catch (error) {
@@ -142,7 +154,7 @@ const RecordItem = ({
         endTime: fileInfo.endTime,
         fileName: fileInfo.fileName,
       });
-      console.log('downloadInfo:', downloadInfo);
+      console.log('[RecordItem] downloadSingleFile result:', downloadInfo);
 
       const filesInFolderAfterLoading = await getFilesInFolder(path);
       console.log('filesInFolderAfterLoading res: ', filesInFolderAfterLoading);
@@ -184,7 +196,10 @@ const RecordItem = ({
           hitSlop={20}
           style={{ backgroundColor: 'green', margin: 2 }}
           onPress={() => {
-            console.log('playerRef: ', playerRef);
+            console.log(
+              '[RecordItem] start play record, playerRef exists:',
+              !!playerRef
+            );
             playerRef?.stopPlay();
             playerRef?.startPlayRecordByTime(
               fileInfo.startTime,

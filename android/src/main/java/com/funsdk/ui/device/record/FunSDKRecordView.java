@@ -150,7 +150,8 @@ public class FunSDKRecordView extends LinearLayout
     calendarShow = Calendar.getInstance();
 
     initRecordPlayer(this, recordPlayType);
-    searchRecordByFile(calendarShow);
+    // Align with iOS behavior: do not auto-search records on init.
+    // searchRecordByFile(calendarShow);
     // searchRecordByTime(calendarShow);
 
     // mediaFileCalendarManager = new MediaFileCalendarManager(this);

@@ -49,6 +49,14 @@ export const RecordButtons = ({
     React.SetStateAction<SearchDeviceFilesByDateItemResponse[] | null>
   >;
 }) => {
+  React.useEffect(() => {
+    console.log('[RecordButtons] mount');
+    return () => console.log('[RecordButtons] unmount');
+  }, []);
+
+  React.useEffect(() => {
+    console.log('[RecordButtons] playerRef changed:', !!playerRef);
+  }, [playerRef]);
   const searchRecordTimeInfo = async () => {
     try {
       // 27.10.23
@@ -304,15 +312,17 @@ export const RecordButtons = ({
   };
 
   const init = () => {
-    console.log('playerRef: ', playerRef);
+    console.log('[RecordButtons] init pressed, playerRef exists:', !!playerRef);
     playerRef?.init();
   };
 
   const speedNormal = () => {
+    console.log('[RecordButtons] setPlaySpeed 0');
     playerRef?.setPlaySpeed(0);
   };
 
   const speedPlus2 = () => {
+    console.log('[RecordButtons] setPlaySpeed 2');
     playerRef?.setPlaySpeed(2);
   };
 
@@ -337,7 +347,13 @@ export const RecordButtons = ({
         <Button text="openVoice" onPress={() => openVoice()} />
         <Button text="closeVoice" onPress={() => closeVoice()} />
         <Button text="pause" onPress={() => pause()} />
-        <Button text="rePlay" onPress={() => rePlay()} />
+        <Button
+          text="rePlay"
+          onPress={() => {
+            console.log('[RecordButtons] rePlay');
+            rePlay();
+          }}
+        />
         <Button text="stopPlay" onPress={() => stopPlay()} />
         <Button text="speedNormal" onPress={() => speedNormal()} />
         <Button text="speedPlus2" onPress={() => speedPlus2()} />

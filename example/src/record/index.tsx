@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View, Text, ScrollView, Platform } from 'react-native';
 import {
   RecordPlayer,
   RecordPlayerRef,
@@ -20,6 +20,26 @@ export const RecordPage = () => {
 
   const [timeline, setTimeline] = useState<number[] | null>(null);
 
+  useEffect(() => {
+    console.log('[RecordPage] mount', { DEVICE_ID });
+    return () => {
+      console.log('[RecordPage] unmount');
+    };
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      console.log('[RecordPage] auto init RecordPlayer on Android');
+      setTimeout(() => {
+        try {
+          playerRef.current?.init();
+        } catch (e) {
+          console.log('[RecordPage] auto init error:', e);
+        }
+      }, 0);
+    }
+  }, []);
+
   const getColorByStatus = (status: number) => {
     if (status === 1) {
       return 'blue';
@@ -37,24 +57,42 @@ export const RecordPage = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        console.log('[RecordPage] container onLayout:', { width, height });
+      }}
+    >
       <RecordPlayer
         ref={playerRef}
         style={styles.monitor}
         devId={DEVICE_ID}
         channelId={0}
-        onMediaPlayState={(ev) => console.log('onMediaPlayState: ', ev)}
-        onShowRateAndTime={(ev) => console.log('onShowRateAndTime: ', ev)}
-        onVideoBufferEnd={(ev) => console.log('onVideoBufferEnd: ', ev)}
+        onMediaPlayState={(ev) => {
+          console.log('[RecordPlayer] onMediaPlayState:', ev);
+        }}
+        onShowRateAndTime={(ev) => {
+          console.log('[RecordPlayer] onShowRateAndTime:', ev);
+        }}
+        onVideoBufferEnd={(ev) => {
+          console.log('[RecordPlayer] onVideoBufferEnd:', ev);
+        }}
         // onSearchRecordByFilesResult={(ev) => {
         //   console.log('onSearchRecordByFilesResult ', ev?.list?.length);
         //   if (ev?.list) {
         //     setRecordList(ev?.list);
         //   }
         // }}
-        onFailed={(obj) => console.log('onFailed: ', obj)}
-        onStartInit={(obj) => console.log('onStartInit: ', obj)}
-        onDebugState={(obj) => console.log('DEBUG STATE: ', obj)}
+        onFailed={(obj) => {
+          console.log('[RecordPlayer] onFailed:', obj);
+        }}
+        onStartInit={(obj) => {
+          console.log('[RecordPlayer] onStartInit:', obj);
+        }}
+        onDebugState={(obj) => {
+          console.log('[RecordPlayer] DEBUG STATE:', obj);
+        }}
       />
       <ScrollView horizontal style={styles.timelineScrollview}>
         {timeline?.map((minute, index) => {
