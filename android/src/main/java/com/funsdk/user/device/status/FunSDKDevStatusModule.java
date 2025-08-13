@@ -63,85 +63,38 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
       final String devUser = params.getString(Constants.DEVICE_LOGIN);
       final String devPwd = params.getString(Constants.DEVICE_PASSWORD);
 
-      // Выровнять поведение с iOS: сперва сохранить локальные креды
+      // как на iOS: сохранить локальные креды и не вызывать фактический логин
       try {
         FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
       } catch (Exception ignored) {
       }
 
-      DeviceManager.getInstance().loginDev(
-          devId,
-          devUser,
-          devPwd,
-          new DeviceManager.OnDevManagerListener() {
-            @Override
-            public void onSuccess(String s, int i, Object abilityKey) {
-              int networkMode = 0;
-              try {
-                XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
-                if (xmDevInfo != null) {
-                  SDBDeviceInfo sdb = xmDevInfo.getSdbDevInfo();
-                  if (sdb != null) {
-                    networkMode = sdb.connectType;
-                  }
-                }
-              } catch (Exception ignored) {
-              }
+      int networkMode = 0;
+      try {
+        XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
+        if (xmDevInfo != null) {
+          SDBDeviceInfo sdb = xmDevInfo.getSdbDevInfo();
+          if (sdb != null) {
+            networkMode = sdb.connectType;
+          }
+        }
+      } catch (Exception ignored) {
+      }
 
-              WritableMap result = Arguments.createMap();
-              result.putString("s", devId);
-              result.putInt("i", i);
+      WritableMap result = Arguments.createMap();
+      result.putString("s", devId);
+      result.putInt("i", 0);
+      WritableMap valueMap = Arguments.createMap();
+      valueMap.putInt("networkMode", networkMode);
+      result.putMap("value", valueMap);
+      promise.resolve(result);
 
-              if (abilityKey == null) {
-                WritableMap valueMap = Arguments.createMap();
-                valueMap.putInt("networkMode", networkMode);
-                result.putMap("value", valueMap);
-              } else if (abilityKey instanceof String) {
-                // Оборачиваем строку как value и добавляем networkMode отдельно
-                WritableMap valueMap = Arguments.createMap();
-                valueMap.putString("value", (String) abilityKey);
-                valueMap.putInt("networkMode", networkMode);
-                result.putMap("value", valueMap);
-              } else if (abilityKey instanceof Boolean) {
-                WritableMap valueMap = Arguments.createMap();
-                valueMap.putBoolean("value", (Boolean) abilityKey);
-                valueMap.putInt("networkMode", networkMode);
-                result.putMap("value", valueMap);
-              } else if (abilityKey instanceof Integer) {
-                WritableMap valueMap = Arguments.createMap();
-                valueMap.putInt("value", (Integer) abilityKey);
-                valueMap.putInt("networkMode", networkMode);
-                result.putMap("value", valueMap);
-              } else if (abilityKey instanceof Double) {
-                WritableMap valueMap = Arguments.createMap();
-                valueMap.putDouble("value", (Double) abilityKey);
-                valueMap.putInt("networkMode", networkMode);
-                result.putMap("value", valueMap);
-              } else if (abilityKey instanceof Long) {
-                WritableMap valueMap = Arguments.createMap();
-                valueMap.putDouble("value", (Long) abilityKey);
-                valueMap.putInt("networkMode", networkMode);
-                result.putMap("value", valueMap);
-              } else {
-                com.facebook.react.bridge.WritableMap valueMap = DataConverter.parseToWritableMap(abilityKey);
-                if (valueMap == null) {
-                  valueMap = Arguments.createMap();
-                }
-                try {
-                  valueMap.putInt("networkMode", networkMode);
-                } catch (Exception ignored) {
-                }
-                result.putMap("value", valueMap);
-              }
-
-              promise.resolve(result);
-            }
-
-            @Override
-            public void onFailed(String s, int i, String s1, int errorId) {
-              promise.reject(s + ", " + i + ", " + s1 + ", " + errorId);
-            }
-          });
+      // Реальный логин временно отключён для выравнивания поведения с iOS
+      // DeviceManager.getInstance().loginDev(
+      //     devId,
+      //     devUser,
+      //     devPwd,
+      //     getResultCallback(promise));
     }
   }
 
