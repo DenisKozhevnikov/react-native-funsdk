@@ -93,6 +93,12 @@ export const RecordPage = () => {
         onDebugState={(obj) => {
           console.log('[RecordPlayer] DEBUG STATE:', obj);
         }}
+        onDownloadProgress={(ev) => {
+          console.log('[RecordPlayer] onDownloadProgress:', ev);
+        }}
+        onDownloadState={(ev) => {
+          console.log('[RecordPlayer] onDownloadState:', ev);
+        }}
       />
       <ScrollView horizontal style={styles.timelineScrollview}>
         {timeline?.map((minute, index) => {
@@ -110,12 +116,12 @@ export const RecordPage = () => {
         })}
       </ScrollView>
       <RecordButtons
-        playerRef={playerRef.current}
+        playerRef={playerRef}
         setTimeline={setTimeline}
         setRecordList={setRecordList}
       />
       <Text>list of recordlist</Text>
-      <RecordList recordList={recordList} playerRef={playerRef.current} />
+      <RecordList recordList={recordList} playerRef={playerRef} />
     </View>
   );
 };

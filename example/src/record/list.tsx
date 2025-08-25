@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import {
   downloadSingleFile,
+  downloadSingleFileByTime,
   downloadSingleImage,
   SearchDate,
   type RecordPlayerRef,
@@ -24,7 +25,9 @@ import {
 import { createFolderIfNotExist, getFilesInFolder } from '../live/ImageSaver';
 
 const searchDateToString = (date: SearchDate) => {
-  return `${date.day}.${date.month}.${date.year}-${date.hour}:${date.minute}:${date.second}`;
+  const base = `${date.day}.${date.month}.${date.year}-${date.hour}:${date.minute}:${date.second}`;
+  // Android filesystem does not allow ':' in filenames
+  return Platform.OS === 'android' ? base.replace(/:/g, '-') : base;
 };
 
 const RecordItem = ({
@@ -32,7 +35,8 @@ const RecordItem = ({
   playerRef,
 }: {
   fileInfo: SearchDeviceFilesByDateItemResponse;
-  playerRef: RecordPlayerRef | null;
+  index: number;
+  playerRef: React.RefObject<RecordPlayerRef>;
 }) => {
   const [thumbLink, setThumbLink] = useState<string | null>(null);
   React.useEffect(() => {
@@ -98,8 +102,12 @@ const RecordItem = ({
       );
       console.log('pathWithFileNameStat res: ', pathWithFileNameStat);
 
+      const imageUri =
+        Platform.OS === 'android'
+          ? `file://${pathWithFileName}`
+          : pathWithFileName;
       Image.getSize(
-        pathWithFileName,
+        imageUri,
         (width, height) => {
           console.log('Image.getSize width height: ', width, height);
         },
@@ -134,7 +142,6 @@ const RecordItem = ({
 
       if (Platform.OS === 'android') {
         const permissionAccess = await askPermissionStorage();
-        // const permissionReadAccess = await askPermissionReadStorage();
         if (!permissionAccess) {
           Alert.alert('Отсутсвует разрешение на сохранение файлов');
           return;
@@ -143,18 +150,32 @@ const RecordItem = ({
 
       const pathWithFileName = `${path}/${searchDateToString(
         fileInfo.startTime
-      )}.mp4`;
+      )}-${searchDateToString(fileInfo.endTime)}.mp4`;
       console.log('pathWithFileName: ', pathWithFileName);
 
-      const downloadInfo = await downloadSingleFile({
-        deviceId: DEVICE_ID,
-        deviceChannel: fileInfo.channel,
-        mSaveImageDir: pathWithFileName,
-        startTime: fileInfo.startTime,
-        endTime: fileInfo.endTime,
-        fileName: fileInfo.fileName,
-      });
-      console.log('[RecordItem] downloadSingleFile result:', downloadInfo);
+      if (Platform.OS === 'android') {
+        const result = await downloadSingleFileByTime({
+          deviceId: DEVICE_ID,
+          deviceChannel: fileInfo.channel,
+          mSaveImageDir: pathWithFileName,
+          startTime: fileInfo.startTime,
+          endTime: fileInfo.endTime,
+        });
+        console.log(
+          '[RecordItem] downloadSingleFileByTime result (android):',
+          result
+        );
+      } else {
+        const result = await downloadSingleFile({
+          deviceId: DEVICE_ID,
+          deviceChannel: fileInfo.channel,
+          mSaveImageDir: pathWithFileName,
+          startTime: fileInfo.startTime,
+          endTime: fileInfo.endTime,
+          fileName: fileInfo.fileName,
+        });
+        console.log('[RecordItem] downloadSingleFile result:', result);
+      }
 
       const filesInFolderAfterLoading = await getFilesInFolder(path);
       console.log('filesInFolderAfterLoading res: ', filesInFolderAfterLoading);
@@ -197,11 +218,11 @@ const RecordItem = ({
           style={{ backgroundColor: 'green', margin: 2 }}
           onPress={() => {
             console.log(
-              '[RecordItem] start play record, playerRef exists:',
-              !!playerRef
+              '[RecordItem] start play record, playerRef.current exists:',
+              !!playerRef?.current
             );
-            playerRef?.stopPlay();
-            playerRef?.startPlayRecordByTime(
+            playerRef.current?.stopPlay();
+            playerRef.current?.startPlayRecordByTime(
               fileInfo.startTime,
               fileInfo.endTime
             );
@@ -233,15 +254,15 @@ export const RecordList = ({
   playerRef,
 }: {
   recordList: SearchDeviceFilesByDateItemResponse[] | null;
-  playerRef: RecordPlayerRef | null;
+  playerRef: React.RefObject<RecordPlayerRef>;
 }) => {
   return (
     <FlatList
       style={{ flex: 1 }}
       data={recordList}
       keyExtractor={(item) => item.fileName + item.size}
-      renderItem={({ item }) => (
-        <RecordItem fileInfo={item} playerRef={playerRef} />
+      renderItem={({ item, index }) => (
+        <RecordItem fileInfo={item} index={index} playerRef={playerRef} />
       )}
     />
   );

@@ -43,7 +43,7 @@ export const RecordButtons = ({
   setTimeline,
   setRecordList,
 }: {
-  playerRef: RecordPlayerRef | null;
+  playerRef: React.RefObject<RecordPlayerRef>;
   setTimeline: React.Dispatch<React.SetStateAction<number[] | null>>;
   setRecordList: React.Dispatch<
     React.SetStateAction<SearchDeviceFilesByDateItemResponse[] | null>
@@ -55,7 +55,10 @@ export const RecordButtons = ({
   }, []);
 
   React.useEffect(() => {
-    console.log('[RecordButtons] playerRef changed:', !!playerRef);
+    console.log(
+      '[RecordButtons] playerRef.current exists:',
+      !!playerRef?.current
+    );
   }, [playerRef]);
   const searchRecordTimeInfo = async () => {
     try {
@@ -75,19 +78,19 @@ export const RecordButtons = ({
         deviceId: DEVICE_ID,
         deviceChannel: 0,
         start: {
-          year: 2024,
+          year: 2025,
           // Отсчет от 1
           // Если нужен ноябрь, то это 10 месяц + 1 = 11
-          month: 1, // January = 1, February = 2, and so on.
-          day: 9,
+          month: 8, // January = 1, February = 2, and so on.
+          day: 21,
           hour: 0,
           minute: 0,
           second: 0,
         },
         end: {
-          year: 2024,
-          month: 11,
-          day: 11,
+          year: 2025,
+          month: 8,
+          day: 22,
           hour: 23,
           minute: 59,
           second: 59,
@@ -123,19 +126,19 @@ export const RecordButtons = ({
         // fileType: FILE_TYPE.SDK_RECORD_ALL,
         fileType: FILE_TYPE.SDK_RECORD_ALL,
         start: {
-          year: 2024,
+          year: 2025,
           // Отсчет от 1
           // Если нужен ноябрь, то это 10 месяц + 1 = 11
-          month: 11,
-          day: 25,
+          month: 8,
+          day: 21,
           hour: 0,
           minute: 0,
           second: 0,
         },
         end: {
-          year: 2024,
-          month: 11,
-          day: 27,
+          year: 2025,
+          month: 8,
+          day: 22,
           hour: 23,
           minute: 59,
           second: 59,
@@ -180,18 +183,18 @@ export const RecordButtons = ({
       }
 
       const startTime = {
-        year: 2024,
-        month: 11,
-        day: 26,
+        year: 2025,
+        month: 8,
+        day: 21,
         hour: 10,
         minute: 10,
         second: 10,
       };
 
       const endTime = {
-        year: 2024,
-        month: 11,
-        day: 26,
+        year: 2025,
+        month: 8,
+        day: 22,
         hour: 10,
         minute: 11,
         second: 10,
@@ -251,9 +254,9 @@ export const RecordButtons = ({
       console.log('stat: ', JSON.stringify(stat, null, 2));
 
       const pathWithFileName = `${path}/${searchDateToString({
-        year: 2024,
-        month: 11,
-        day: 26,
+        year: 2025,
+        month: 8,
+        day: 21,
         hour: 10,
         minute: 10,
         second: 10,
@@ -288,42 +291,45 @@ export const RecordButtons = ({
   };
 
   const seekToTime = async (addTime: number, absTime: number) => {
-    playerRef?.seekToTime(addTime, absTime);
+    playerRef.current?.seekToTime(addTime, absTime);
   };
 
   const openVoice = () => {
-    playerRef?.openVoice();
+    playerRef.current?.openVoice();
   };
 
   const closeVoice = () => {
-    playerRef?.closeVoice();
+    playerRef.current?.closeVoice();
   };
 
   const pause = () => {
-    playerRef?.pausePlay();
+    playerRef.current?.pausePlay();
   };
 
   const rePlay = () => {
-    playerRef?.rePlay();
+    playerRef.current?.rePlay();
   };
 
   const stopPlay = () => {
-    playerRef?.stopPlay();
+    playerRef.current?.stopPlay();
   };
 
   const init = () => {
-    console.log('[RecordButtons] init pressed, playerRef exists:', !!playerRef);
-    playerRef?.init();
+    console.log(
+      '[RecordButtons] init pressed, playerRef.current exists:',
+      !!playerRef?.current
+    );
+    playerRef.current?.init();
   };
 
   const speedNormal = () => {
     console.log('[RecordButtons] setPlaySpeed 0');
-    playerRef?.setPlaySpeed(0);
+    playerRef.current?.setPlaySpeed(0);
   };
 
   const speedPlus2 = () => {
     console.log('[RecordButtons] setPlaySpeed 2');
-    playerRef?.setPlaySpeed(2);
+    playerRef.current?.setPlaySpeed(2);
   };
 
   // const plus10sec = () => {
