@@ -30,8 +30,14 @@ import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.Queue;
 import java.util.Date;
+import java.util.Calendar;
 
 import com.funsdk.utils.enums.EUIMSG;
+
+// Added imports for video file download by time
+import com.manager.db.DownloadInfo;
+import com.manager.db.Define;
+import com.manager.device.media.download.DownloadManager;
 
 public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implements IFunSDKResult {
   private ReactApplicationContext reactContext;
@@ -74,7 +80,9 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
     int channelId = params.getInt(Constants.DEVICE_CHANNEL);
     String mSaveImageDir = params.getString("mSaveImageDir");
     ReadableMap imgSizes = params.getMap("imgSizes");
-    String timestamp = params.getString("timestamp");
+    // Support both iOS-style { time: {year,month,...} } and Android-style { timestamp: string }
+    ReadableMap timeMap = params.hasKey("time") ? params.getMap("time") : null;
+    String timestamp = params.hasKey("timestamp") ? params.getString("timestamp") : null;
     // уникальный номер
     int seq = params.getInt("seq");
 
@@ -83,21 +91,36 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
       isFunSDKResultAdded = true;
     }
 
-    String path = mSaveImageDir + File.separator + mDevId + "_" + channelId + "_" + timestamp + "thumb.jpg";
+    // Treat mSaveImageDir as a full file path if provided; otherwise build default path
+    String path = mSaveImageDir;
+    if (path == null || path.isEmpty()) {
+      String safeTs = timestamp != null ? timestamp : "";
+      path = File.separator + mDevId + "_" + channelId + "_" + safeTs + "thumb.jpg";
+    }
 
     // размеры изображения
     int imgHeight = imgSizes.getInt("imgHeight"); // 160
     int imgWidth = imgSizes.getInt("imgWidth"); // 90
 
-    // время изображения
-    Date sDate = DataConverter.stringToDate(timestamp);
-
-    int year = sDate.getYear() + 1900;
-    int month = sDate.getMonth() + 1;
-    int day = sDate.getDate();
-    int hour = sDate.getHours();
-    int minute = sDate.getMinutes();
-    int second = sDate.getSeconds();
+    // Время изображения
+    int year, month, day, hour, minute, second;
+    if (timeMap != null) {
+      year = timeMap.getInt("year");
+      month = timeMap.getInt("month");
+      day = timeMap.getInt("day");
+      hour = timeMap.getInt("hour");
+      minute = timeMap.getInt("minute");
+      second = timeMap.getInt("second");
+    } else {
+      // Fallback to string timestamp (e.g. "2025-08-21 00:00:00")
+      Date sDate = DataConverter.stringToDate(timestamp);
+      year = sDate.getYear() + 1900;
+      month = sDate.getMonth() + 1;
+      day = sDate.getDate();
+      hour = sDate.getHours();
+      minute = sDate.getMinutes();
+      second = sDate.getSeconds();
+    }
 
     int times = FunSDK.ToTimeType(new int[] { year,
         month, day,
@@ -191,16 +214,8 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
     // System.out.println("onFunSDKResult message " + message.what);
     switch (message.what) {
       case EUIMSG.DOWN_RECODE_BPIC_START: // Начнется загрузка миниатюр видео
-        // if (msgContent.pData == null) {
-        // DownItemData downItemData = mDownloadResultMap.get(msgContent.seq);
-
-        // downItemData.mListener.onDownloadResult(false, null,
-        // downItemData.mType, msgContent.seq);
-        // }
-        // System.out.println("image load start");
         break;
       case EUIMSG.DOWN_RECODE_BPIC_FILE: // Загрузка миниатюр видео – возвращены результаты загрузки файла.
-        // System.out.println("image load end");
         if (message.arg1 < 0) {
           DownItemData downItemData = mDownloadResultMap.get(msgContent.seq);
           if (downItemData != null && downItemData.mListener != null) {
@@ -216,36 +231,10 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
             }
           }
         } else {
-          // if (mBitmapMaps == null) {
-          // mBitmapMaps = new HashMap<>();
-          // }
-
           DownItemData downItemData = mDownloadResultMap.get(msgContent.seq);
-
-          // Bitmap bitmap;
-          if (downItemData != null && downItemData.mWidth > 0) {
-            // bitmap = XUtils.createImageThumbnail(msgContent.str);
-            // mBitmapMaps.put(msgContent.str, bitmap);
-          } else {
-            // bitmap = BitmapFactory.decodeFile(msgContent.str);
-            // mBitmapMaps.put(msgContent.str, bitmap);
-          }
-
           if (downItemData != null && downItemData.mListener != null) {
             downItemData.mListener.onDownloadResult(true, msgContent.str, downItemData.mType, msgContent.seq);
-          } else {
-            System.out.println("mListener");
-            // if (mListener != null) {
-            // if (downItemData != null) {
-            // mListener.onDownloadResult(true, msgContent.str, bitmap,
-            // downItemData.mType, msgContent.seq);
-            // } else {
-            // mListener.onDownloadResult(true, msgContent.str, bitmap,
-            // 0, msgContent.seq);
-            // }
-            // }
           }
-
           mDownloadResultMap.remove(msgContent.seq);
         }
 
@@ -253,13 +242,99 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
         downloadImage();
         break;
       case EUIMSG.DOWN_RECODE_BPIC_COMPLETE: // Загрузка миниатюр видео завершена (окончание)
-        // System.out.println("image load complete");
         break;
       default:
-        // System.out.println("image load default " + message.what);
         break;
     }
     return 0;
   }
 
+  // New: download video file by time for Android (parity with iOS)
+  @ReactMethod
+  public void downloadSingleFileByTime(ReadableMap params, final Promise promise) {
+    try {
+      final String devId = params.getString(Constants.DEVICE_ID);
+      final String savePath = params.getString("mSaveImageDir");
+      final ReadableMap start = params.getMap("startTime");
+      final ReadableMap end = params.getMap("endTime");
+      startDownloadByTime(devId, savePath, start, end, promise);
+    } catch (Exception e) {
+      promise.reject("ANDROID_DOWNLOAD_BY_TIME_ERROR", e);
+    }
+  }
+
+  // New: download video file by filename signature (JS calls this on Android too)
+  @ReactMethod
+  public void downloadSingleFile(ReadableMap params, final Promise promise) {
+    try {
+      final String devId = params.getString(Constants.DEVICE_ID);
+      final String savePath = params.getString("mSaveImageDir");
+      final ReadableMap start = params.getMap("startTime");
+      final ReadableMap end = params.getMap("endTime");
+      // Reuse time-based download (filename is not required by SDK here)
+      startDownloadByTime(devId, savePath, start, end, promise);
+    } catch (Exception e) {
+      promise.reject("ANDROID_DOWNLOAD_FILE_ERROR", e);
+    }
+  }
+
+  private void startDownloadByTime(String devId, String savePath, ReadableMap start, ReadableMap end, final Promise promise) {
+    if (devId == null || devId.isEmpty()) {
+      promise.reject("ANDROID_DOWNLOAD_INVALID_PARAMS", "deviceId is null or empty");
+      return;
+    }
+    if (savePath == null || savePath.isEmpty()) {
+      promise.reject("ANDROID_DOWNLOAD_INVALID_PARAMS", "mSaveImageDir (file path) is null or empty");
+      return;
+    }
+    try {
+      File parent = new File(savePath).getParentFile();
+      if (parent != null && !parent.exists()) {
+        parent.mkdirs();
+      }
+    } catch (Throwable ignored) {}
+    Calendar startCal = Calendar.getInstance();
+    startCal.set(start.getInt("year"), start.getInt("month") - 1, start.getInt("day"),
+        start.getInt("hour"), start.getInt("minute"), start.getInt("second"));
+
+    Calendar endCal = Calendar.getInstance();
+    endCal.set(end.getInt("year"), end.getInt("month") - 1, end.getInt("day"),
+        end.getInt("hour"), end.getInt("minute"), end.getInt("second"));
+
+    final DownloadManager dm = DownloadManager.getInstance(new DownloadManager.OnDownloadListener() {
+      @Override
+      public void onDownload(DownloadInfo info) {
+        if (info == null) {
+          return;
+        }
+        if (info.getDownloadState() != DownloadManager.DOWNLOAD_STATE_PROGRESS) {
+          WritableMap map = Arguments.createMap();
+          boolean success = false;
+          try {
+            String fp = info.getSaveFileName();
+            success = fp != null && !fp.isEmpty() && new File(fp).exists();
+          } catch (Throwable ignored) {}
+          map.putBoolean("isSuccess", success);
+          map.putString("filePath", info.getSaveFileName());
+          map.putInt("seq", info.getSeq());
+          promise.resolve(map);
+        }
+      }
+    });
+
+    try {
+      DownloadInfo di = new DownloadInfo();
+      di.setStartTime(startCal);
+      di.setEndTime(endCal);
+      di.setDevId(devId);
+      di.setObj(null);
+      di.setSaveFileName(savePath);
+      // Match behavior used elsewhere: download recorded video by file
+      di.setDownloadType(Define.DOWNLOAD_VIDEO_BY_FILE);
+      dm.addDownload(di);
+      dm.startDownload();
+    } catch (Exception e) {
+      promise.reject("ANDROID_DOWNLOAD_START_ERROR", e);
+    }
+  }
 }

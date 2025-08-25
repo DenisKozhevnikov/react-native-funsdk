@@ -10,6 +10,8 @@ import com.lib.EFUN_ATTR;
 import com.lib.EUIMSG;
 import com.lib.FunSDK;
 import com.lib.MsgContent;
+import com.manager.device.media.attribute.PlayerAttribute;
+import com.lib.IFunSDKResult;
 import com.lib.sdk.bean.StringUtils;
 import com.lib.sdk.struct.H264_DVR_FILE_DATA;
 import com.lib.sdk.struct.H264_DVR_FINDINFO;
@@ -37,6 +39,13 @@ public class UpdatedDevRecordManager extends RecordManager {
 
   public UpdatedDevRecordManager(ViewGroup playView, RecordPlayerAttribute playerAttribute) {
     super(playView, playerAttribute);
+    
+    // Ensure userId is properly initialized like in iOS msgHandle
+    if (userId <= 0) {
+      userId = FunSDK.GetId(userId, (IFunSDKResult) this);
+      android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - Initialized userId: " + userId);
+    }
+    
     fileInfo = new H264_DVR_FINDINFO();
     fileInfo.st_0_nChannelN0 = playerAttribute.getChnnel();
     fileInfo.st_1_nFileType = playerAttribute.getFileType();
@@ -141,6 +150,7 @@ public class UpdatedDevRecordManager extends RecordManager {
       return 0;
     }
 
+    // Ensure underlying render surface and handlers are initialized
     super.start();
 
     int[] sTime = {
@@ -174,6 +184,20 @@ public class UpdatedDevRecordManager extends RecordManager {
     fileInfo.st_3_endTime.st_4_dwMinute = eTime[4];
     fileInfo.st_3_endTime.st_5_dwSecond = eTime[5];
     fileInfo.st_6_StreamType = playerAttribute.getStreamType();
+    
+    // Debug info
+    android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - Starting playback with:");
+    android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - userId: " + userId);
+    android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - devId: " + getDevId());
+    android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - surfaceView: " + surfaceView);
+    if (surfaceView != null) {
+      android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - surfaceView dimensions: width=" + surfaceView.getWidth() + ", height=" + surfaceView.getHeight());
+      android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - surfaceView visibility: " + surfaceView.getVisibility());
+    }
+    android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - channelId: " + fileInfo.st_0_nChannelN0);
+    android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - streamType: " + fileInfo.st_6_StreamType);
+    
+    // Bind to the actual SurfaceView created by RecordManager so WM places it at the correct coords
     int lPlayHandle = FunSDK.MediaNetRecordPlayByTime(userId,
         getDevId(), G.ObjToBytes(fileInfo), surfaceView, 0);
     if (playMode == MEDIA_DATA_TYPE_YUV_NOT_DISPLAY) {
@@ -186,8 +210,10 @@ public class UpdatedDevRecordManager extends RecordManager {
     }
     FunSDK.SetIntAttr(lPlayHandle, EFUN_ATTR.EOA_PCM_SET_SOUND, 100);
     playerAttribute.setPlayHandle(lPlayHandle);
-    setPlayState(E_STATE_READY_PLAY);
-    return 0;
+    
+    android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - Play handle result: " + lPlayHandle);
+    
+    return lPlayHandle;
   }
 
   @Override
@@ -235,6 +261,8 @@ public class UpdatedDevRecordManager extends RecordManager {
 
   @Override
   public int OnFunSDKResult(Message msg, MsgContent ex) {
+    android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - OnFunSDKResult: msgId=" + msg.what + ", arg1=" + msg.arg1 + ", arg2=" + msg.arg2);
+    
     switch (msg.what) {
       case EUIMSG.DEV_FIND_FILE:
         boolean hasRecords = false;
@@ -260,6 +288,38 @@ public class UpdatedDevRecordManager extends RecordManager {
           if (null != mediaManagerLs) {
             mediaManagerLs.onFailed(playerAttribute, msg.what, msg.arg1);
             mediaManagerLs.searchResult(playerAttribute, null);
+          }
+        }
+        break;
+      
+      // Handle media playback events like iOS
+      case EUIMSG.START_PLAY:
+        if (msg.arg1 == 0) {
+          // Play started successfully - emit BUFFER state like iOS
+          if (null != mediaManagerLs) {
+            mediaManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_BUFFER);
+          }
+        } else {
+          // Play failed
+          if (null != mediaManagerLs) {
+            mediaManagerLs.onFailed(playerAttribute, msg.what, msg.arg1);
+            mediaManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_STOP);
+          }
+        }
+        break;
+        
+      case EUIMSG.ON_PLAY_BUFFER_BEGIN:
+        // Buffering started - emit BUFFER state like iOS
+        if (null != mediaManagerLs) {
+          mediaManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_BUFFER);
+        }
+        break;
+        
+      case EUIMSG.ON_PLAY_BUFFER_END:
+        // Buffering ended - emit PLAY state like iOS
+        if (msg.arg1 == 0) {
+          if (null != mediaManagerLs) {
+            mediaManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_PlAY);
           }
         }
         break;
@@ -291,5 +351,15 @@ public class UpdatedDevRecordManager extends RecordManager {
     }
 
     return fileDataList.get(0);
+  }
+  
+  @Override
+  public void release() {
+    super.release();
+    if (userId > 0) {
+      FunSDK.UnRegUser(userId);
+      android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - Released userId: " + userId);
+      userId = 0;
+    }
   }
 }

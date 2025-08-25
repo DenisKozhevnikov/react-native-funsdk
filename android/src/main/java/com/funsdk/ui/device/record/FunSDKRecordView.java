@@ -62,7 +62,7 @@ import com.funsdk.utils.device.media.playback.UpdatedDevRecordManager;
 
 // public class FunSDKRecordView extends LinearLayout {
 public class FunSDKRecordView extends LinearLayout
-    implements RecordManager.OnRecordManagerListener, DownloadManager.OnDownloadListener {
+    implements MediaManager.OnMediaManagerListener, RecordManager.OnRecordManagerListener, DownloadManager.OnDownloadListener {
   private String devId;
   private int channelId;
   // нужен ли он?
@@ -71,31 +71,10 @@ public class FunSDKRecordView extends LinearLayout
   private Activity activity = null;
   private final RecordEventEmitter eventEmitter;
 
-  public static final int MN_COUNT = 8;
-  public static final int TIME_UNIT = 60;
-
-  private MediaFileCalendarManager mediaFileCalendarManager;
   private UpdatedDevRecordManager recordManager;
-  private Calendar calendarShow;
-  private Calendar searchMonthCalendar = Calendar.getInstance();
-  protected DeviceManager manager = this.getManager();
   private DownloadManager downloadManager;
-  // список архивных элементов
   private List<H264_DVR_FILE_DATA> recordList;
-  private List<Map<String, Object>> recordTimeList;
-  private Map<String, Object> recordTimeMap;
-  private TreeMap<Object, Boolean> haveRecordMap;
-  private Calendar searchTime;
-  private int timeUnit = TIME_UNIT;
-  private int timeCount = MN_COUNT;
-  private int playTimeBySecond;
-  private int playTimeByMinute;
-  // int 1
   private int recordPlayType = PLAY_DEV_PLAYBACK;
-  private int playSpeed;
-
-  // debug
-  private LinearLayout debugLayout;
 
   public FunSDKRecordView(ThemedReactContext context) {
     super(context);
@@ -103,7 +82,6 @@ public class FunSDKRecordView extends LinearLayout
     this.themedReactContext = context;
     this.activity = ((ReactContext) getContext()).getCurrentActivity();
     recordList = new ArrayList<>();
-    recordTimeList = new ArrayList<>();
     downloadManager = DownloadManager.getInstance(this);
   }
 
@@ -133,6 +111,53 @@ public class FunSDKRecordView extends LinearLayout
     }
   };
 
+  @Override
+  protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    super.onLayout(changed, left, top, right, bottom);
+    adjustSurfaceChildren();
+  }
+
+  private void adjustSurfaceChildren() {
+    int parentWidth = getWidth();
+    int parentHeight = getHeight();
+    try {
+      setClipChildren(false);
+      setClipToPadding(false);
+      adjustNodeRecursively(this, parentWidth, parentHeight);
+    } catch (Throwable t) {
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - adjustSurfaceChildren error: " + t.getMessage());
+    }
+  }
+
+  private void adjustNodeRecursively(View view, int parentWidth, int parentHeight) {
+    if (view instanceof SurfaceView) {
+      SurfaceView sv = (SurfaceView) view;
+      // Ensure full-bleed fill for the surface view
+      ViewGroup.LayoutParams lp = sv.getLayoutParams();
+      if (lp == null || lp.width != ViewGroup.LayoutParams.MATCH_PARENT || lp.height != ViewGroup.LayoutParams.MATCH_PARENT) {
+        sv.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+      }
+      sv.setBackgroundColor(Color.TRANSPARENT);
+      sv.setZOrderOnTop(false);
+      sv.setZOrderMediaOverlay(true);
+      sv.setX(parentWidth);
+      sv.setY(0);
+      sv.layout(0, 0, parentWidth, parentHeight);
+      sv.bringToFront();
+      try {
+        // Let Surface buffer follow layout size automatically
+        sv.getHolder().setFormat(android.graphics.PixelFormat.TRANSLUCENT);
+      } catch (Throwable ignored) {}
+      return;
+    }
+    if (view instanceof ViewGroup) {
+      ViewGroup vg = (ViewGroup) view;
+      for (int i = 0; i < vg.getChildCount(); i++) {
+        adjustNodeRecursively(vg.getChildAt(i), parentWidth, parentHeight);
+      }
+    }
+  }
+
   // @Override
   public void setId(int id) {
     super.setId(id);
@@ -145,17 +170,42 @@ public class FunSDKRecordView extends LinearLayout
 
   public void init() {
     WritableMap map = Arguments.createMap();
+    map.putInt("target", getId());
+    map.putString("status", "start");
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_START_INIT);
 
-    calendarShow = Calendar.getInstance();
+    recordManager = new UpdatedDevRecordManager(this, new RecordPlayerAttribute(getDevId()));
+    recordManager.setChnId(getChannelId());
+    recordManager.setVideoFullScreen(false);
+    recordManager.setOnMediaManagerListener(this);
 
-    initRecordPlayer(this, recordPlayType);
-    // Align with iOS behavior: do not auto-search records on init.
-    // searchRecordByFile(calendarShow);
-    // searchRecordByTime(calendarShow);
+    // Log view dimensions
+    android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - init() view dimensions: width=" + getWidth() + ", height=" + getHeight());
+    android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - init() view visibility: " + getVisibility());
+    android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - child count: " + getChildCount());
+    
+    // Check if SurfaceView was created by RecordManager and adjust z-order
+    for (int i = 0; i < getChildCount(); i++) {
+      View child = getChildAt(i);
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - child " + i + ": " + child.getClass().getSimpleName());
+      if (child instanceof SurfaceView) {
+        SurfaceView surfaceView = (SurfaceView) child;
+        android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - Found SurfaceView: width=" + surfaceView.getWidth() + ", height=" + surfaceView.getHeight());
+        // Ensure SurfaceView renders above RN content if needed
+        try {
+          surfaceView.setZOrderOnTop(false);
+          surfaceView.setZOrderMediaOverlay(true);
+          surfaceView.bringToFront();
+        } catch (Throwable t) {
+          android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - SurfaceView z-order setup error: " + t.getMessage());
+        }
+      }
+    }
 
-    // mediaFileCalendarManager = new MediaFileCalendarManager(this);
-    // mediaFileCalendarManager.init(devId, null, "h264");
+    WritableMap initMap = Arguments.createMap();
+    initMap.putInt("target", getId());
+    initMap.putString("status", "initialized");
+    eventEmitter.sendEvent(initMap, RecordEventEmitter.EVENT_START_INIT);
   }
 
   public String getDevId() {
@@ -174,33 +224,12 @@ public class FunSDKRecordView extends LinearLayout
     this.channelId = channelId;
   }
 
-  public void initRecordPlayer(ViewGroup playView, int recordType) {
-    if (recordManager != null) {
-
-    } else {
-
-      // recordManager = manager.createRecordPlayer(this, getDevId(), recordType);
+  public void initRecordPlayer() {
+    if (recordManager == null) {
       recordManager = new UpdatedDevRecordManager(this, new RecordPlayerAttribute(getDevId()));
-      // TODO: сделать методы с каналами
-      // recordManager.setChnId(getChnId());
       recordManager.setChnId(getChannelId());
-      recordManager.setVideoFullScreen(false);// 默认按比例显示
-      // назначаем в менеджер слушатели, примеры по которым будет ответ
-      // OnFunSDKResult(this.playerAttribute, msg, ex) - 5101 обработается в
-      // recordManager и ответ будет в searchResult
-      // onFailed(this.playerAttribute, msg.what, msg.arg2)
-      // onMediaPlayState(this.playerAttribute, 18)
-      // onShowRateAndTime(this.playerAttribute, isShowTime, time,
-      // FileUtils.FormetFileSize(Long.parseLong(value)) + "/S")
-      // onVideoBufferEnd(this.playerAttribute, ex)
-      // onPlayStateClick(v)
-      // searchResult - результат поиска по 5101(DEV_FIND_FILE)
+      recordManager.setVideoFullScreen(false);
       recordManager.setOnMediaManagerListener(this);
-      // recordManager.setOnMediaManagerListener(new MediaManagerListener());
-
-      // recordManager.initVideoThumb(PathManager.getInstance(this.getContext()).getTempImages(),
-      // getDevId(),
-      // this);
     }
   }
 
@@ -215,27 +244,7 @@ public class FunSDKRecordView extends LinearLayout
   // recordManager.searchFileByTime(times);
   // }
 
-  public void searchRecordByFile(Calendar searchTime) {
-    this.searchTime = searchTime;
-    // if (recordManager instanceof DevRecordManager) {
-    searchTime.set(Calendar.HOUR_OF_DAY, 0);
-    searchTime.set(Calendar.MINUTE, 0);
-    searchTime.set(Calendar.SECOND, 0);
-
-    Calendar endTime = (Calendar) searchTime.clone();
-    endTime.set(Calendar.HOUR_OF_DAY, 23);
-    endTime.set(Calendar.MINUTE, 59);
-    endTime.set(Calendar.SECOND, 59);
-
-    // ((DevRecordManager) recordManager).searchFileByTime(searchTime, endTime);
-    recordManager.searchFileByTime(searchTime, endTime);
-    // }
-  }
-
   public void searchRecordByFile(Calendar startTime, Calendar endTime) {
-    // if (recordManager instanceof DevRecordManager) {
-    // ((DevRecordManager) recordManager).searchFileByTime(startTime, endTime);
-    // }
     recordManager.searchFileByTime(startTime, endTime);
   }
 
@@ -244,64 +253,129 @@ public class FunSDKRecordView extends LinearLayout
    */
   // @Override
   public void startPlayRecord(int position) {
+    android.util.Log.d("FunSDKRecordView", "startPlayRecord(int) called with position: " + position);
+    android.util.Log.d("FunSDKRecordView", "recordList size: " + (recordList != null ? recordList.size() : "null"));
+    android.util.Log.d("FunSDKRecordView", "recordManager: " + (recordManager != null ? "exists" : "null"));
+    
     H264_DVR_FILE_DATA recordInfo = recordList.get(position);
     Calendar playCalendar = TimeUtils.getNormalFormatCalender(recordInfo.getStartTimeOfYear());
-    Calendar endCalendar;
-    endCalendar = Calendar.getInstance();
+    Calendar endCalendar = Calendar.getInstance();
     endCalendar.setTime(playCalendar.getTime());
     endCalendar.set(Calendar.HOUR_OF_DAY, 23);
     endCalendar.set(Calendar.MINUTE, 59);
     endCalendar.set(Calendar.SECOND, 59);
 
+    android.util.Log.d("FunSDKRecordView", "About to call recordManager.startPlay()");
     recordManager.startPlay(playCalendar, endCalendar);
   }
 
-  public void startPlayRecord(Calendar playCalendar, Calendar endCalendar) {
-    recordManager.startPlay(playCalendar, endCalendar);
+  public void startPlayRecord(Calendar startTime, Calendar endTime) {
+    android.util.Log.d("FunSDKRecordView", "startPlayRecord(Calendar) called");
+    android.util.Log.d("FunSDKRecordView", "recordManager: " + (recordManager != null ? "exists" : "null"));
+    // Defer start until we have non-zero size to avoid a 0x0 surface
+    if (getWidth() == 0 || getHeight() == 0) {
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - view size is 0, deferring start until layout");
+      getViewTreeObserver().addOnGlobalLayoutListener(new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+          getViewTreeObserver().removeOnGlobalLayoutListener(this);
+          startPlayWithAdjustments(startTime, endTime);
+        }
+      });
+    } else {
+      startPlayWithAdjustments(startTime, endTime);
+    }
   }
 
-  // TODO: переработать так как сейчас непонятно как работает
-  // передаем время с начала
-  // public void seekToTime(int times) {
-  // int[] time = { searchTime.get(Calendar.YEAR), searchTime.get(Calendar.MONTH)
-  // + 1,
-  // searchTime.get(Calendar.DAY_OF_MONTH), 0, 0, 0 };
-  // int absTime = FunSDK.ToTimeType(time) + times;
-  // recordManager.seekToTime(times, absTime);
-  // }
+    public void startPlayRecordByTime(Map<String, Object> start, Map<String, Object> end) {
+    android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - startPlayRecordByTime called");
+    android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - recordManager: " + (recordManager != null ? "exists" : "null"));
+    
+    Calendar startCalendar = Calendar.getInstance();
+    Calendar endCalendar = Calendar.getInstance();
+    
+    startCalendar.set(
+      (Integer) start.get("year"),
+      (Integer) start.get("month") - 1,
+      (Integer) start.get("day"),
+      (Integer) start.get("hour"),
+      (Integer) start.get("minute"),
+      (Integer) start.get("second")
+    );
+    
+    endCalendar.set(
+      (Integer) end.get("year"),
+      (Integer) end.get("month") - 1,
+      (Integer) end.get("day"),
+      (Integer) end.get("hour"),
+      (Integer) end.get("minute"),
+      (Integer) end.get("second")
+    );
+    
+    android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - About to call recordManager.startPlay() with time range");
+    // Defer start until we have non-zero size to avoid a 0x0 surface
+    if (getWidth() == 0 || getHeight() == 0) {
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - view size is 0, deferring start until layout (by time)");
+      getViewTreeObserver().addOnGlobalLayoutListener(new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+          getViewTreeObserver().removeOnGlobalLayoutListener(this);
+          startPlayWithAdjustments(startCalendar, endCalendar);
+        }
+      });
+    } else {
+      startPlayWithAdjustments(startCalendar, endCalendar);
+    }
+  }
 
-  // время старта и время которое прошло со старта
-  // public void seekToTime(long startTimeinMillis, long timeInMillis) {
-  // Calendar times = Calendar.getInstance();
-  // times.setTimeInMillis(timeInMillis);
+  private void startPlayWithAdjustments(Calendar startCalendar, Calendar endCalendar) {
+    recordManager.startPlay(startCalendar, endCalendar);
+    // Post to adjust SurfaceView after RecordManager attaches it
+    post(new Runnable() {
+      @Override
+      public void run() {
+        for (int i = 0; i < getChildCount(); i++) {
+          View child = getChildAt(i);
+          if (child instanceof SurfaceView) {
+            try {
+              // Ensure the render view fills parent
+              ViewGroup.LayoutParams lp = child.getLayoutParams();
+              if (lp == null || lp.width != ViewGroup.LayoutParams.MATCH_PARENT || lp.height != ViewGroup.LayoutParams.MATCH_PARENT) {
+                child.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+              }
+              ((SurfaceView) child).setZOrderOnTop(false);
+              ((SurfaceView) child).setZOrderMediaOverlay(true);
+              child.bringToFront();
+              child.requestLayout();
+              invalidate();
+            } catch (Throwable t) {
+              android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - SurfaceView layout/z-order setup error: " + t.getMessage());
+            }
+          }
+        }
+      }
+    });
+  }
 
-  // int year = times.get(Calendar.YEAR);
-  // int month = times.get(Calendar.MONTH) + 1;
-  // int day = times.get(Calendar.DAY_OF_MONTH);
-
-  // int[] time = {
-  // year,
-  // month,
-  // day,
-  // 0,
-  // 0,
-  // 0
-  // };
-
-  // int absTime = (int) timeInMillis / 1000;
-
-  // // int absTime = FunSDK.ToTimeType(time) + times;
-  // // recordManager.seekToTime(times, absTime);
-  // recordManager.seekToTime(times, absTime);
-  // }
+  public void seekToTime(int addTime, int absTime) {
+    recordManager.seekToTime(addTime, absTime);
+  }
 
   public String capture(String path) {
-    return recordManager.capture(path);
+    if (path != null && !path.isEmpty()) {
+      return recordManager.capture(path);
+    } else {
+      return recordManager.capture(null);
+    }
   }
 
   public void startRecord(String path) {
     if (!recordManager.isRecord()) {
-      recordManager.startRecord(path);
+      if (path != null && !path.isEmpty()) {
+        recordManager.startRecord(path);
+      } else {
+        recordManager.startRecord(null);
+      }
     }
   }
 
@@ -339,42 +413,19 @@ public class FunSDKRecordView extends LinearLayout
     recordManager.destroyPlay();
   }
 
+  public void onDebugState(String state) {
+    WritableMap map = Arguments.createMap();
+    map.putInt("target", getId());
+    map.putString("state", state);
+    eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_DEBUG_STATE);
+  }
+
   public boolean isRecordPlay() {
     return recordManager.getPlayState() == PlayerAttribute.E_STATE_PlAY;
   }
 
-  public int getShowCount() {
-    return timeCount;
-  }
-
-  public int getTimeUnit() {
-    return timeUnit;
-  }
-
-  // public void setPlayTimeBySecond(int secondTime) {
-  // this.playTimeBySecond = secondTime;
-  // }
-
-  // public int getPlayTimeBySecond() {
-  // return playTimeBySecond;
-  // }
-
-  // // TODO: понять зачем это надо
-  // public void setPlayTimeByMinute(int minute) {
-  // // result >= 0 返回有效的时间,< 0 保持原来的时间
-  // int result = recordManager.dealWithRecordEffectiveByMinute(minute);
-  // if (result >= 0) {
-  // playTimeByMinute = result;
-  // playTimeBySecond = 0;
-  // }
-  // }
-
-  // public int getPlayTimeByMinute() {
-  // return playTimeByMinute;
-  // }
-
-  public void setRecordType(int recordType) {
-    this.recordPlayType = recordType;
+  public void setPlaySpeed(int speed) {
+    recordManager.setPlaySpeed(speed);
   }
 
   public void downloadFile(int position, String path) {
@@ -384,7 +435,16 @@ public class FunSDKRecordView extends LinearLayout
 
     H264_DVR_FILE_DATA data = recordList.get(position);
     if (data != null) {
-      String fileName = data.getStartTimeOfYear() + "_" + data.getEndTimeOfYear() + ".mp4";
+      String rawName = data.getStartTimeOfYear() + "_" + data.getEndTimeOfYear() + ".mp4";
+      // Sanitize for Android filesystem
+      String fileName = rawName.replace(":", "-").replace(" ", "_");
+      try {
+        File dir = new File(path);
+        if (!dir.exists()) {
+          // Ensure directory exists
+          dir.mkdirs();
+        }
+      } catch (Throwable ignored) {}
       DownloadInfo downloadInfo = new DownloadInfo();
       downloadInfo.setStartTime(TimeUtils.getNormalFormatCalender(data.getStartTimeOfYear()));
       downloadInfo.setEndTime(TimeUtils.getNormalFormatCalender(data.getEndTimeOfYear()));
@@ -397,10 +457,6 @@ public class FunSDKRecordView extends LinearLayout
       downloadManager.addDownload(downloadInfo);
       downloadManager.startDownload();
     }
-  }
-
-  public void setPlaySpeed(int playSpeed) {
-    recordManager.setPlaySpeed(playSpeed);
   }
 
   // public void searchMediaFileCalendar(Calendar searchCalendar) {
@@ -672,109 +728,78 @@ public class FunSDKRecordView extends LinearLayout
    */
   @Override
   public void onMediaPlayState(PlayerAttribute attribute, int state) {
-    playSpeed = ((RecordPlayerAttribute) attribute).getPlaySpeed();
+    android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - onMediaPlayState called with state: " + state);
+    android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - State meanings: 0=PLAY, 1=PAUSE, 2=BUFFER, 4=STOP, 6=CANNOT_PLAY");
+    
     WritableMap map = Arguments.createMap();
-    map.putInt("playSpeed", playSpeed);
+    map.putInt("target", getId());
     map.putInt("state", state);
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_MEDIA_PLAY_STATE);
   }
 
+  @Override
   public void onFailed(PlayerAttribute attribute, int msgId, int errorId) {
-    // в фансдк демо тут TODO и ничего нет
     WritableMap map = Arguments.createMap();
+    map.putInt("target", getId());
     map.putInt("msgId", msgId);
     map.putInt("errorId", errorId);
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_FAILED);
   }
 
-  /**
-   * Показывает битрейт и временную метку
-   *
-   * @param attribute
-   * @param isShowTime
-   * @param time
-   * @param rate
-   */
   @Override
   public void onShowRateAndTime(PlayerAttribute attribute, boolean isShowTime,
       String time, long rate) {
-
     WritableMap map = Arguments.createMap();
-    // map.putBoolean("isShowTime", isShowTime);
+    map.putInt("target", getId());
     map.putString("time", time);
-    map.putDouble("rate", (double) rate);
+    map.putString("rate", String.format("%d/S", rate));
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_SHOW_RATE_AND_TIME);
   }
 
-  /**
-   * Обратный вызов завершения буферизации видео
-   *
-   * @param attribute
-   * @param ex
-   */
   @Override
   public void onVideoBufferEnd(PlayerAttribute attribute, MsgContent ex) {
     WritableMap map = Arguments.createMap();
+    map.putInt("target", getId());
     map.putBoolean("isBufferEnd", true);
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_VIDEO_BUFFER_END);
   }
 
+  @Override
   public void onPlayStateClick(View view) {
-    // в библиотеке тут пусто
+    // Not used in iOS implementation
   }
-  // }
 
-  public void onDebugState(String str) {
+  public void onCapture(String path) {
     WritableMap map = Arguments.createMap();
-    map.putString("state", str);
-    eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_DEBUG_STATE);
+    map.putInt("target", getId());
+    map.putString("path", path);
+    eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_CAPTURE_PATH);
   }
 
   public void onDownloadProgress(int progress) {
     WritableMap map = Arguments.createMap();
+    map.putInt("target", getId());
     map.putInt("progress", progress);
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_DOWNLOAD_PROGRESS);
   }
 
   public void onDownloadState(int downloadState, String fileName) {
     WritableMap map = Arguments.createMap();
-    map.putInt("downloadState", downloadState);
+    map.putInt("target", getId());
+    map.putInt("state", downloadState);
     map.putString("fileName", fileName);
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_DOWNLOAD_STATE);
   }
 
-  public void onCapture(String path) {
-    WritableMap map = Arguments.createMap();
-    map.putString("path", path);
-    eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_CAPTURE_PATH);
-  }
-
-  // слушатель для downloadmanager
   @Override
   public void onDownload(DownloadInfo downloadInfo) {
     if (downloadInfo != null) {
       if (downloadInfo.getDownloadState() == DOWNLOAD_STATE_PROGRESS) {
         int progress = (downloadInfo.getDownloadProgress() + 100 * downloadInfo.getSeq());
-        // TODO: создать методы для отправки данных о прогрессе
-        // iDevRecordView.onDownloadProgress(progress);
         onDownloadProgress(progress);
       } else {
-        // TODO: создать методы для отправки данных о состоянии
-        // public static final int DOWNLOAD_STATE_UNINT = 0;
-        // public static final int DOWNLOAD_STATE_START = 1;
-        // public static final int DOWNLOAD_STATE_PROGRESS = 2;
-        // public static final int DOWNLOAD_STATE_COMPLETE = 3;
-        // public static final int DOWNLOAD_STATE_STOP = 4;
-        // public static final int DOWNLOAD_STATE_FAILED = 5;
-        // public static final int DOWNLOAD_STATE_COMPLETE_ALL = 6;
-        // iDevRecordView.onDownloadState(downloadInfo.getDownloadState(),
-        // downloadInfo.getSaveFileName());
-        onDownloadState(downloadInfo.getDownloadState(),
-            downloadInfo.getSaveFileName());
+        onDownloadState(downloadInfo.getDownloadState(), downloadInfo.getSaveFileName());
       }
-
-      System.out
-          .println("download-->" + downloadInfo.getDownloadState() + " progress:" + downloadInfo.getDownloadProgress());
     }
   }
 }

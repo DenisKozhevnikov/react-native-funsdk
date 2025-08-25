@@ -2,6 +2,7 @@ package com.funsdk.ui.device.record;
 
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.SimpleViewManager;
 import com.facebook.react.uimanager.ThemedReactContext;
@@ -235,39 +236,35 @@ public class FunSDKRecordPlayerManager extends SimpleViewManager<FunSDKRecordVie
     }
 
     if (commandId == COMMAND_START_PLAY_RECORD_BY_TIME_ID) {
-      long startLong = (long) args.getDouble(0);
-      long endLong = (long) args.getDouble(1);
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordPlayerManager - startPlayRecordByTime command received");
+      
+      // Get the objects from JavaScript
+      ReadableMap startMap = args.getMap(0);
+      ReadableMap endMap = args.getMap(1);
+      
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordPlayerManager - startMap: " + startMap);
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordPlayerManager - endMap: " + endMap);
+      
+      // Convert ReadableMap to Map<String, Object>
+      Map<String, Object> start = new HashMap<>();
+      start.put("year", startMap.getInt("year"));
+      start.put("month", startMap.getInt("month"));
+      start.put("day", startMap.getInt("day"));
+      start.put("hour", startMap.getInt("hour"));
+      start.put("minute", startMap.getInt("minute"));
+      start.put("second", startMap.getInt("second"));
+      
+      Map<String, Object> end = new HashMap<>();
+      end.put("year", endMap.getInt("year"));
+      end.put("month", endMap.getInt("month"));
+      end.put("day", endMap.getInt("day"));
+      end.put("hour", endMap.getInt("hour"));
+      end.put("minute", endMap.getInt("minute"));
+      end.put("second", endMap.getInt("second"));
+      
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordPlayerManager - About to call view.startPlayRecordByTime");
+      view.startPlayRecordByTime(start, end);
 
-      Calendar startTime = Calendar.getInstance();
-      startTime.setTimeInMillis(startLong);
-      Calendar endTime = Calendar.getInstance();
-      endTime.setTimeInMillis(endLong);
-
-      // for onDebugState
-      int year = startTime.get(Calendar.YEAR);
-      int month = startTime.get(Calendar.MONTH);
-      int day = startTime.get(Calendar.DATE);
-      int hour = startTime.get(Calendar.HOUR_OF_DAY);
-      int minutes = startTime.get(Calendar.MINUTE);
-      int second = startTime.get(Calendar.SECOND);
-
-      view.onDebugState(
-          "startPlayRecord start - startLong: " + startLong + " year: " + year + " month: " + month + " day: "
-              + day + " hour: " + hour + " minutes: " + minutes + " second: " + second);
-
-      // for onDebugState
-      int year2 = endTime.get(Calendar.YEAR);
-      int month2 = endTime.get(Calendar.MONTH);
-      int day2 = endTime.get(Calendar.DATE);
-      int hour2 = endTime.get(Calendar.HOUR_OF_DAY);
-      int minutes2 = endTime.get(Calendar.MINUTE);
-      int second2 = endTime.get(Calendar.SECOND);
-
-      view.onDebugState(
-          "startPlayRecord end - endLong: " + endLong + " year: " + year2 + " month: " + month2 + " day: "
-              + day2 + " hour: " + hour2 + " minutes: " + minutes2 + " second2: " + second2);
-
-      view.startPlayRecord(startTime, endTime);
     }
   }
 
