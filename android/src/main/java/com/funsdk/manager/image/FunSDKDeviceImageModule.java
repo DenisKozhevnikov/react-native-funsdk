@@ -257,7 +257,10 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
       final String savePath = params.getString("mSaveImageDir");
       final ReadableMap start = params.getMap("startTime");
       final ReadableMap end = params.getMap("endTime");
-      startDownloadByTime(devId, savePath, start, end, promise);
+      final int channel = params.hasKey(Constants.DEVICE_CHANNEL) ? params.getInt(Constants.DEVICE_CHANNEL) : 0;
+      final int streamType = params.hasKey("streamType") ? params.getInt("streamType") : 0;
+      final int fileType = params.hasKey("fileType") ? params.getInt("fileType") : 0;
+      startDownloadByTime(devId, savePath, start, end, channel, streamType, fileType, promise);
     } catch (Exception e) {
       promise.reject("ANDROID_DOWNLOAD_BY_TIME_ERROR", e);
     }
@@ -271,14 +274,88 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
       final String savePath = params.getString("mSaveImageDir");
       final ReadableMap start = params.getMap("startTime");
       final ReadableMap end = params.getMap("endTime");
-      // Reuse time-based download (filename is not required by SDK here)
-      startDownloadByTime(devId, savePath, start, end, promise);
+      final int channel = params.hasKey(Constants.DEVICE_CHANNEL) ? params.getInt(Constants.DEVICE_CHANNEL) : 0;
+      final int streamType = params.hasKey("streamType") ? params.getInt("streamType") : 0;
+      final String fileName = params.hasKey("fileName") ? params.getString("fileName") : "";
+
+      if (devId == null || devId.isEmpty()) {
+        promise.reject("ANDROID_DOWNLOAD_INVALID_PARAMS", "deviceId is null or empty");
+        return;
+      }
+      if (savePath == null || savePath.isEmpty()) {
+        promise.reject("ANDROID_DOWNLOAD_INVALID_PARAMS", "mSaveImageDir (file path) is null or empty");
+        return;
+      }
+
+      Calendar startCal = Calendar.getInstance();
+      startCal.set(start.getInt("year"), start.getInt("month") - 1, start.getInt("day"),
+          start.getInt("hour"), start.getInt("minute"), start.getInt("second"));
+
+      Calendar endCal = Calendar.getInstance();
+      endCal.set(end.getInt("year"), end.getInt("month") - 1, end.getInt("day"),
+          end.getInt("hour"), end.getInt("minute"), end.getInt("second"));
+
+      final DownloadManager dm = DownloadManager.getInstance(new DownloadManager.OnDownloadListener() {
+        @Override
+        public void onDownload(DownloadInfo info) {
+          if (info == null) {
+            return;
+          }
+          if (info.getDownloadState() != DownloadManager.DOWNLOAD_STATE_PROGRESS) {
+            WritableMap map = Arguments.createMap();
+            boolean success = false;
+            try {
+              String fp = info.getSaveFileName();
+              success = fp != null && !fp.isEmpty() && new File(fp).exists();
+            } catch (Throwable ignored) {}
+            map.putBoolean("isSuccess", success);
+            map.putString("filePath", info.getSaveFileName());
+            map.putInt("seq", info.getSeq());
+            promise.resolve(map);
+          }
+        }
+      });
+
+      try {
+        DownloadInfo di = new DownloadInfo();
+        di.setStartTime(startCal);
+        di.setEndTime(endCal);
+        di.setDevId(devId);
+
+        H264_DVR_FILE_DATA data = new H264_DVR_FILE_DATA();
+        // begin
+        data.st_3_beginTime.st_0_year = startCal.get(Calendar.YEAR);
+        data.st_3_beginTime.st_1_month = startCal.get(Calendar.MONTH) + 1;
+        data.st_3_beginTime.st_2_day = startCal.get(Calendar.DAY_OF_MONTH);
+        data.st_3_beginTime.st_4_hour = startCal.get(Calendar.HOUR_OF_DAY);
+        data.st_3_beginTime.st_5_minute = startCal.get(Calendar.MINUTE);
+        data.st_3_beginTime.st_6_second = startCal.get(Calendar.SECOND);
+        // end
+        data.st_4_endTime.st_0_year = endCal.get(Calendar.YEAR);
+        data.st_4_endTime.st_1_month = endCal.get(Calendar.MONTH) + 1;
+        data.st_4_endTime.st_2_day = endCal.get(Calendar.DAY_OF_MONTH);
+        data.st_4_endTime.st_4_hour = endCal.get(Calendar.HOUR_OF_DAY);
+        data.st_4_endTime.st_5_minute = endCal.get(Calendar.MINUTE);
+        data.st_4_endTime.st_6_second = endCal.get(Calendar.SECOND);
+        data.st_0_ch = channel;
+        data.st_6_StreamType = streamType;
+        data.st_2_fileName = (fileName != null ? fileName : "").getBytes();
+
+        di.setObj(data);
+        di.setSaveFileName(savePath);
+        di.setDownloadType(Define.DOWNLOAD_VIDEO_BY_FILE);
+        dm.addDownload(di);
+        dm.startDownload();
+      } catch (Exception e) {
+        promise.reject("ANDROID_DOWNLOAD_START_ERROR", e);
+      }
     } catch (Exception e) {
       promise.reject("ANDROID_DOWNLOAD_FILE_ERROR", e);
     }
   }
 
-  private void startDownloadByTime(String devId, String savePath, ReadableMap start, ReadableMap end, final Promise promise) {
+  private void startDownloadByTime(String devId, String savePath, ReadableMap start, ReadableMap end,
+      int channel, int streamType, int fileType, final Promise promise) {
     if (devId == null || devId.isEmpty()) {
       promise.reject("ANDROID_DOWNLOAD_INVALID_PARAMS", "deviceId is null or empty");
       return;
@@ -327,10 +404,33 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
       di.setStartTime(startCal);
       di.setEndTime(endCal);
       di.setDevId(devId);
-      di.setObj(null);
+
+      // Build minimal file info to avoid internal null filename usage
+      H264_DVR_FILE_DATA data = new H264_DVR_FILE_DATA();
+      // begin time
+      data.st_3_beginTime.st_0_year = startCal.get(Calendar.YEAR);
+      data.st_3_beginTime.st_1_month = startCal.get(Calendar.MONTH) + 1;
+      data.st_3_beginTime.st_2_day = startCal.get(Calendar.DAY_OF_MONTH);
+      data.st_3_beginTime.st_4_hour = startCal.get(Calendar.HOUR_OF_DAY);
+      data.st_3_beginTime.st_5_minute = startCal.get(Calendar.MINUTE);
+      data.st_3_beginTime.st_6_second = startCal.get(Calendar.SECOND);
+      // end time
+      data.st_4_endTime.st_0_year = endCal.get(Calendar.YEAR);
+      data.st_4_endTime.st_1_month = endCal.get(Calendar.MONTH) + 1;
+      data.st_4_endTime.st_2_day = endCal.get(Calendar.DAY_OF_MONTH);
+      data.st_4_endTime.st_4_hour = endCal.get(Calendar.HOUR_OF_DAY);
+      data.st_4_endTime.st_5_minute = endCal.get(Calendar.MINUTE);
+      data.st_4_endTime.st_6_second = endCal.get(Calendar.SECOND);
+      // channel and stream
+      data.st_0_ch = channel;
+      data.st_6_StreamType = streamType;
+      // Avoid null filename usage inside SDK consumers
+      data.st_2_fileName = new byte[0];
+
+      di.setObj(data);
       di.setSaveFileName(savePath);
-      // Match behavior used elsewhere: download recorded video by file
-      di.setDownloadType(Define.DOWNLOAD_VIDEO_BY_FILE);
+      // Download by time
+      di.setDownloadType(Define.DOWNLOAD_VIDEO_BY_TIME);
       dm.addDownload(di);
       dm.startDownload();
     } catch (Exception e) {

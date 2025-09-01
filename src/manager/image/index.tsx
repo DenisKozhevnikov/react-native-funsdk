@@ -37,6 +37,8 @@ export type DownloadSingleFileParams = {
   startTime: SearchDate;
   endTime: SearchDate;
   fileName: string;
+  streamType?: STREAM_TYPE;
+  fileType?: FILE_TYPE;
 };
 
 export type DownloadSingleFileResponse = {

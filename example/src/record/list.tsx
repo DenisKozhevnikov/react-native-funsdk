@@ -124,6 +124,14 @@ const RecordItem = ({
 
   const handleLoadVideoFile = async () => {
     try {
+      console.log('[RecordItem] handleLoadVideoFile start', {
+        channel: fileInfo.channel,
+        fileName: fileInfo.fileName,
+        size: fileInfo.size,
+        streamType: fileInfo.streamType,
+        startTime: fileInfo.startTime,
+        endTime: fileInfo.endTime,
+      });
       let folder: string;
 
       if (Platform.OS === 'ios') {
@@ -131,14 +139,14 @@ const RecordItem = ({
       } else {
         folder = ReactNativeBlobUtil.fs.dirs.MovieDir;
       }
-      console.log('folder: ', folder);
+      console.log('[RecordItem] folder', folder);
 
       const path = `${folder}/video/${DEVICE_ID}`;
 
       await createFolderIfNotExist(path);
 
       const res = await getFilesInFolder(path);
-      console.log('getFilesInFolder res: ', res);
+      console.log('[RecordItem] getFilesInFolder before download', res);
 
       if (Platform.OS === 'android') {
         const permissionAccess = await askPermissionStorage();
@@ -146,26 +154,44 @@ const RecordItem = ({
           Alert.alert('Отсутсвует разрешение на сохранение файлов');
           return;
         }
+        console.log('[RecordItem] storage permission granted');
       }
 
       const pathWithFileName = `${path}/${searchDateToString(
         fileInfo.startTime
       )}-${searchDateToString(fileInfo.endTime)}.mp4`;
-      console.log('pathWithFileName: ', pathWithFileName);
+      console.log('[RecordItem] pathWithFileName', pathWithFileName);
 
       if (Platform.OS === 'android') {
+        console.log('[RecordItem] call downloadSingleFileByTime', {
+          deviceId: DEVICE_ID,
+          deviceChannel: fileInfo.channel,
+          startTime: fileInfo.startTime,
+          endTime: fileInfo.endTime,
+          streamType: fileInfo.streamType,
+          mSaveImageDir: pathWithFileName,
+        });
         const result = await downloadSingleFileByTime({
           deviceId: DEVICE_ID,
           deviceChannel: fileInfo.channel,
           mSaveImageDir: pathWithFileName,
           startTime: fileInfo.startTime,
           endTime: fileInfo.endTime,
+          streamType: fileInfo.streamType,
         });
         console.log(
-          '[RecordItem] downloadSingleFileByTime result (android):',
+          '[RecordItem] downloadSingleFileByTime result (android)',
           result
         );
       } else {
+        console.log('[RecordItem] call downloadSingleFile (iOS)', {
+          deviceId: DEVICE_ID,
+          deviceChannel: fileInfo.channel,
+          startTime: fileInfo.startTime,
+          endTime: fileInfo.endTime,
+          fileName: fileInfo.fileName,
+          mSaveImageDir: pathWithFileName,
+        });
         const result = await downloadSingleFile({
           deviceId: DEVICE_ID,
           deviceChannel: fileInfo.channel,
@@ -174,18 +200,21 @@ const RecordItem = ({
           endTime: fileInfo.endTime,
           fileName: fileInfo.fileName,
         });
-        console.log('[RecordItem] downloadSingleFile result:', result);
+        console.log('[RecordItem] downloadSingleFile result (ios)', result);
       }
 
       const filesInFolderAfterLoading = await getFilesInFolder(path);
-      console.log('filesInFolderAfterLoading res: ', filesInFolderAfterLoading);
+      console.log(
+        '[RecordItem] getFilesInFolder after download',
+        filesInFolderAfterLoading
+      );
 
       const pathWithFileNameStat = await ReactNativeBlobUtil.fs.stat(
         pathWithFileName
       );
-      console.log('pathWithFileNameStat res: ', pathWithFileNameStat);
+      console.log('[RecordItem] stat downloaded file', pathWithFileNameStat);
     } catch (error) {
-      console.log('handleLoadVideoFile error: ', error);
+      console.log('[RecordItem] handleLoadVideoFile error', error);
     }
   };
 
