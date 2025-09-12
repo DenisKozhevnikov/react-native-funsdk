@@ -4,6 +4,12 @@ import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.view.SurfaceView;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+import android.os.Build;
+import android.graphics.PixelFormat;
 
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.bridge.ReactContext;
@@ -90,6 +96,47 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
     }
   };
 
+  @Override
+  protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    super.onLayout(changed, left, top, right, bottom);
+    adjustSurfaceChildren();
+  }
+
+  private void adjustSurfaceChildren() {
+    int parentWidth = getWidth();
+    int parentHeight = getHeight();
+    try {
+      setClipChildren(false);
+      setClipToPadding(false);
+      adjustNodeRecursively(this, parentWidth, parentHeight);
+    } catch (Throwable ignored) {}
+  }
+
+  private void adjustNodeRecursively(View view, int parentWidth, int parentHeight) {
+    if (view instanceof SurfaceView) {
+      SurfaceView sv = (SurfaceView) view;
+      ViewGroup.LayoutParams lp = sv.getLayoutParams();
+      if (lp == null || lp.width != ViewGroup.LayoutParams.MATCH_PARENT || lp.height != ViewGroup.LayoutParams.MATCH_PARENT) {
+        sv.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+      }
+      sv.setZOrderOnTop(false);
+      sv.setZOrderMediaOverlay(true);
+      sv.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+      try {
+        sv.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+      } catch (Throwable ignored) {}
+      sv.layout(0, 0, parentWidth, parentHeight);
+      sv.bringToFront();
+      return;
+    }
+    if (view instanceof ViewGroup) {
+      ViewGroup vg = (ViewGroup) view;
+      for (int i = 0; i < vg.getChildCount(); i++) {
+        adjustNodeRecursively(vg.getChildAt(i), parentWidth, parentHeight);
+      }
+    }
+  }
+
   // @Override
   public void setId(int id) {
     super.setId(id);
@@ -143,6 +190,13 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
       mediaManager.setStreamType(getStreamType());
       mediaManager.setVideoFullScreen(false);
       mediaManager.startMonitor();
+      // Дождаться добавления SurfaceView и растянуть его на весь контейнер
+      post(new Runnable() {
+        @Override
+        public void run() {
+          adjustSurfaceChildren();
+        }
+      });
     }
   }
 
@@ -313,12 +367,50 @@ public class FunSDKVideoView extends LinearLayout implements MediaManager.OnMedi
      * }
      */
     screenOrientationManager = ScreenOrientationManager.getInstance();
-    // System.out.println("VideoFullScreen: " + isFullScreen);
-    if (isFullScreen)
+    if (isFullScreen) {
       screenOrientationManager.landscapeScreen(this.activity, true);
-    else
+      setImmersiveMode(true);
+    } else {
       screenOrientationManager.portraitScreen(this.activity, true);
+      setImmersiveMode(false);
+    }
 
+  }
+
+  private void setImmersiveMode(boolean enable) {
+    if (this.activity == null) return;
+    try {
+      Window window = this.activity.getWindow();
+      View decorView = window.getDecorView();
+      if (enable) {
+        if (Build.VERSION.SDK_INT >= 30) {
+          window.setDecorFitsSystemWindows(false);
+          WindowInsetsController controller = window.getInsetsController();
+          if (controller != null) {
+            controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+            controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+          }
+        } else {
+          int flags = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+              | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+              | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+              | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+              | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+              | View.SYSTEM_UI_FLAG_FULLSCREEN;
+          decorView.setSystemUiVisibility(flags);
+        }
+      } else {
+        if (Build.VERSION.SDK_INT >= 30) {
+          WindowInsetsController controller = window.getInsetsController();
+          if (controller != null) {
+            controller.show(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+          }
+          window.setDecorFitsSystemWindows(true);
+        } else {
+          decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+        }
+      }
+    } catch (Throwable ignored) {}
   }
 
   public void capturePicFromDevAndSave() {
