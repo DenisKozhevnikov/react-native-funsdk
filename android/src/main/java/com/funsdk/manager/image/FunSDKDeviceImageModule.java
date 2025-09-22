@@ -41,6 +41,7 @@ import com.manager.device.media.download.DownloadManager;
 
 public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implements IFunSDKResult {
   private ReactApplicationContext reactContext;
+  private static final String TAG_DWL = "DOWNLOAD_BY_TIME";
 
   @Override
   public String getName() {
@@ -260,8 +261,10 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
       final int channel = params.hasKey(Constants.DEVICE_CHANNEL) ? params.getInt(Constants.DEVICE_CHANNEL) : 0;
       final int streamType = params.hasKey("streamType") ? params.getInt("streamType") : 0;
       final int fileType = params.hasKey("fileType") ? params.getInt("fileType") : 0;
+      android.util.Log.e(TAG_DWL, "downloadSingleFileByTime call: devId=" + devId + ", path=" + savePath + ", ch=" + channel + ", streamType=" + streamType + ", fileType=" + fileType + ", start=" + start + ", end=" + end);
       startDownloadByTime(devId, savePath, start, end, channel, streamType, fileType, promise);
     } catch (Exception e) {
+      android.util.Log.e(TAG_DWL, "downloadSingleFileByTime exception", e);
       promise.reject("ANDROID_DOWNLOAD_BY_TIME_ERROR", e);
     }
   }
@@ -378,12 +381,21 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
     endCal.set(end.getInt("year"), end.getInt("month") - 1, end.getInt("day"),
         end.getInt("hour"), end.getInt("minute"), end.getInt("second"));
 
+    android.util.Log.e(TAG_DWL, "startDownloadByTime params: devId=" + devId
+        + ", savePath=" + savePath
+        + ", startCal=" + startCal.getTime()
+        + ", endCal=" + endCal.getTime()
+        + ", ch=" + channel
+        + ", streamType=" + streamType
+        + ", fileType=" + fileType);
+
     final DownloadManager dm = DownloadManager.getInstance(new DownloadManager.OnDownloadListener() {
       @Override
       public void onDownload(DownloadInfo info) {
         if (info == null) {
           return;
         }
+        android.util.Log.e(TAG_DWL, "onDownload state=" + info.getDownloadState() + ", file=" + info.getSaveFileName() + ", seq=" + info.getSeq());
         if (info.getDownloadState() != DownloadManager.DOWNLOAD_STATE_PROGRESS) {
           WritableMap map = Arguments.createMap();
           boolean success = false;
@@ -394,6 +406,7 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
           map.putBoolean("isSuccess", success);
           map.putString("filePath", info.getSaveFileName());
           map.putInt("seq", info.getSeq());
+          android.util.Log.e(TAG_DWL, "download finished: success=" + success + ", filePath=" + info.getSaveFileName());
           promise.resolve(map);
         }
       }
@@ -431,9 +444,12 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
       di.setSaveFileName(savePath);
       // Download by time
       di.setDownloadType(Define.DOWNLOAD_VIDEO_BY_TIME);
+      android.util.Log.e(TAG_DWL, "enqueue download: savePath=" + savePath + ", downloadType=DOWNLOAD_VIDEO_BY_TIME");
       dm.addDownload(di);
+      android.util.Log.e(TAG_DWL, "startDownload()");
       dm.startDownload();
     } catch (Exception e) {
+      android.util.Log.e(TAG_DWL, "download start exception", e);
       promise.reject("ANDROID_DOWNLOAD_START_ERROR", e);
     }
   }

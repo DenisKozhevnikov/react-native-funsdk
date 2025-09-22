@@ -1,6 +1,7 @@
 package com.funsdk.user.device.config;
 
 import android.os.Message;
+import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -30,6 +31,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
   private int mSeq = 1;
   private final Map<Integer, Promise> pending = new HashMap<>();
   private Promise pendingCmdGeneral = null;
+  private static final String TAG = "DEV_CONFIG_ANDROID";
 
   public FunSDKDevConfigModule(ReactApplicationContext context) {
     super(context);
@@ -71,6 +73,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final int seq = nextSeq();
     pending.put(seq, promise);
 
+    Log.e(TAG, "getDevConfig: devId=" + devId + ", name=" + name + ", outLen=" + nOutBufLen + ", ch=" + channel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevGetConfigByJson(int userId, String devId, String cmd, int outLen, int chn, int timeout, int seq)
     FunSDK.DevGetConfigByJson(mUserId, devId, name, nOutBufLen, channel, timeout, seq);
   }
@@ -92,6 +95,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     pending.put(seq, promise);
 
     final String jsonStr = json != null ? json : "";
+    Log.e(TAG, "setDevConfig: devId=" + devId + ", name=" + name + ", jsonLen=" + jsonStr.length() + ", ch=" + channel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevSetConfigByJson(int userId, String devId, String cmd, String json, int chn, int timeout, int seq)
     FunSDK.DevSetConfigByJson(mUserId, devId, name, jsonStr, channel, timeout, seq);
   }
@@ -116,6 +120,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     pendingCmdGeneral = promise;
 
     byte[] inBytes = param != null ? param.getBytes(Charset.forName("UTF-8")) : null;
+    Log.e(TAG, "DevCmdGeneral: devId=" + devId + ", cmdReq=" + cmdReq + ", cmd=" + cmd + ", isBinary=" + isBinary + ", timeout=" + timeout + ", inLen=" + (inBytes != null ? inBytes.length : 0) + ", cmdRes=" + cmdRes);
     // int DevCmdGeneral(int userId, String devId, int cmdType, String cmd, int isBinary, int timeout, byte[] inData, int inLen, int cmdRes)
     FunSDK.DevCmdGeneral(mUserId, devId, cmdReq, cmd, isBinary, timeout, inBytes, inParamLen, cmdRes);
   }
@@ -129,6 +134,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final int seq = msg.arg2; // FunSDK обычно возвращает seq в arg2
 
     Promise promise = pending.remove(seq);
+    Log.e(TAG, "OnFunSDKResult: what=" + what + ", arg1=" + arg1 + ", seq=" + seq + ", pDataLen=" + (ex != null && ex.pData != null ? ex.pData.length : -1));
 
     try {
       if (what == EUIMSG.DEV_GET_JSON || what == EUIMSG.DEV_GET_CONFIG) {
@@ -137,8 +143,10 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
           WritableMap map = Arguments.createMap();
           map.putString("data", data);
           if (promise != null) promise.resolve(map);
+          Log.e(TAG, "DEV_GET_CONFIG success: dataLen=" + (data != null ? data.length() : 0));
         } else {
           if (promise != null) promise.reject(String.valueOf(arg1), "DEV_GET_CONFIG failed");
+          Log.e(TAG, "DEV_GET_CONFIG failed: err=" + arg1);
         }
         return 0;
       }
@@ -148,8 +156,10 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
           WritableMap map = Arguments.createMap();
           map.putBoolean("success", true);
           if (promise != null) promise.resolve(map);
+          Log.e(TAG, "DEV_SET_CONFIG success");
         } else {
           if (promise != null) promise.reject(String.valueOf(arg1), "DEV_SET_CONFIG failed");
+          Log.e(TAG, "DEV_SET_CONFIG failed: err=" + arg1);
         }
         return 0;
       }
@@ -163,14 +173,19 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
             pendingCmdGeneral.resolve(map);
             pendingCmdGeneral = null;
           }
+          Log.e(TAG, "DEV_CMD_EN success: dataLen=" + (data != null ? data.length() : 0));
         } else {
           if (pendingCmdGeneral != null) {
             pendingCmdGeneral.reject(String.valueOf(arg1), "DEV_CMD_EN failed");
             pendingCmdGeneral = null;
           }
+          Log.e(TAG, "DEV_CMD_EN failed: err=" + arg1);
         }
         return 0;
       }
+
+      // Неизвестный what — оставим след в логе для диагностики
+      Log.e(TAG, "Unhandled what: " + what + ", arg1=" + arg1 + ", seq=" + seq);
     } catch (Throwable t) {
       if (promise != null) {
         promise.reject("FunSDKDevConfigModule", t);
@@ -178,6 +193,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
         pendingCmdGeneral.reject("FunSDKDevConfigModule", t);
         pendingCmdGeneral = null;
       }
+      Log.e(TAG, "OnFunSDKResult exception", t);
     }
 
     return 0;

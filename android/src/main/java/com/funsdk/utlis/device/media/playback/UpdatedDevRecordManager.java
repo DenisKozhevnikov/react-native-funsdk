@@ -243,7 +243,12 @@ public class UpdatedDevRecordManager extends RecordManager {
     } else {
       stopRecord();
       setPlaySpeed(0);
-      FunSDK.MediaSeekToTime(playerAttribute.getPlayHandle(), 0, absTime, 0);
+      // Если задан абсолютный таргет (>0) — используем его, иначе выполняем относительный seek на nTimes секунд
+      if (absTime > 0) {
+        FunSDK.MediaSeekToTime(playerAttribute.getPlayHandle(), 0, absTime, 0);
+      } else {
+        FunSDK.MediaSeekToTime(playerAttribute.getPlayHandle(), nTimes, 0, 0);
+      }
       setPlayState(E_STATE_PLAY_SEEK);
     }
     return 0;
