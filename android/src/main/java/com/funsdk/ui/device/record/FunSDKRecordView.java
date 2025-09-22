@@ -11,6 +11,9 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.FrameLayout;
 import android.os.Message;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.Arguments;
@@ -75,6 +78,7 @@ public class FunSDKRecordView extends LinearLayout
   private DownloadManager downloadManager;
   private List<H264_DVR_FILE_DATA> recordList;
   private int recordPlayType = PLAY_DEV_PLAYBACK;
+  private int currentAbsTime = 0; // seconds since epoch used by FunSDK.ToTimeType
 
   public FunSDKRecordView(ThemedReactContext context) {
     super(context);
@@ -358,7 +362,15 @@ public class FunSDKRecordView extends LinearLayout
   }
 
   public void seekToTime(int addTime, int absTime) {
-    recordManager.seekToTime(addTime, absTime);
+    int targetAbsTime = absTime;
+    if (targetAbsTime <= 0) {
+      // Use last known playback time if available
+      try {
+        targetAbsTime = this.currentAbsTime + addTime;
+      } catch (Throwable ignored) {
+      }
+    }
+    recordManager.seekToTime(addTime, targetAbsTime);
   }
 
   public String capture(String path) {
@@ -754,6 +766,19 @@ public class FunSDKRecordView extends LinearLayout
     map.putString("time", time);
     map.putString("rate", String.format("%d/S", rate));
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_SHOW_RATE_AND_TIME);
+
+    // Update absolute playback time for accurate seeking (+/- 15s etc.)
+    try {
+      // Expecting format yyyy-MM-dd HH:mm:ss
+      SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+      Date d = df.parse(time);
+      if (d != null) {
+        int[] t = new int[] { d.getYear() + 1900, d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes(),
+            d.getSeconds() };
+        this.currentAbsTime = FunSDK.ToTimeType(t);
+      }
+    } catch (Throwable ignored) {
+    }
   }
 
   @Override

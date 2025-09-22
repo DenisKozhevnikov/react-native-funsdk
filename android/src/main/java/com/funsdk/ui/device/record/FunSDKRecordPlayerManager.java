@@ -90,6 +90,8 @@ public class FunSDKRecordPlayerManager extends SimpleViewManager<FunSDKRecordVie
   private static final int COMMAND_DOWNLOAD_FILE_ID = 14;
   private static final String COMMAND_SET_PLAY_SPEED = "setPlaySpeed";
   private static final int COMMAND_SET_PLAY_SPEED_ID = 15;
+  private static final String COMMAND_SEEK_TO_TIME = "seekToTime";
+  private static final int COMMAND_SEEK_TO_TIME_ID = 19;
   // private static final String COMMAND_SEARCH_RECORD_FILE_BY_TIME =
   // "searchRecordFileByTime";
   // private static final int COMMAND_SEARCH_RECORD_FILE_BY_TIME_ID = 16;
@@ -115,6 +117,7 @@ public class FunSDKRecordPlayerManager extends SimpleViewManager<FunSDKRecordVie
     commandsMap.put(COMMAND_IS_RECORD_PLAY, COMMAND_IS_RECORD_PLAY_ID);
     commandsMap.put(COMMAND_DOWNLOAD_FILE, COMMAND_DOWNLOAD_FILE_ID);
     commandsMap.put(COMMAND_SET_PLAY_SPEED, COMMAND_SET_PLAY_SPEED_ID);
+    commandsMap.put(COMMAND_SEEK_TO_TIME, COMMAND_SEEK_TO_TIME_ID);
     // commandsMap.put(COMMAND_SEARCH_RECORD_FILE_BY_TIME,
     // COMMAND_SEARCH_RECORD_FILE_BY_TIME_ID);
     commandsMap.put(COMMAND_START_PLAY_RECORD_BY_TIME, COMMAND_START_PLAY_RECORD_BY_TIME_ID);
@@ -265,6 +268,12 @@ public class FunSDKRecordPlayerManager extends SimpleViewManager<FunSDKRecordVie
       android.util.Log.e("RECORD_DEBUG", "FunSDKRecordPlayerManager - About to call view.startPlayRecordByTime");
       view.startPlayRecordByTime(start, end);
 
+    }
+
+    if (commandId == COMMAND_SEEK_TO_TIME_ID) {
+      int addTime = args.getInt(0);
+      int absTime = args.getInt(1);
+      view.seekToTime(addTime, absTime);
     }
   }
 
