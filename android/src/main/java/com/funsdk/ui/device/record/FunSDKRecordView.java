@@ -334,6 +334,19 @@ public class FunSDKRecordView extends LinearLayout
 
   private void startPlayWithAdjustments(Calendar startCalendar, Calendar endCalendar) {
     recordManager.startPlay(startCalendar, endCalendar);
+    // Initialize absolute playback time immediately so +/- seek works before first time callback
+    try {
+      int[] sTime = new int[] {
+        startCalendar.get(Calendar.YEAR),
+        startCalendar.get(Calendar.MONTH) + 1,
+        startCalendar.get(Calendar.DAY_OF_MONTH),
+        startCalendar.get(Calendar.HOUR_OF_DAY),
+        startCalendar.get(Calendar.MINUTE),
+        startCalendar.get(Calendar.SECOND)
+      };
+      this.currentAbsTime = FunSDK.ToTimeType(sTime);
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - init currentAbsTime: " + this.currentAbsTime);
+    } catch (Throwable ignored) {}
     // Post to adjust SurfaceView after RecordManager attaches it
     post(new Runnable() {
       @Override
