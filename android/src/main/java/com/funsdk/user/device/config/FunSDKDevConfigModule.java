@@ -138,14 +138,23 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final String name = params.getString("name");
     final int nOutBufLen = params.hasKey("nOutBufLen") ? params.getInt("nOutBufLen") : 0;
     final int channel = params.hasKey("channel") ? params.getInt("channel") : -1;
-    final int timeout = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
+    final int timeoutRaw = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
+
+    int effectiveChannel = channel;
+    if (isGlobalConfigName(name)) {
+      effectiveChannel = -1;
+    }
+    int timeout = timeoutRaw;
+    if (isGlobalConfigName(name) && timeoutRaw < 12000) {
+      timeout = 15000;
+    }
 
     final int seq = nextSeq();
-    pending.put(seq, new Pending(promise, devId, name, channel, timeout, "GET"));
+    pending.put(seq, new Pending(promise, devId, name, effectiveChannel, timeout, "GET"));
 
-    Log.e(TAG, "getDevConfig: devId=" + devId + ", name=" + name + ", outLen=" + nOutBufLen + ", ch=" + channel + ", timeout=" + timeout + ", seq=" + seq);
+    Log.e(TAG, "getDevConfig: devId=" + devId + ", name=" + name + ", outLen=" + nOutBufLen + ", chRaw=" + channel + ", effectiveCh=" + effectiveChannel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevGetConfigByJson(int userId, String devId, String cmd, int outLen, int chn, int timeout, int seq)
-    int ret = FunSDK.DevGetConfigByJson(mUserId, devId, name, nOutBufLen, channel, timeout, seq);
+    int ret = FunSDK.DevGetConfigByJson(mUserId, devId, name, nOutBufLen, effectiveChannel, timeout, seq);
     if (ret < 0) {
       Runnable r = timeoutRunnables.remove(seq);
       if (r != null) {
@@ -331,7 +340,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
           }
           // Fallback-сопоставление по имени конфигурации, если seq не совпал
           if (promise == null && data != null && !data.isEmpty()) {
-            String returnedName = extractNameFromJson(data);
+            String returnedName = extractNameFromJson(sanitizeJson(data));
             if (returnedName != null) {
               Integer matchedSeq = null;
               Pending matchedPending = null;
