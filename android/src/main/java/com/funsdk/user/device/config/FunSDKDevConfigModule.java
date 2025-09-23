@@ -1,6 +1,8 @@
 package com.funsdk.user.device.config;
 
 import android.os.Message;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -19,6 +21,10 @@ import com.lib.EUIMSG;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 /**
  * Android-аналог iOS-модуля FunSDKDevConfigModule.
@@ -29,9 +35,40 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
   private int mUserId = 0;
   private boolean isRegistered = false;
   private int mSeq = 1;
-  private final Map<Integer, Promise> pending = new HashMap<>();
+  private final Map<Integer, Pending> pending = new HashMap<>();
+  private final Map<Integer, Runnable> timeoutRunnables = new HashMap<>();
+  private final Handler mainHandler = new Handler(Looper.getMainLooper());
   private Promise pendingCmdGeneral = null;
+  private Runnable pendingCmdGeneralTimeout = null;
   private static final String TAG = "DEV_CONFIG_ANDROID";
+
+  private static class Pending {
+    final Promise promise;
+    final String devId;
+    final String name;
+    final int channel;
+    final int timeoutMs;
+
+    Pending(Promise promise, String devId, String name, int channel, int timeoutMs) {
+      this.promise = promise;
+      this.devId = devId;
+      this.name = name;
+      this.channel = channel;
+      this.timeoutMs = timeoutMs;
+    }
+  }
+
+  private String extractNameFromJson(String json) {
+    try {
+      if (json == null || json.isEmpty()) return null;
+      JSONObject obj = new JSONObject(json);
+      if (obj.has("Name")) {
+        return obj.getString("Name");
+      }
+    } catch (JSONException ignored) {
+    }
+    return null;
+  }
 
   public FunSDKDevConfigModule(ReactApplicationContext context) {
     super(context);
@@ -55,6 +92,21 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     }
   }
 
+  private boolean isGlobalConfigName(String name) {
+    if (name == null) return false;
+    String n = name.trim();
+    if (n.isEmpty()) return false;
+    // Набор известных глобальных узлов, для которых требуется channel = -1
+    if (n.equals("SystemInfo")) return true;
+    if (n.equals("SystemFunction")) return true;
+    if (n.equals("EncodeCapability")) return true;
+    if (n.equals("General.Location")) return true;
+    if (n.contains("Simplify.Encode")) return true;
+    // Часто системные узлы начинаются с "System"
+    if (n.startsWith("System")) return true;
+    return false;
+  }
+
   // === Public RN API ===
 
   /**
@@ -71,11 +123,45 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final int timeout = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
 
     final int seq = nextSeq();
-    pending.put(seq, promise);
+    pending.put(seq, new Pending(promise, devId, name, channel, timeout));
 
     Log.e(TAG, "getDevConfig: devId=" + devId + ", name=" + name + ", outLen=" + nOutBufLen + ", ch=" + channel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevGetConfigByJson(int userId, String devId, String cmd, int outLen, int chn, int timeout, int seq)
-    FunSDK.DevGetConfigByJson(mUserId, devId, name, nOutBufLen, channel, timeout, seq);
+    int ret = FunSDK.DevGetConfigByJson(mUserId, devId, name, nOutBufLen, channel, timeout, seq);
+    if (ret < 0) {
+      Runnable r = timeoutRunnables.remove(seq);
+      if (r != null) {
+        mainHandler.removeCallbacks(r);
+      }
+      Pending removed = pending.remove(seq);
+      Log.e(TAG, "DevGetConfigByJson immediate error: ret=" + ret + ", name=" + name + ", ch=" + channel + ", outLen=" + nOutBufLen + ", seq=" + seq);
+      if (removed != null && removed.promise != null) {
+        try {
+          removed.promise.reject(String.valueOf(ret), "DEV_GET_CONFIG immediate error");
+        } catch (Throwable t) {
+          Log.e(TAG, "Immediate reject failed", t);
+        }
+      }
+      return;
+    }
+
+    Runnable r = new Runnable() {
+      @Override
+      public void run() {
+        Pending removed = pending.remove(seq);
+        timeoutRunnables.remove(seq);
+        if (removed != null) {
+          Log.e(TAG, "TIMEOUT getDevConfig: devId=" + removed.devId + ", name=" + removed.name + ", ch=" + removed.channel + ", timeout=" + removed.timeoutMs + ", seq=" + seq);
+          try {
+            removed.promise.reject("Timeout", "Timeout: " + removed.name);
+          } catch (Throwable t) {
+            Log.e(TAG, "Reject timeout failed", t);
+          }
+        }
+      }
+    };
+    timeoutRunnables.put(seq, r);
+    mainHandler.postDelayed(r, timeout);
   }
 
   /**
@@ -92,12 +178,46 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final int timeout = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
 
     final int seq = nextSeq();
-    pending.put(seq, promise);
+    pending.put(seq, new Pending(promise, devId, name, channel, timeout));
 
     final String jsonStr = json != null ? json : "";
     Log.e(TAG, "setDevConfig: devId=" + devId + ", name=" + name + ", jsonLen=" + jsonStr.length() + ", ch=" + channel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevSetConfigByJson(int userId, String devId, String cmd, String json, int chn, int timeout, int seq)
-    FunSDK.DevSetConfigByJson(mUserId, devId, name, jsonStr, channel, timeout, seq);
+    int ret = FunSDK.DevSetConfigByJson(mUserId, devId, name, jsonStr, channel, timeout, seq);
+    if (ret < 0) {
+      Runnable r = timeoutRunnables.remove(seq);
+      if (r != null) {
+        mainHandler.removeCallbacks(r);
+      }
+      Pending removed = pending.remove(seq);
+      Log.e(TAG, "DevSetConfigByJson immediate error: ret=" + ret + ", name=" + name + ", ch=" + channel + ", seq=" + seq);
+      if (removed != null && removed.promise != null) {
+        try {
+          removed.promise.reject(String.valueOf(ret), "DEV_SET_CONFIG immediate error");
+        } catch (Throwable t) {
+          Log.e(TAG, "Immediate reject failed", t);
+        }
+      }
+      return;
+    }
+
+    Runnable r = new Runnable() {
+      @Override
+      public void run() {
+        Pending removed = pending.remove(seq);
+        timeoutRunnables.remove(seq);
+        if (removed != null) {
+          Log.e(TAG, "TIMEOUT setDevConfig: devId=" + removed.devId + ", name=" + removed.name + ", ch=" + removed.channel + ", timeout=" + removed.timeoutMs + ", seq=" + seq);
+          try {
+            removed.promise.reject("Timeout", "Timeout: " + removed.name);
+          } catch (Throwable t) {
+            Log.e(TAG, "Reject timeout failed", t);
+          }
+        }
+      }
+    };
+    timeoutRunnables.put(seq, r);
+    mainHandler.postDelayed(r, timeout);
   }
 
   /**
@@ -118,11 +238,32 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
 
     // В Android Java API DevCmdGeneral не принимает seq, поэтому храним одиночный promise
     pendingCmdGeneral = promise;
+    if (pendingCmdGeneralTimeout != null) {
+      mainHandler.removeCallbacks(pendingCmdGeneralTimeout);
+      pendingCmdGeneralTimeout = null;
+    }
 
     byte[] inBytes = param != null ? param.getBytes(Charset.forName("UTF-8")) : null;
     Log.e(TAG, "DevCmdGeneral: devId=" + devId + ", cmdReq=" + cmdReq + ", cmd=" + cmd + ", isBinary=" + isBinary + ", timeout=" + timeout + ", inLen=" + (inBytes != null ? inBytes.length : 0) + ", cmdRes=" + cmdRes);
     // int DevCmdGeneral(int userId, String devId, int cmdType, String cmd, int isBinary, int timeout, byte[] inData, int inLen, int cmdRes)
     FunSDK.DevCmdGeneral(mUserId, devId, cmdReq, cmd, isBinary, timeout, inBytes, inParamLen, cmdRes);
+
+    pendingCmdGeneralTimeout = new Runnable() {
+      @Override
+      public void run() {
+        if (pendingCmdGeneral != null) {
+          Log.e(TAG, "TIMEOUT DevCmdGeneral: cmdReq=" + cmdReq + ", cmd=" + cmd + ", timeout=" + timeout);
+          Promise p = pendingCmdGeneral;
+          pendingCmdGeneral = null;
+          try {
+            p.reject("Timeout", "Timeout: DevCmdGeneral");
+          } catch (Throwable t) {
+            Log.e(TAG, "Reject timeout failed", t);
+          }
+        }
+      }
+    };
+    mainHandler.postDelayed(pendingCmdGeneralTimeout, timeout);
   }
 
   // === IFunSDKResult ===
@@ -133,13 +274,53 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final int arg1 = msg.arg1;
     final int seq = msg.arg2; // FunSDK обычно возвращает seq в arg2
 
-    Promise promise = pending.remove(seq);
+    Pending pendingReq = pending.remove(seq);
+    if (pendingReq != null) {
+      Runnable r = timeoutRunnables.remove(seq);
+      if (r != null) {
+        mainHandler.removeCallbacks(r);
+      }
+    }
+
+    Promise promise = pendingReq != null ? pendingReq.promise : null;
     Log.e(TAG, "OnFunSDKResult: what=" + what + ", arg1=" + arg1 + ", seq=" + seq + ", pDataLen=" + (ex != null && ex.pData != null ? ex.pData.length : -1));
 
     try {
       if (what == EUIMSG.DEV_GET_JSON || what == EUIMSG.DEV_GET_CONFIG) {
         if (arg1 >= 0) {
-          String data = ex != null && ex.pData != null ? new String(ex.pData, Charset.forName("UTF-8")).trim() : "";
+          String data = "";
+          if (ex != null) {
+            if (ex.pData != null && ex.pData.length > 0) {
+              data = new String(ex.pData, Charset.forName("UTF-8")).trim();
+            } else if (ex.str != null) {
+              data = ex.str.trim();
+            }
+          }
+          // Fallback-сопоставление по имени конфигурации, если seq не совпал
+          if (promise == null && data != null && !data.isEmpty()) {
+            String returnedName = extractNameFromJson(data);
+            if (returnedName != null) {
+              Integer matchedSeq = null;
+              Pending matchedPending = null;
+              Iterator<Entry<Integer, Pending>> it = pending.entrySet().iterator();
+              while (it.hasNext()) {
+                Entry<Integer, Pending> e = it.next();
+                Pending p = e.getValue();
+                if (p != null && returnedName.equals(p.name)) {
+                  matchedSeq = e.getKey();
+                  matchedPending = p;
+                  it.remove();
+                  break;
+                }
+              }
+              if (matchedSeq != null && matchedPending != null) {
+                Runnable r2 = timeoutRunnables.remove(matchedSeq);
+                if (r2 != null) mainHandler.removeCallbacks(r2);
+                promise = matchedPending.promise;
+                Log.e(TAG, "Matched pending by name fallback: name=" + returnedName + ", matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
+              }
+            }
+          }
           WritableMap map = Arguments.createMap();
           map.putString("data", data);
           if (promise != null) promise.resolve(map);
@@ -170,12 +351,20 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
           WritableMap map = Arguments.createMap();
           map.putString("data", data);
           if (pendingCmdGeneral != null) {
+            if (pendingCmdGeneralTimeout != null) {
+              mainHandler.removeCallbacks(pendingCmdGeneralTimeout);
+              pendingCmdGeneralTimeout = null;
+            }
             pendingCmdGeneral.resolve(map);
             pendingCmdGeneral = null;
           }
           Log.e(TAG, "DEV_CMD_EN success: dataLen=" + (data != null ? data.length() : 0));
         } else {
           if (pendingCmdGeneral != null) {
+            if (pendingCmdGeneralTimeout != null) {
+              mainHandler.removeCallbacks(pendingCmdGeneralTimeout);
+              pendingCmdGeneralTimeout = null;
+            }
             pendingCmdGeneral.reject(String.valueOf(arg1), "DEV_CMD_EN failed");
             pendingCmdGeneral = null;
           }
@@ -190,6 +379,10 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
       if (promise != null) {
         promise.reject("FunSDKDevConfigModule", t);
       } else if (pendingCmdGeneral != null) {
+        if (pendingCmdGeneralTimeout != null) {
+          mainHandler.removeCallbacks(pendingCmdGeneralTimeout);
+          pendingCmdGeneralTimeout = null;
+        }
         pendingCmdGeneral.reject("FunSDKDevConfigModule", t);
         pendingCmdGeneral = null;
       }
