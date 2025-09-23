@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import org.json.JSONObject;
 import org.json.JSONException;
+import com.funsdk.utils.DataConverter;
 
 /**
  * Android-аналог iOS-модуля FunSDKDevConfigModule.
@@ -48,13 +49,15 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final String name;
     final int channel;
     final int timeoutMs;
+    final String op; // "GET", "SET", "CMD"
 
-    Pending(Promise promise, String devId, String name, int channel, int timeoutMs) {
+    Pending(Promise promise, String devId, String name, int channel, int timeoutMs, String op) {
       this.promise = promise;
       this.devId = devId;
       this.name = name;
       this.channel = channel;
       this.timeoutMs = timeoutMs;
+      this.op = op;
     }
   }
 
@@ -68,6 +71,21 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     } catch (JSONException ignored) {
     }
     return null;
+  }
+
+  private String sanitizeJson(String raw) {
+    if (raw == null) return "";
+    String s = raw;
+    int zero = s.indexOf('\u0000');
+    if (zero >= 0) {
+      s = s.substring(0, zero);
+    }
+    int start = s.indexOf('{');
+    int end = s.lastIndexOf('}');
+    if (start >= 0 && end >= start) {
+      s = s.substring(start, end + 1);
+    }
+    return s.trim();
   }
 
   public FunSDKDevConfigModule(ReactApplicationContext context) {
@@ -123,7 +141,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final int timeout = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
 
     final int seq = nextSeq();
-    pending.put(seq, new Pending(promise, devId, name, channel, timeout));
+    pending.put(seq, new Pending(promise, devId, name, channel, timeout, "GET"));
 
     Log.e(TAG, "getDevConfig: devId=" + devId + ", name=" + name + ", outLen=" + nOutBufLen + ", ch=" + channel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevGetConfigByJson(int userId, String devId, String cmd, int outLen, int chn, int timeout, int seq)
@@ -178,7 +196,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final int timeout = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
 
     final int seq = nextSeq();
-    pending.put(seq, new Pending(promise, devId, name, channel, timeout));
+    pending.put(seq, new Pending(promise, devId, name, channel, timeout, "SET"));
 
     final String jsonStr = json != null ? json : "";
     Log.e(TAG, "setDevConfig: devId=" + devId + ", name=" + name + ", jsonLen=" + jsonStr.length() + ", ch=" + channel + ", timeout=" + timeout + ", seq=" + seq);
@@ -200,6 +218,21 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
       }
       return;
     }
+
+    // Коалесинг: отменим предыдущие SET на тот же (devId,name), оставим актуальный
+    try {
+      for (Iterator<Entry<Integer, Pending>> it = pending.entrySet().iterator(); it.hasNext();) {
+        Entry<Integer, Pending> e = it.next();
+        if (e.getKey() == seq) continue;
+        Pending p = e.getValue();
+        if (p != null && "SET".equals(p.op) && devId.equals(p.devId) && name.equals(p.name)) {
+          Runnable r2 = timeoutRunnables.remove(e.getKey());
+          if (r2 != null) mainHandler.removeCallbacks(r2);
+          try { p.promise.reject("Cancelled", "Superseded by newer setDevConfig"); } catch (Throwable ignored) {}
+          it.remove();
+        }
+      }
+    } catch (Throwable ignored) {}
 
     Runnable r = new Runnable() {
       @Override
@@ -321,26 +354,158 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
               }
             }
           }
-          WritableMap map = Arguments.createMap();
-          map.putString("data", data);
-          if (promise != null) promise.resolve(map);
+          if (promise != null) {
+            try {
+              String cleaned = sanitizeJson(data);
+              if (cleaned == null || cleaned.isEmpty()) {
+                promise.reject("ParseError", "Empty JSON in DEV_GET_CONFIG");
+              } else {
+                try {
+                  WritableMap parsed = DataConverter.parseToWritableMap(cleaned);
+                  promise.resolve(parsed);
+                } catch (Throwable inner) {
+                  // резерв: вынем простые поля Name/SerialNo
+                  WritableMap fallback = Arguments.createMap();
+                  try {
+                    int nameIdx = cleaned.indexOf("\"Name\"");
+                    if (nameIdx >= 0) {
+                      int colon = cleaned.indexOf(':', nameIdx);
+                      int q1 = cleaned.indexOf('"', colon + 1);
+                      int q2 = cleaned.indexOf('"', q1 + 1);
+                      if (q1 > 0 && q2 > q1) fallback.putString("Name", cleaned.substring(q1 + 1, q2));
+                    }
+                  } catch (Throwable ignored) {}
+                  try {
+                    int snIdx = cleaned.indexOf("\"SerialNo\"");
+                    if (snIdx >= 0) {
+                      int colon = cleaned.indexOf(':', snIdx);
+                      int q1 = cleaned.indexOf('"', colon + 1);
+                      int q2 = cleaned.indexOf('"', q1 + 1);
+                      if (q1 > 0 && q2 > q1) fallback.putString("SerialNo", cleaned.substring(q1 + 1, q2));
+                    }
+                  } catch (Throwable ignored) {}
+                  promise.resolve(fallback);
+                }
+              }
+            } catch (Throwable t) {
+              promise.reject("ParseError", t);
+            }
+          }
           Log.e(TAG, "DEV_GET_CONFIG success: dataLen=" + (data != null ? data.length() : 0));
         } else {
-          if (promise != null) promise.reject(String.valueOf(arg1), "DEV_GET_CONFIG failed");
-          Log.e(TAG, "DEV_GET_CONFIG failed: err=" + arg1);
+          // Ошибка: пробуем сопоставить pending, даже если seq не совпал
+          if (promise == null) {
+            Integer matchedSeq = null;
+            Pending matchedPending = null;
+            String returnedName = null;
+            try {
+              if (ex != null && ex.str != null) returnedName = extractNameFromJson(ex.str);
+            } catch (Throwable ignored) {}
+            for (Entry<Integer, Pending> e : pending.entrySet()) {
+              Pending p = e.getValue();
+              if (p != null && "GET".equals(p.op)) {
+                if (returnedName == null || returnedName.equals(p.name)) {
+                  matchedSeq = e.getKey();
+                  matchedPending = p;
+                  break;
+                }
+              }
+            }
+            if (matchedSeq != null && matchedPending != null) {
+              Runnable r2 = timeoutRunnables.remove(matchedSeq);
+              if (r2 != null) mainHandler.removeCallbacks(r2);
+              pending.remove(matchedSeq);
+              promise = matchedPending.promise;
+              Log.e(TAG, "Matched GET pending on error: name=" + matchedPending.name + ", matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
+            }
+          }
+          if (promise != null) promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+          Log.e(TAG, "DEV_GET_CONFIG failed: what=" + what + ", err=" + arg1);
         }
         return 0;
       }
 
       if (what == EUIMSG.DEV_SET_JSON || what == EUIMSG.DEV_SET_CONFIG) {
         if (arg1 >= 0) {
-          WritableMap map = Arguments.createMap();
-          map.putBoolean("success", true);
-          if (promise != null) promise.resolve(map);
+          String data = "";
+          if (ex != null) {
+            if (ex.pData != null && ex.pData.length > 0) {
+              data = new String(ex.pData, Charset.forName("UTF-8")).trim();
+            } else if (ex.str != null) {
+              data = ex.str.trim();
+            }
+          }
+          // Fallback: если seq не совпал (например, -1), найдём подходящий pending SET
+          if (promise == null) {
+            Integer matchedSeq = null;
+            Pending matchedPending = null;
+            for (Entry<Integer, Pending> e : pending.entrySet()) {
+              Pending p = e.getValue();
+              if (p != null && "SET".equals(p.op)) {
+                matchedSeq = e.getKey();
+                matchedPending = p;
+                break;
+              }
+            }
+            if (matchedSeq != null && matchedPending != null) {
+              Runnable r2 = timeoutRunnables.remove(matchedSeq);
+              if (r2 != null) mainHandler.removeCallbacks(r2);
+              pending.remove(matchedSeq);
+              promise = matchedPending.promise;
+              // Подменим pendingReq для дальнейшей сборки ответа
+              pendingReq = matchedPending;
+              Log.e(TAG, "Matched SET pending fallback: name=" + pendingReq.name + ", matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
+            }
+          }
+          WritableMap res = Arguments.createMap();
+          try {
+            String cleaned = sanitizeJson(data);
+            WritableMap value = DataConverter.parseToWritableMap(cleaned);
+            // Добьём Name, если SDK вернул пусто
+            if (value != null) {
+              boolean needName = true;
+              try {
+                if (value.hasKey("Name") && value.getString("Name") != null && !value.getString("Name").isEmpty()) {
+                  needName = false;
+                }
+              } catch (Throwable ignored) {}
+              if (needName && pendingReq != null && pendingReq.name != null) {
+                value.putString("Name", pendingReq.name);
+              }
+            }
+            res.putString("s", pendingReq != null ? pendingReq.devId : "");
+            res.putInt("i", 1);
+            res.putMap("value", value);
+          } catch (Throwable t) {
+            res.putString("s", pendingReq != null ? pendingReq.devId : "");
+            res.putInt("i", 1);
+            res.putNull("value");
+          }
+          if (promise != null) promise.resolve(res);
           Log.e(TAG, "DEV_SET_CONFIG success");
         } else {
-          if (promise != null) promise.reject(String.valueOf(arg1), "DEV_SET_CONFIG failed");
-          Log.e(TAG, "DEV_SET_CONFIG failed: err=" + arg1);
+          // Ошибка: сопоставим pending SET даже при некорректном seq
+          if (promise == null) {
+            Integer matchedSeq = null;
+            Pending matchedPending = null;
+            for (Entry<Integer, Pending> e : pending.entrySet()) {
+              Pending p = e.getValue();
+              if (p != null && "SET".equals(p.op)) {
+                matchedSeq = e.getKey();
+                matchedPending = p;
+                break;
+              }
+            }
+            if (matchedSeq != null && matchedPending != null) {
+              Runnable r2 = timeoutRunnables.remove(matchedSeq);
+              if (r2 != null) mainHandler.removeCallbacks(r2);
+              pending.remove(matchedSeq);
+              promise = matchedPending.promise;
+              Log.e(TAG, "Matched SET pending on error: name=" + matchedPending.name + ", matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
+            }
+          }
+          if (promise != null) promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+          Log.e(TAG, "DEV_SET_CONFIG failed: what=" + what + ", err=" + arg1);
         }
         return 0;
       }
@@ -365,10 +530,10 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
               mainHandler.removeCallbacks(pendingCmdGeneralTimeout);
               pendingCmdGeneralTimeout = null;
             }
-            pendingCmdGeneral.reject(String.valueOf(arg1), "DEV_CMD_EN failed");
+            pendingCmdGeneral.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
             pendingCmdGeneral = null;
           }
-          Log.e(TAG, "DEV_CMD_EN failed: err=" + arg1);
+          Log.e(TAG, "DEV_CMD_EN failed: what=" + what + ", err=" + arg1);
         }
         return 0;
       }

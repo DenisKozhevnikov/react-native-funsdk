@@ -54,6 +54,7 @@ const DeviceCard = ({ device }: { device: DetailDeviceType }) => {
   const [deviceNameJsonina, setDeviceNameJsonina] = useState<any>(null);
 
   const updateChannelName = async () => {
+    console.log('deviceNameJsonina: ', deviceNameJsonina);
     if (deviceNameJsonina) {
       // -_-
       const params = [...deviceNameJsonina];
