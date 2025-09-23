@@ -160,6 +160,7 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
                       finish.run();
                     }
                   }
+                  @Override public void reject(String message) { reject("FunSDK", message); }
                   @Override public void reject(String code, String message) {
                     sysInfoDone[0] = true;
                     if (pending.decrementAndGet() == 0) {
@@ -170,6 +171,11 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
                   @Override public void reject(String code, Throwable e) { reject(code, e != null ? e.getMessage() : null); }
                   @Override public void reject(String code, String message, Throwable e) { reject(code, message); }
                   @Override public void reject(Throwable e) { reject("FunSDK", e != null ? e.getMessage() : null); }
+                  @Override public void reject(String code, com.facebook.react.bridge.WritableMap userInfo) { reject(code, (String) null); }
+                  @Override public void reject(String code, Throwable e, com.facebook.react.bridge.WritableMap userInfo) { reject(code, e != null ? e.getMessage() : null); }
+                  @Override public void reject(String code, String message, com.facebook.react.bridge.WritableMap userInfo) { reject(code, message); }
+                  @Override public void reject(String code, String message, Throwable e, com.facebook.react.bridge.WritableMap userInfo) { reject(code, message); }
+                  @Override public void reject(Throwable e, com.facebook.react.bridge.WritableMap userInfo) { reject("FunSDK", e != null ? e.getMessage() : null); }
                 });
               } catch (Throwable ignored) {}
 
