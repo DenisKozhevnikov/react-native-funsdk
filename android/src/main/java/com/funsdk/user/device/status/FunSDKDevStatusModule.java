@@ -63,6 +63,20 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
       final String devUser = params.getString(Constants.DEVICE_LOGIN);
       final String devPwd = params.getString(Constants.DEVICE_PASSWORD);
 
+      // Жёсткая валидация, чтобы не падать внутри DeviceManager
+      if (devId == null || devId.trim().isEmpty()) {
+        promise.reject("FunSDK", "DeviceId is empty");
+        return;
+      }
+      if (devUser == null || devUser.trim().isEmpty()) {
+        promise.reject("FunSDK", "Device login is empty");
+        return;
+      }
+      if (devPwd == null || devPwd.trim().isEmpty()) {
+        promise.reject("FunSDK", "Device password is empty");
+        return;
+      }
+
       // как на iOS: сохранить локальные креды и не вызывать фактический логин
       try {
         FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
@@ -85,11 +99,12 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
       final int networkModeFinal = networkMode;
 
       // Поднимаем реальный логин как на iOS до запросов конфигов
-      DeviceManager.getInstance().loginDev(
-          devId,
-          devUser,
-          devPwd,
-          new DeviceManager.OnDevManagerListener() {
+      try {
+        DeviceManager.getInstance().loginDev(
+            devId,
+            devUser,
+            devPwd,
+            new DeviceManager.OnDevManagerListener() {
             @Override
             public void onSuccess(String s, int i, Object abilityKey) {
               final WritableMap result = Arguments.createMap();
@@ -256,7 +271,10 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
             public void onFailed(String s, int i, String s1, int errorId) {
               promise.reject(s + ", " + i + ", " + s1 + ", " + errorId);
             }
-          });
+            });
+      } catch (Throwable t) {
+        promise.reject("FunSDK", t);
+      }
     }
   }
 
