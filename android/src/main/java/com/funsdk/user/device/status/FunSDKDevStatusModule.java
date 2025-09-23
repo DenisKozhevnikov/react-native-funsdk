@@ -98,13 +98,14 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
               final WritableMap valueMap = Arguments.createMap();
               valueMap.putInt("networkMode", networkModeFinal);
 
-              // Сбор каналов после успешного логина
+              // Параллельно подтянем SystemInfo (UI для "О системе") и каналы
               final int timeoutMs = 6000;
               final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
-              final java.util.concurrent.atomic.AtomicInteger pending = new java.util.concurrent.atomic.AtomicInteger(2);
+              final java.util.concurrent.atomic.AtomicInteger pending = new java.util.concurrent.atomic.AtomicInteger(3);
               final int[] analogRef = new int[] { -1 };
               final int[] digitalRef = new int[] { -1 };
               final boolean[] resolved = new boolean[] { false };
+              final boolean[] sysInfoDone = new boolean[] { false };
 
               final Runnable finish = new Runnable() {
                 @Override
@@ -133,6 +134,44 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
 
               handler.postDelayed(timeout, timeoutMs);
               android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: login success, fetching channels, devId=" + devId + ", timeout=" + timeoutMs);
+
+              // SystemInfo: глобальный узел, ch=-1, timeout 15000
+              try {
+                com.facebook.react.bridge.WritableMap sysParams = com.facebook.react.bridge.Arguments.createMap();
+                sysParams.putString("deviceId", devId);
+                sysParams.putString("name", "SystemInfo");
+                sysParams.putInt("nOutBufLen", 0);
+                sysParams.putInt("channel", -1);
+                sysParams.putInt("timeout", 15000);
+                new com.funsdk.user.device.config.FunSDKDevConfigModule(getReactApplicationContext()).getDevConfig(sysParams, new com.facebook.react.bridge.Promise() {
+                  @Override public void resolve(Object value) {
+                    try {
+                      com.facebook.react.bridge.ReadableMap m = (com.facebook.react.bridge.ReadableMap) value;
+                      if (m != null) {
+                        if (m.hasKey("HardWare")) valueMap.putString("HardWare", m.getString("HardWare"));
+                        if (m.hasKey("HardWareVersion")) valueMap.putString("HardWareVersion", m.getString("HardWareVersion"));
+                        if (m.hasKey("SoftWareVersion")) valueMap.putString("SoftWareVersion", m.getString("SoftWareVersion"));
+                        if (m.hasKey("BuildTime")) valueMap.putString("BuildTime", m.getString("BuildTime"));
+                      }
+                    } catch (Throwable ignored) {}
+                    sysInfoDone[0] = true;
+                    if (pending.decrementAndGet() == 0) {
+                      handler.removeCallbacks(timeout);
+                      finish.run();
+                    }
+                  }
+                  @Override public void reject(String code, String message) {
+                    sysInfoDone[0] = true;
+                    if (pending.decrementAndGet() == 0) {
+                      handler.removeCallbacks(timeout);
+                      finish.run();
+                    }
+                  }
+                  @Override public void reject(String code, Throwable e) { reject(code, e != null ? e.getMessage() : null); }
+                  @Override public void reject(String code, String message, Throwable e) { reject(code, message); }
+                  @Override public void reject(Throwable e) { reject("FunSDK", e != null ? e.getMessage() : null); }
+                });
+              } catch (Throwable ignored) {}
 
               DeviceManager.OnDevManagerListener analogListener = new DeviceManager.OnDevManagerListener() {
                 @Override

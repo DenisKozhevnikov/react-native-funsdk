@@ -125,6 +125,17 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     return false;
   }
 
+  private boolean isEncodingConfigName(String name) {
+    if (name == null) return false;
+    String n = name.trim();
+    if (n.isEmpty()) return false;
+    if (n.startsWith("AVEnc.")) return true;
+    if (n.startsWith("Encode")) return true;
+    if (n.equals("AVEnc.SmartH264V2")) return true;
+    if (n.equals("AVEnc.EncodeStaticParam")) return true;
+    return false;
+  }
+
   // === Public RN API ===
 
   /**
@@ -143,18 +154,22 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     int effectiveChannel = channel;
     if (isGlobalConfigName(name)) {
       effectiveChannel = -1;
+    } else if (isEncodingConfigName(name) && effectiveChannel < 0) {
+      effectiveChannel = 0; // кодировочные узлы требуют канальный ch
     }
     int timeout = timeoutRaw;
-    if (isGlobalConfigName(name) && timeoutRaw < 12000) {
-      timeout = 15000;
-    }
+    if (isGlobalConfigName(name) && timeoutRaw < 12000) timeout = 15000;
+    if (isEncodingConfigName(name) && timeoutRaw < 12000) timeout = 15000;
 
     final int seq = nextSeq();
     pending.put(seq, new Pending(promise, devId, name, effectiveChannel, timeout, "GET"));
 
-    Log.e(TAG, "getDevConfig: devId=" + devId + ", name=" + name + ", outLen=" + nOutBufLen + ", chRaw=" + channel + ", effectiveCh=" + effectiveChannel + ", timeout=" + timeout + ", seq=" + seq);
+    int outLenEff = nOutBufLen;
+    if (isEncodingConfigName(name) && outLenEff <= 0) outLenEff = 10 * 1024;
+
+    Log.e(TAG, "getDevConfig: devId=" + devId + ", name=" + name + ", outLenRaw=" + nOutBufLen + ", outLenEff=" + outLenEff + ", chRaw=" + channel + ", effectiveCh=" + effectiveChannel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevGetConfigByJson(int userId, String devId, String cmd, int outLen, int chn, int timeout, int seq)
-    int ret = FunSDK.DevGetConfigByJson(mUserId, devId, name, nOutBufLen, effectiveChannel, timeout, seq);
+    int ret = FunSDK.DevGetConfigByJson(mUserId, devId, name, outLenEff, effectiveChannel, timeout, seq);
     if (ret < 0) {
       Runnable r = timeoutRunnables.remove(seq);
       if (r != null) {
@@ -202,15 +217,23 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final String name = params.getString("name");
     final String json = params.getString("param");
     final int channel = params.hasKey("channel") ? params.getInt("channel") : -1;
-    final int timeout = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
+    final int timeoutRaw = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
+
+    int effectiveChannel = channel;
+    if (isGlobalConfigName(name)) effectiveChannel = -1;
+    else if (isEncodingConfigName(name) && effectiveChannel < 0) effectiveChannel = 0;
+
+    int timeout = timeoutRaw;
+    if (isGlobalConfigName(name) && timeoutRaw < 12000) timeout = 15000;
+    if (isEncodingConfigName(name) && timeoutRaw < 12000) timeout = 20000;
 
     final int seq = nextSeq();
-    pending.put(seq, new Pending(promise, devId, name, channel, timeout, "SET"));
+    pending.put(seq, new Pending(promise, devId, name, effectiveChannel, timeout, "SET"));
 
     final String jsonStr = json != null ? json : "";
-    Log.e(TAG, "setDevConfig: devId=" + devId + ", name=" + name + ", jsonLen=" + jsonStr.length() + ", ch=" + channel + ", timeout=" + timeout + ", seq=" + seq);
+    Log.e(TAG, "setDevConfig: devId=" + devId + ", name=" + name + ", jsonLen=" + jsonStr.length() + ", chRaw=" + channel + ", effectiveCh=" + effectiveChannel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevSetConfigByJson(int userId, String devId, String cmd, String json, int chn, int timeout, int seq)
-    int ret = FunSDK.DevSetConfigByJson(mUserId, devId, name, jsonStr, channel, timeout, seq);
+    int ret = FunSDK.DevSetConfigByJson(mUserId, devId, name, jsonStr, effectiveChannel, timeout, seq);
     if (ret < 0) {
       Runnable r = timeoutRunnables.remove(seq);
       if (r != null) {
