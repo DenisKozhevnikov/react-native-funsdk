@@ -63,20 +63,6 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
       final String devUser = params.getString(Constants.DEVICE_LOGIN);
       final String devPwd = params.getString(Constants.DEVICE_PASSWORD);
 
-      // Жёсткая валидация, чтобы не падать внутри DeviceManager
-      if (devId == null || devId.trim().isEmpty()) {
-        promise.reject("FunSDK", "DeviceId is empty");
-        return;
-      }
-      if (devUser == null || devUser.trim().isEmpty()) {
-        promise.reject("FunSDK", "Device login is empty");
-        return;
-      }
-      if (devPwd == null || devPwd.trim().isEmpty()) {
-        promise.reject("FunSDK", "Device password is empty");
-        return;
-      }
-
       // как на iOS: сохранить локальные креды и не вызывать фактический логин
       try {
         FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
@@ -95,186 +81,20 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
       } catch (Exception ignored) {
       }
 
-      // Зафиксируем значение для использования во внутренних классах
-      final int networkModeFinal = networkMode;
+      WritableMap result = Arguments.createMap();
+      result.putString("s", devId);
+      result.putInt("i", 0);
+      WritableMap valueMap = Arguments.createMap();
+      valueMap.putInt("networkMode", networkMode);
+      result.putMap("value", valueMap);
+      promise.resolve(result);
 
-      // Поднимаем реальный логин как на iOS до запросов конфигов
-      try {
-        DeviceManager.getInstance().loginDev(
-            devId,
-            devUser,
-            devPwd,
-            new DeviceManager.OnDevManagerListener() {
-            @Override
-            public void onSuccess(String s, int i, Object abilityKey) {
-              final WritableMap result = Arguments.createMap();
-              result.putString("s", devId);
-              result.putInt("i", 0);
-              final WritableMap valueMap = Arguments.createMap();
-              valueMap.putInt("networkMode", networkModeFinal);
-
-              // Параллельно подтянем SystemInfo (UI для "О системе") и каналы
-              final int timeoutMs = 6000;
-              final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
-              final java.util.concurrent.atomic.AtomicInteger pending = new java.util.concurrent.atomic.AtomicInteger(3);
-              final int[] analogRef = new int[] { -1 };
-              final int[] digitalRef = new int[] { -1 };
-              final boolean[] resolved = new boolean[] { false };
-              final boolean[] sysInfoDone = new boolean[] { false };
-
-              final Runnable finish = new Runnable() {
-                @Override
-                public void run() {
-                  if (resolved[0]) return;
-                  resolved[0] = true;
-                  int videoIn = analogRef[0] > 0 ? analogRef[0] : 1;
-                  valueMap.putInt("VideoInChannel", videoIn);
-                  if (digitalRef[0] >= 0) {
-                    valueMap.putInt("DigChannel", digitalRef[0]);
-                  }
-                  result.putMap("value", valueMap);
-                  try {
-                    promise.resolve(result);
-                  } catch (Exception ignored) {}
-                }
-              };
-
-              final Runnable timeout = new Runnable() {
-                @Override
-                public void run() {
-                  android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: timeout while fetching channels after login, devId=" + devId + ", timeout=" + timeoutMs);
-                  finish.run();
-                }
-              };
-
-              handler.postDelayed(timeout, timeoutMs);
-              android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: login success, fetching channels, devId=" + devId + ", timeout=" + timeoutMs);
-
-              // SystemInfo: глобальный узел, ch=-1, timeout 15000
-              try {
-                com.facebook.react.bridge.WritableMap sysParams = com.facebook.react.bridge.Arguments.createMap();
-                sysParams.putString("deviceId", devId);
-                sysParams.putString("name", "SystemInfo");
-                sysParams.putInt("nOutBufLen", 0);
-                sysParams.putInt("channel", -1);
-                sysParams.putInt("timeout", 15000);
-                new com.funsdk.user.device.config.FunSDKDevConfigModule(getReactApplicationContext()).getDevConfig(sysParams, new com.facebook.react.bridge.Promise() {
-                  @Override public void resolve(Object value) {
-                    try {
-                      com.facebook.react.bridge.ReadableMap m = (com.facebook.react.bridge.ReadableMap) value;
-                      if (m != null) {
-                        if (m.hasKey("HardWare")) valueMap.putString("HardWare", m.getString("HardWare"));
-                        if (m.hasKey("HardWareVersion")) valueMap.putString("HardWareVersion", m.getString("HardWareVersion"));
-                        if (m.hasKey("SoftWareVersion")) valueMap.putString("SoftWareVersion", m.getString("SoftWareVersion"));
-                        if (m.hasKey("BuildTime")) valueMap.putString("BuildTime", m.getString("BuildTime"));
-                      }
-                    } catch (Throwable ignored) {}
-                    sysInfoDone[0] = true;
-                    if (pending.decrementAndGet() == 0) {
-                      handler.removeCallbacks(timeout);
-                      finish.run();
-                    }
-                  }
-                  @Override public void reject(String message) { reject("FunSDK", message); }
-                  @Override public void reject(String code, String message) {
-                    sysInfoDone[0] = true;
-                    if (pending.decrementAndGet() == 0) {
-                      handler.removeCallbacks(timeout);
-                      finish.run();
-                    }
-                  }
-                  @Override public void reject(String code, Throwable e) { reject(code, e != null ? e.getMessage() : null); }
-                  @Override public void reject(String code, String message, Throwable e) { reject(code, message); }
-                  @Override public void reject(Throwable e) { reject("FunSDK", e != null ? e.getMessage() : null); }
-                  @Override public void reject(String code, com.facebook.react.bridge.WritableMap userInfo) { reject(code, (String) null); }
-                  @Override public void reject(String code, Throwable e, com.facebook.react.bridge.WritableMap userInfo) { reject(code, e != null ? e.getMessage() : null); }
-                  @Override public void reject(String code, String message, com.facebook.react.bridge.WritableMap userInfo) { reject(code, message); }
-                  @Override public void reject(String code, String message, Throwable e, com.facebook.react.bridge.WritableMap userInfo) { reject(code, message); }
-                  @Override public void reject(Throwable e, com.facebook.react.bridge.WritableMap userInfo) { reject("FunSDK", e != null ? e.getMessage() : null); }
-                });
-              } catch (Throwable ignored) {}
-
-              DeviceManager.OnDevManagerListener analogListener = new DeviceManager.OnDevManagerListener() {
-                @Override
-                public void onSuccess(String s, int i, Object abilityKey) {
-                  try {
-                    if (abilityKey instanceof Integer) {
-                      analogRef[0] = (Integer) abilityKey;
-                    } else if (abilityKey instanceof String) {
-                      try { analogRef[0] = Integer.parseInt((String) abilityKey); } catch (Exception ignored) {}
-                    }
-                  } catch (Exception ignored) {}
-                  if (pending.decrementAndGet() == 0) {
-                    handler.removeCallbacks(timeout);
-                    finish.run();
-                  }
-                }
-
-                @Override
-                public void onFailed(String s, int i, String s1, int errorId) {
-                  android.util.Log.e("DEV_STATUS_ANDROID", "VideoInChannel failed: devId=" + s + ", err=" + errorId + ", msg=" + s1);
-                  if (pending.decrementAndGet() == 0) {
-                    handler.removeCallbacks(timeout);
-                    finish.run();
-                  }
-                }
-              };
-
-              DeviceManager.OnDevManagerListener digitalListener = new DeviceManager.OnDevManagerListener() {
-                @Override
-                public void onSuccess(String s, int i, Object abilityKey) {
-                  try {
-                    if (abilityKey instanceof Integer) {
-                      digitalRef[0] = (Integer) abilityKey;
-                    } else if (abilityKey instanceof String) {
-                      try { digitalRef[0] = Integer.parseInt((String) abilityKey); } catch (Exception ignored) {}
-                    }
-                  } catch (Exception ignored) {}
-                  if (pending.decrementAndGet() == 0) {
-                    handler.removeCallbacks(timeout);
-                    finish.run();
-                  }
-                }
-
-                @Override
-                public void onFailed(String s, int i, String s1, int errorId) {
-                  android.util.Log.e("DEV_STATUS_ANDROID", "DigChannel failed: devId=" + s + ", err=" + errorId + ", msg=" + s1);
-                  if (pending.decrementAndGet() == 0) {
-                    handler.removeCallbacks(timeout);
-                    finish.run();
-                  }
-                }
-              };
-
-              try {
-                DevDataCenter.getInstance().getVideoInChannel(devId, analogListener);
-              } catch (Exception e) {
-                android.util.Log.e("DEV_STATUS_ANDROID", "getVideoInChannel invoke error", e);
-                if (pending.decrementAndGet() == 0) {
-                  handler.removeCallbacks(timeout);
-                  finish.run();
-                }
-              }
-
-              try {
-                DevDataCenter.getInstance().getExtraChannel(devId, digitalListener);
-              } catch (Exception e) {
-                android.util.Log.e("DEV_STATUS_ANDROID", "getExtraChannel invoke error", e);
-                if (pending.decrementAndGet() == 0) {
-                  handler.removeCallbacks(timeout);
-                  finish.run();
-                }
-              }
-            }
-
-            @Override
-            public void onFailed(String s, int i, String s1, int errorId) {
-              promise.reject(s + ", " + i + ", " + s1 + ", " + errorId);
-            }
-            });
-      } catch (Throwable t) {
-        promise.reject("FunSDK", t);
-      }
+      // Реальный логин временно отключён для выравнивания поведения с iOS
+      // DeviceManager.getInstance().loginDev(
+      //     devId,
+      //     devUser,
+      //     devPwd,
+      //     getResultCallback(promise));
     }
   }
 
