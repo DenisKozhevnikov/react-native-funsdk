@@ -66,7 +66,15 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
       if (json == null || json.isEmpty()) return null;
       JSONObject obj = new JSONObject(json);
       if (obj.has("Name")) {
-        return obj.getString("Name");
+        String nm = obj.getString("Name");
+        if (nm == null) return null;
+        // Приведём "Detect.MotionDetect.[0]" → "Detect.MotionDetect"
+        int idx = nm.indexOf(".[");
+        if (idx > 0) {
+          nm = nm.substring(0, idx);
+        }
+        // На некоторых прошивках формат может быть вида "Name":"Detect.MotionDetect" без индекса
+        return nm;
       }
     } catch (JSONException ignored) {
     }
@@ -136,6 +144,31 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     return false;
   }
 
+  private boolean isRecordConfigName(String name) {
+    if (name == null) return false;
+    String n = name.trim();
+    if (n.isEmpty()) return false;
+    if (n.equals("Record")) return true;
+    if (n.equals("ExtRecord")) return true;
+    if (n.equals("SupportExtRecord")) return true;
+    if (n.startsWith("Record.")) return true;
+    if (n.contains("Record")) return true;
+    return false;
+  }
+
+  private boolean isDetectConfigName(String name) {
+    if (name == null) return false;
+    String n = name.trim();
+    if (n.isEmpty()) return false;
+    if (n.startsWith("Detect.")) return true;
+    if (n.contains("MotionDetect")) return true;
+    if (n.contains("HumanDetection")) return true;
+    if (n.contains("DetectTrack")) return true;
+    if (n.contains("LossDetect")) return true;
+    if (n.contains("BlindDetect")) return true;
+    return false;
+  }
+
   // === Public RN API ===
 
   /**
@@ -147,25 +180,17 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     ensureUser();
     final String devId = params.getString("deviceId");
     final String name = params.getString("name");
-    final int nOutBufLen = params.hasKey("nOutBufLen") ? params.getInt("nOutBufLen") : 0;
-    final int channel = params.hasKey("channel") ? params.getInt("channel") : -1;
-    final int timeoutRaw = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
+    final int nOutBufLen = params.getInt("nOutBufLen");
+    final int channel = params.getInt("channel");
+    final int timeoutRaw = params.getInt("timeout");
 
     int effectiveChannel = channel;
-    if (isGlobalConfigName(name)) {
-      effectiveChannel = -1;
-    } else if (isEncodingConfigName(name) && effectiveChannel < 0) {
-      effectiveChannel = 0; // кодировочные узлы требуют канальный ch
-    }
     int timeout = timeoutRaw;
-    if (isGlobalConfigName(name) && timeoutRaw < 12000) timeout = 15000;
-    if (isEncodingConfigName(name) && timeoutRaw < 12000) timeout = 15000;
 
     final int seq = nextSeq();
     pending.put(seq, new Pending(promise, devId, name, effectiveChannel, timeout, "GET"));
 
     int outLenEff = nOutBufLen;
-    if (isEncodingConfigName(name) && outLenEff <= 0) outLenEff = 10 * 1024;
 
     Log.e(TAG, "getDevConfig: devId=" + devId + ", name=" + name + ", outLenRaw=" + nOutBufLen + ", outLenEff=" + outLenEff + ", chRaw=" + channel + ", effectiveCh=" + effectiveChannel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevGetConfigByJson(int userId, String devId, String cmd, int outLen, int chn, int timeout, int seq)
@@ -220,12 +245,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final int timeoutRaw = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
 
     int effectiveChannel = channel;
-    if (isGlobalConfigName(name)) effectiveChannel = -1;
-    else if (isEncodingConfigName(name) && effectiveChannel < 0) effectiveChannel = 0;
-
     int timeout = timeoutRaw;
-    if (isGlobalConfigName(name) && timeoutRaw < 12000) timeout = 15000;
-    if (isEncodingConfigName(name) && timeoutRaw < 12000) timeout = 20000;
 
     final int seq = nextSeq();
     pending.put(seq, new Pending(promise, devId, name, effectiveChannel, timeout, "SET"));
@@ -339,7 +359,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final int arg1 = msg.arg1;
     final int seq = msg.arg2; // FunSDK обычно возвращает seq в arg2
 
-    Pending pendingReq = pending.remove(seq);
+    Pending pendingReq = pending.get(seq);
     if (pendingReq != null) {
       Runnable r = timeoutRunnables.remove(seq);
       if (r != null) {
@@ -387,14 +407,32 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
             }
           }
           if (promise != null) {
-            try {
+          try {
               String cleaned = sanitizeJson(data);
-              if (cleaned == null || cleaned.isEmpty()) {
+            // Если пришёл только заголовок (Name/Ret/SessionID) без тела — ждём следующий пакет
+            try {
+              JSONObject obj = new JSONObject(cleaned);
+              String expectName = pendingReq != null ? pendingReq.name : extractNameFromJson(cleaned);
+              boolean headerOnly = false;
+              if (obj != null) {
+                int len = obj.length();
+                boolean hasNameOnly = obj.has("Name") && (expectName == null || (!obj.has(expectName) && !cleaned.contains(expectName + ".[")));
+                headerOnly = hasNameOnly && len <= 3;
+              }
+              if (headerOnly) {
+                Log.e(TAG, "Header-only JSON received for name=" + expectName + ", waiting for full payload");
+                return 0;
+              }
+            } catch (Throwable ignored) {}
+
+            if (cleaned == null || cleaned.isEmpty()) {
                 promise.reject("ParseError", "Empty JSON in DEV_GET_CONFIG");
+              pending.remove(seq);
               } else {
                 try {
                   WritableMap parsed = DataConverter.parseToWritableMap(cleaned);
                   promise.resolve(parsed);
+                pending.remove(seq);
                 } catch (Throwable inner) {
                   // резерв: вынем простые поля Name/SerialNo
                   WritableMap fallback = Arguments.createMap();
@@ -417,10 +455,12 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
                     }
                   } catch (Throwable ignored) {}
                   promise.resolve(fallback);
+                pending.remove(seq);
                 }
               }
             } catch (Throwable t) {
               promise.reject("ParseError", t);
+            pending.remove(seq);
             }
           }
           Log.e(TAG, "DEV_GET_CONFIG success: dataLen=" + (data != null ? data.length() : 0));
@@ -451,7 +491,10 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
               Log.e(TAG, "Matched GET pending on error: name=" + matchedPending.name + ", matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
             }
           }
-          if (promise != null) promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+          if (promise != null) {
+            promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+            pending.remove(seq);
+          }
           Log.e(TAG, "DEV_GET_CONFIG failed: what=" + what + ", err=" + arg1);
         }
         return 0;
@@ -513,7 +556,10 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
             res.putInt("i", 1);
             res.putNull("value");
           }
-          if (promise != null) promise.resolve(res);
+          if (promise != null) {
+            promise.resolve(res);
+            pending.remove(seq);
+          }
           Log.e(TAG, "DEV_SET_CONFIG success");
         } else {
           // Ошибка: сопоставим pending SET даже при некорректном seq
@@ -536,7 +582,10 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
               Log.e(TAG, "Matched SET pending on error: name=" + matchedPending.name + ", matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
             }
           }
-          if (promise != null) promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+          if (promise != null) {
+            promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+            pending.remove(seq);
+          }
           Log.e(TAG, "DEV_SET_CONFIG failed: what=" + what + ", err=" + arg1);
         }
         return 0;

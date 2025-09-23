@@ -404,6 +404,54 @@ const DeviceCard = ({ device }: { device: DetailDeviceType }) => {
             }
           />
           <TchblButton
+            text="Record"
+            onPress={() =>
+              actionDevice(getDevConfig, {
+                deviceId: device.devId,
+                name: 'Record',
+                nOutBufLen: 0,
+                channel: 1,
+                timeout: 10000,
+              })
+            }
+          />
+          <TchblButton
+            text="ExtRecord"
+            onPress={() =>
+              actionDevice(getDevConfig, {
+                deviceId: device.devId,
+                name: 'ExtRecord',
+                nOutBufLen: 0,
+                channel: 1,
+                timeout: 10000,
+              })
+            }
+          />
+          <TchblButton
+            text="SupportExtRecord"
+            onPress={() =>
+              actionDevice(getDevConfig, {
+                deviceId: device.devId,
+                name: 'SupportExtRecord',
+                nOutBufLen: 0,
+                channel: 1,
+                timeout: 10000,
+              })
+            }
+          />
+          <TchblButton
+            text="AVEnc.SmartH264V2"
+            onPress={() =>
+              actionDevice(getDevConfig, {
+                deviceId: device.devId,
+                name: 'AVEnc.SmartH264V2',
+                nOutBufLen: 0,
+                channel: 1,
+                timeout: 10000,
+              })
+            }
+          />
+          <TchblButton
             text="SystemFunction"
             onPress={() =>
               actionDevice(getDevConfig, {

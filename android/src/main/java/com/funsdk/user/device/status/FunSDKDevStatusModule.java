@@ -20,11 +20,18 @@ import com.funsdk.utils.Constants;
 import com.funsdk.utils.ReactParamsCheck;
 
 import com.lib.FunSDK;
+import com.lib.IFunSDKResult;
+import com.lib.MsgContent;
+import com.lib.EUIMSG;
 import com.lib.sdk.bean.PtzCtrlInfoBean;
 import com.lib.sdk.struct.SDBDeviceInfo;
 import static com.lib.EFUN_ATTR.LOGIN_USER_ID;
 
 import com.funsdk.utils.DataConverter;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.nio.charset.Charset;
 
 // // To reference the pop-up password input box below, if you don't want to
 // // participate in the pop-up dialog, you can follow the steps below:
@@ -35,7 +42,7 @@ import com.funsdk.utils.DataConverter;
 // // (default is admin), and passWord is the correct password you want to pass.
 // // Step 2: Call presenter.loginDev() again.
 
-public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
+public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements IFunSDKResult {
   public FunSDKDevStatusModule(ReactApplicationContext context) {
     super(context);
   }
@@ -81,20 +88,12 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
       } catch (Exception ignored) {
       }
 
-      WritableMap result = Arguments.createMap();
-      result.putString("s", devId);
-      result.putInt("i", 0);
-      WritableMap valueMap = Arguments.createMap();
-      valueMap.putInt("networkMode", networkMode);
-      result.putMap("value", valueMap);
-      promise.resolve(result);
-
-      // Реальный логин временно отключён для выравнивания поведения с iOS
-      // DeviceManager.getInstance().loginDev(
-      //     devId,
-      //     devUser,
-      //     devPwd,
-      //     getResultCallback(promise));
+      // Вместо немедленного resolve — как на iOS, запрашиваем SystemInfo и возвращаем его
+      ensureUser();
+      final int seq = nextSeq();
+      pendingSystemInfo.put(seq, new PendingLogin(promise, devId, networkMode));
+      // int DevGetConfigByJson(int userId, String devId, String cmd, int outLen, int chn, int timeout, int seq)
+      FunSDK.DevGetConfigByJson(mUserId, devId, "SystemInfo", 2048, -1, 15000, seq);
     }
   }
 
@@ -703,5 +702,100 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule {
         promise.reject(s + ", " + i + ", " + s1 + ", " + errorId);
       }
     };
+  }
+
+  // === Прямой запрос SystemInfo для loginDeviceWithCredential ===
+
+  private int mUserId = 0;
+  private boolean isRegistered = false;
+  private int mSeq = 1;
+  private final Map<Integer, PendingLogin> pendingSystemInfo = new HashMap<>();
+
+  private static class PendingLogin {
+    final Promise promise;
+    final String devId;
+    final int networkMode;
+    PendingLogin(Promise promise, String devId, int networkMode) {
+      this.promise = promise;
+      this.devId = devId;
+      this.networkMode = networkMode;
+    }
+  }
+
+  private void ensureUser() {
+    if (!isRegistered) {
+      mUserId = FunSDK.GetId(mUserId, this);
+      isRegistered = true;
+    }
+  }
+
+  private int nextSeq() {
+    mSeq += 1;
+    return mSeq;
+  }
+
+  @Override
+  public int OnFunSDKResult(android.os.Message msg, MsgContent ex) {
+    final int what = msg.what;
+    final int arg1 = msg.arg1;
+    final int seq = msg.arg2;
+
+    PendingLogin pend = pendingSystemInfo.remove(seq);
+
+    if (what == EUIMSG.DEV_GET_JSON || what == EUIMSG.DEV_GET_CONFIG) {
+      if (pend == null) {
+        return 0;
+      }
+      try {
+        if (arg1 >= 0) {
+          String data = null;
+          if (ex != null) {
+            if (ex.pData != null && ex.pData.length > 0) {
+              data = new String(ex.pData, Charset.forName("UTF-8")).trim();
+            } else if (ex.str != null) {
+              data = ex.str.trim();
+            }
+          }
+          if (data == null || data.isEmpty()) {
+            pend.promise.reject("EMPTY", "SystemInfo empty");
+            return 0;
+          }
+          com.facebook.react.bridge.WritableMap value = DataConverter.parseToWritableMap(data);
+          if (value != null && value.hasKey("SystemInfo")) {
+            try {
+              com.facebook.react.bridge.ReadableMap nested = value.getMap("SystemInfo");
+              if (nested != null) {
+                com.facebook.react.bridge.WritableMap copy = Arguments.createMap();
+                for (java.util.Iterator<java.util.Map.Entry<String, Object>> it = ((java.util.HashMap<String, Object>)com.funsdk.utils.DataConverter.parseToMap(nested)).entrySet().iterator(); it.hasNext();) {
+                  // no-op; fallback path below if needed
+                }
+                // Более простой путь: распарсим nested повторно из строки
+                // (если nested недоступен как WritableMap)
+                value = DataConverter.parseToWritableMap(nested);
+              }
+            } catch (Throwable ignored) {}
+          }
+          // Если networkMode отсутствует — добавим сохранённое значение
+          try {
+            if (value != null && (!value.hasKey("networkMode") || value.getString("networkMode") == null)) {
+              value.putInt("networkMode", pend.networkMode);
+            }
+          } catch (Throwable ignored) {}
+
+          WritableMap res = Arguments.createMap();
+          res.putString("s", pend.devId);
+          res.putInt("i", 1);
+          res.putMap("value", value);
+          pend.promise.resolve(res);
+        } else {
+          pend.promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+        }
+      } catch (Throwable t) {
+        pend.promise.reject("FunSDKDevStatusModule", t);
+      }
+      return 0;
+    }
+
+    return 0;
   }
 }
