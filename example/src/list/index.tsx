@@ -18,6 +18,7 @@ import {
   // getDevCmdGeneral,
   getDevConfig,
   setDevConfig,
+  loginDeviceWithCredential,
 } from 'react-native-funsdk';
 import Base64 from './utils';
 // import { DEVICE_ID } from '../topsecret';
@@ -170,6 +171,48 @@ const DeviceCard = ({ device }: { device: DetailDeviceType }) => {
                 }
               )
             }
+          />
+          <TchblButton
+            text="loginWithCreds (SystemInfo)"
+            onPress={async () => {
+              try {
+                console.log(
+                  '[EXAMPLE] loginWithCreds: pressed for',
+                  device.devId
+                );
+                setStatus('loginDeviceWithCredential: in process');
+                const startedAt = Date.now();
+                console.log(
+                  '[EXAMPLE] calling loginDeviceWithCredential at',
+                  new Date(startedAt).toISOString()
+                );
+                const res = await loginDeviceWithCredential({
+                  deviceId: device.devId,
+                  deviceLogin: 'admin',
+                  devicePassword: '123456',
+                });
+                console.log(
+                  '[EXAMPLE] SystemInfo login result (elapsed ms):',
+                  Date.now() - startedAt,
+                  res
+                );
+                setStatus(
+                  'loginDeviceWithCredential: success ' +
+                    JSON.stringify(res?.value || res, null, 2)
+                );
+              } catch (e) {
+                console.log('[EXAMPLE] loginDeviceWithCredential error: ', e);
+                setStatus(
+                  'loginDeviceWithCredential: error ' +
+                    ((e && (e as any).message) || String(e))
+                );
+              } finally {
+                console.log(
+                  '[EXAMPLE] loginWithCreds: finished for',
+                  device.devId
+                );
+              }
+            }}
           />
           <TchblButton
             text="isDeviceFunctionSupport"

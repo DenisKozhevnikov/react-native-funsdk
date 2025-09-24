@@ -88,12 +88,33 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       } catch (Exception ignored) {
       }
 
-      // Вместо немедленного resolve — как на iOS, запрашиваем SystemInfo и возвращаем его
+      // Как на iOS: запрашиваем SystemInfo и резолвим этим ответом
       ensureUser();
       final int seq = nextSeq();
+      android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: devId=" + devId + ", user=" + devUser + ", outLen=1024, ch=-1, timeout=15000, seq=" + seq);
+      // Отменим предыдущие ожидания SystemInfo, чтобы fallback не схватывал старый seq
+      try {
+        java.util.ArrayList<Integer> toRemove = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<Integer, PendingLogin> e : pendingSystemInfo.entrySet()) {
+          Integer oldSeq = e.getKey();
+          PendingLogin oldPend = e.getValue();
+          if (oldPend != null && oldPend.promise != null) {
+            try { oldPend.promise.reject("Cancelled", "Superseded by newer loginDeviceWithCredential"); } catch (Throwable ignored) {}
+          }
+          toRemove.add(oldSeq);
+        }
+        for (Integer k : toRemove) pendingSystemInfo.remove(k);
+      } catch (Throwable ignored) {}
       pendingSystemInfo.put(seq, new PendingLogin(promise, devId, networkMode));
-      // int DevGetConfigByJson(int userId, String devId, String cmd, int outLen, int chn, int timeout, int seq)
-      FunSDK.DevGetConfigByJson(mUserId, devId, "SystemInfo", 2048, -1, 15000, seq);
+      int ret = FunSDK.DevGetConfigByJson(mUserId, devId, "SystemInfo", 4096, -1, 15000, seq);
+      android.util.Log.e("DEV_STATUS_ANDROID", "DevGetConfigByJson(SystemInfo) returned ret=" + ret);
+      if (ret < 0) {
+        PendingLogin removed = pendingSystemInfo.remove(seq);
+        if (removed != null && removed.promise != null) {
+          removed.promise.reject(String.valueOf(ret), "SystemInfo immediate error");
+        }
+        return;
+      }
     }
   }
 
@@ -656,9 +677,7 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
         } else if (abilityKey instanceof Long) {
           map.putDouble("value", (Long) abilityKey);
         } else {
-          // Convert arbitrary object to map
           com.facebook.react.bridge.WritableMap valueMap = DataConverter.parseToWritableMap(abilityKey);
-          // Align Android behavior with iOS: decode st_channelTitle from base64 to UTF-8 and trim by nChnCount
           try {
             if (valueMap != null && valueMap.hasKey("st_channelTitle")) {
               com.facebook.react.bridge.ReadableArray titles = valueMap.getArray("st_channelTitle");
@@ -743,8 +762,25 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     PendingLogin pend = pendingSystemInfo.remove(seq);
 
     if (what == EUIMSG.DEV_GET_JSON || what == EUIMSG.DEV_GET_CONFIG) {
+      android.util.Log.e("DEV_STATUS_ANDROID", "OnFunSDKResult: what=" + what + ", arg1=" + arg1 + ", seq=" + seq + ", ex.strLen=" + (ex != null && ex.str != null ? ex.str.length() : -1) + ", pDataLen=" + (ex != null && ex.pData != null ? ex.pData.length : -1));
       if (pend == null) {
-        return 0;
+        Integer matchedSeq = null;
+        PendingLogin matched = null;
+        for (java.util.Map.Entry<Integer, PendingLogin> e : pendingSystemInfo.entrySet()) {
+          if (matchedSeq == null || e.getKey() > matchedSeq) {
+            matchedSeq = e.getKey();
+            matched = e.getValue();
+          }
+        }
+        if (matched != null) {
+          // Снимем таймаут с подобранного запроса
+          pendingSystemInfo.remove(matchedSeq);
+          pend = matched;
+          android.util.Log.e("DEV_STATUS_ANDROID", "OnFunSDKResult: fallback matched pending by name SystemInfo, matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
+        } else {
+          android.util.Log.e("DEV_STATUS_ANDROID", "OnFunSDKResult: no pending for seq=" + seq + ", ignoring");
+          return 0;
+        }
       }
       try {
         if (arg1 >= 0) {
@@ -756,29 +792,20 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
               data = ex.str.trim();
             }
           }
+          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo raw len=" + (data != null ? data.length() : -1));
           if (data == null || data.isEmpty()) {
             pend.promise.reject("EMPTY", "SystemInfo empty");
             return 0;
           }
-          com.facebook.react.bridge.WritableMap value = DataConverter.parseToWritableMap(data);
-          if (value != null && value.hasKey("SystemInfo")) {
-            try {
-              com.facebook.react.bridge.ReadableMap nested = value.getMap("SystemInfo");
-              if (nested != null) {
-                com.facebook.react.bridge.WritableMap copy = Arguments.createMap();
-                for (java.util.Iterator<java.util.Map.Entry<String, Object>> it = ((java.util.HashMap<String, Object>)com.funsdk.utils.DataConverter.parseToMap(nested)).entrySet().iterator(); it.hasNext();) {
-                  // no-op; fallback path below if needed
-                }
-                // Более простой путь: распарсим nested повторно из строки
-                // (если nested недоступен как WritableMap)
-                value = DataConverter.parseToWritableMap(nested);
-              }
-            } catch (Throwable ignored) {}
-          }
-          // Если networkMode отсутствует — добавим сохранённое значение
+          // Возвращаем плоский объект SystemInfo, как на iOS
+          com.facebook.react.bridge.WritableMap parsedAll = DataConverter.parseToWritableMap(data);
+          com.facebook.react.bridge.ReadableMap value = parsedAll;
           try {
-            if (value != null && (!value.hasKey("networkMode") || value.getString("networkMode") == null)) {
-              value.putInt("networkMode", pend.networkMode);
+            if (parsedAll != null && parsedAll.hasKey("SystemInfo")) {
+              com.facebook.react.bridge.ReadableMap nested = parsedAll.getMap("SystemInfo");
+              if (nested != null) {
+                value = nested; // отдать вложенный объект как есть (как на iOS)
+              }
             }
           } catch (Throwable ignored) {}
 
@@ -787,8 +814,10 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
           res.putInt("i", 1);
           res.putMap("value", value);
           pend.promise.resolve(res);
+          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo RESOLVED for devId=" + pend.devId + ", seq=" + seq);
         } else {
           pend.promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo REJECT what=" + what + " arg1=" + arg1 + " seq=" + seq);
         }
       } catch (Throwable t) {
         pend.promise.reject("FunSDKDevStatusModule", t);
