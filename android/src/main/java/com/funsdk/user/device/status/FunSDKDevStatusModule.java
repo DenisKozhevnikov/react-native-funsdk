@@ -111,7 +111,14 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       if (ret < 0) {
         PendingLogin removed = pendingSystemInfo.remove(seq);
         if (removed != null && removed.promise != null) {
-          removed.promise.reject(String.valueOf(ret), "SystemInfo immediate error");
+          WritableMap value = Arguments.createMap();
+          value.putInt("networkMode", removed.networkMode);
+          WritableMap res = Arguments.createMap();
+          res.putString("s", removed.devId);
+          res.putInt("i", 0);
+          res.putMap("value", value);
+          removed.promise.resolve(res);
+          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo immediate error ret=" + ret + ", resolved with fallback for devId=" + removed.devId);
         }
         return;
       }

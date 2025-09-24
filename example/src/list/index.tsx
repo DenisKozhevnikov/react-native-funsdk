@@ -91,21 +91,24 @@ const DeviceCard = ({ device }: { device: DetailDeviceType }) => {
 
       resFunc && resFunc(res);
 
-      if (typeof res === `object`) {
-        setStatus(`${func.name}: success ` + JSON.stringify(res, null, 2));
-        if (args?.name === 'AVEnc.VideoWidget') {
-          console.log(
-            'naconsolili!',
-            res?.['AVEnc.VideoWidget'][0].ChannelTitle
-          );
-          // console.log(
-          //   'naconsolili!',
-          //   JSON.stringify(res['AVEnc.VideoWidget'], null, 2)
-          // );
-          setDeviceNameJsonina(res?.['AVEnc.VideoWidget']);
+      const payload: any =
+        res && typeof res === 'object' && (res as any).value
+          ? (res as any).value
+          : res;
+
+      if (typeof payload === `object`) {
+        setStatus(`${func.name}: success ` + JSON.stringify(payload, null, 2));
+        if ((args as any)?.name === 'AVEnc.VideoWidget') {
+          try {
+            console.log(
+              'naconsolili!',
+              payload?.['AVEnc.VideoWidget'][0].ChannelTitle
+            );
+          } catch (e) {}
+          setDeviceNameJsonina(payload?.['AVEnc.VideoWidget']);
         }
       } else {
-        setStatus(`${func.name}: success ` + res);
+        setStatus(`${func.name}: success ` + String(payload));
       }
     } catch (error) {
       console.log(`error ${func.name}: `, error);

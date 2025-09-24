@@ -12,6 +12,13 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.ReadableType;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
 
 import com.lib.FunSDK;
 import com.lib.IFunSDKResult;
@@ -23,8 +30,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import org.json.JSONObject;
-import org.json.JSONException;
+import java.util.ArrayList;
+import java.util.List;
 import com.funsdk.utils.DataConverter;
 
 /**
@@ -169,12 +176,229 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     return false;
   }
 
-  // === Public RN API ===
+  // === Helpers ===
+  private WritableArray jsonArrayToWritableArray(org.json.JSONArray jsonArray) throws org.json.JSONException {
+    WritableArray out = Arguments.createArray();
+    for (int i = 0; i < jsonArray.length(); i++) {
+      Object elem = jsonArray.get(i);
+      if (elem == null || elem == org.json.JSONObject.NULL) {
+        out.pushNull();
+      } else if (elem instanceof org.json.JSONObject) {
+        out.pushMap(jsonObjectToWritableMap((org.json.JSONObject) elem));
+      } else if (elem instanceof org.json.JSONArray) {
+        out.pushArray(jsonArrayToWritableArray((org.json.JSONArray) elem));
+      } else if (elem instanceof Boolean) {
+        out.pushBoolean((Boolean) elem);
+      } else if (elem instanceof Integer) {
+        out.pushInt((Integer) elem);
+      } else if (elem instanceof Long) {
+        // RN WritableArray doesn't have pushLong; store as double
+        out.pushDouble(((Long) elem).doubleValue());
+      } else if (elem instanceof Double) {
+        out.pushDouble((Double) elem);
+      } else if (elem instanceof Float) {
+        out.pushDouble(((Float) elem).doubleValue());
+      } else {
+        out.pushString(String.valueOf(elem));
+      }
+    }
+    return out;
+  }
 
-  /**
-   * Получение JSON-конфига с устройства (эквивалент iOS FUN_DevGetConfig_Json)
-   * params: { deviceId, name, nOutBufLen, channel, timeout }
-   */
+  private WritableMap jsonObjectToWritableMap(org.json.JSONObject jsonObject) throws org.json.JSONException {
+    WritableMap map = Arguments.createMap();
+    java.util.Iterator<String> keys = jsonObject.keys();
+    while (keys.hasNext()) {
+      String key = keys.next();
+      Object val = jsonObject.get(key);
+      if (val == null || val == org.json.JSONObject.NULL) {
+        map.putNull(key);
+      } else if (val instanceof org.json.JSONObject) {
+        map.putMap(key, jsonObjectToWritableMap((org.json.JSONObject) val));
+      } else if (val instanceof org.json.JSONArray) {
+        map.putArray(key, jsonArrayToWritableArray((org.json.JSONArray) val));
+      } else if (val instanceof Boolean) {
+        map.putBoolean(key, (Boolean) val);
+      } else if (val instanceof Integer) {
+        map.putInt(key, (Integer) val);
+      } else if (val instanceof Long) {
+        map.putDouble(key, ((Long) val).doubleValue());
+      } else if (val instanceof Double) {
+        map.putDouble(key, (Double) val);
+      } else if (val instanceof Float) {
+        map.putDouble(key, ((Float) val).doubleValue());
+      } else {
+        map.putString(key, String.valueOf(val));
+      }
+    }
+    return map;
+  }
+
+  private String findConfigKey(org.json.JSONObject root, String expect) {
+    if (expect == null) return null;
+    try {
+      if (root.has(expect)) return expect;
+      String best = null;
+      java.util.Iterator<String> keys = root.keys();
+      String prefix = expect + ".[";
+      while (keys.hasNext()) {
+        String k = keys.next();
+        if (k != null && k.startsWith(prefix)) {
+          if (best == null || k.length() > best.length()) best = k;
+        }
+      }
+      return best;
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
+  private WritableMap buildNameArrayResult(String cleaned, String expectName, String devId) throws Throwable {
+    WritableMap out = Arguments.createMap();
+    String name = expectName != null ? expectName : extractNameFromJson(cleaned);
+    if (name == null) name = "";
+    out.putString("s", devId != null ? devId : "");
+    out.putInt("i", 1);
+
+    // value: { Name: name, name: [ { ... } ] }
+    WritableMap value = null;
+    try {
+      value = DataConverter.parseToWritableMap(cleaned);
+    } catch (Throwable ignored) {
+    }
+    if (value == null) value = Arguments.createMap();
+
+    // гарантируем поле Name
+    if (!value.hasKey("Name") || value.isNull("Name") || value.getString("Name") == null || value.getString("Name").isEmpty()) {
+      value.putString("Name", name);
+    }
+
+    // если корень уже содержит массив по ключу name, ничего не делаем
+    boolean hasArray = false;
+    try {
+      if (value.hasKey(name) && value.getType(name) == com.facebook.react.bridge.ReadableType.Array) {
+        hasArray = true;
+      }
+    } catch (Throwable ignored) {}
+
+    if (!hasArray) {
+      // Попробуем найти точный ключ или вариант с индексом Name.[0]
+      try {
+        org.json.JSONObject root = new org.json.JSONObject(cleaned);
+        String key = findConfigKey(root, name);
+        if (key != null) {
+          Object node = root.get(key);
+          if (node instanceof org.json.JSONArray) {
+            // Уже массив — сконвертируем и положим
+            WritableArray arr = jsonArrayToWritableArray((org.json.JSONArray) node);
+            value.putArray(name, arr);
+          } else if (node instanceof org.json.JSONObject) {
+            // Один объект — обернём в массив из одного элемента
+            WritableMap m = jsonObjectToWritableMap((org.json.JSONObject) node);
+            WritableArray arr = Arguments.createArray();
+            arr.pushMap(m);
+            value.putArray(name, arr);
+          } else {
+            // Неожиданное — положим как строку в массив
+            WritableArray arr = Arguments.createArray();
+            arr.pushString(String.valueOf(node));
+            value.putArray(name, arr);
+          }
+        } else {
+          // ключ не найден — если весь JSON объект, обернём его как единственный элемент
+          try {
+            org.json.JSONObject asObj = new org.json.JSONObject(cleaned);
+            WritableMap m = jsonObjectToWritableMap(asObj);
+            WritableArray arr = Arguments.createArray();
+            arr.pushMap(m);
+            value.putArray(name, arr);
+          } catch (Throwable ignored2) {
+            // иначе пустой массив
+            value.putArray(name, Arguments.createArray());
+          }
+        }
+      } catch (Throwable ignored3) {
+        value.putArray(name, Arguments.createArray());
+      }
+    }
+
+    out.putMap("value", value);
+    return out;
+  }
+
+  private WritableMap normalizeConfigToNameArray(String cleaned, String expectName) throws Throwable {
+    WritableMap value;
+    try {
+      value = DataConverter.parseToWritableMap(cleaned);
+    } catch (Throwable t) {
+      value = Arguments.createMap();
+    }
+
+    String name = expectName != null ? expectName : extractNameFromJson(cleaned);
+    if (name == null) name = "";
+
+    // гарантируем поле Name
+    try {
+      if (!value.hasKey("Name") || value.isNull("Name") || value.getString("Name") == null || value.getString("Name").isEmpty()) {
+        value.putString("Name", name);
+      }
+    } catch (Throwable ignored) {}
+
+    // уже есть корректный массив — выходим
+    try {
+      if (value.hasKey(name) && value.getType(name) == ReadableType.Array) {
+        return value;
+      }
+    } catch (Throwable ignored) {}
+
+    // попытаемся собрать массив из JSON корня
+    try {
+      org.json.JSONObject root = new org.json.JSONObject(cleaned);
+
+      // 1) прямой ключ name
+      if (root.has(name)) {
+        Object node = root.get(name);
+        if (node instanceof org.json.JSONArray) {
+          WritableArray arr = jsonArrayToWritableArray((org.json.JSONArray) node);
+          value.putArray(name, arr);
+          return value;
+        } else if (node instanceof org.json.JSONObject) {
+          WritableMap m = jsonObjectToWritableMap((org.json.JSONObject) node);
+          WritableArray arr = Arguments.createArray();
+          arr.pushMap(m);
+          value.putArray(name, arr);
+          return value;
+        }
+      }
+
+      // 2) набор ключей name.[i]
+      String prefix = name + ".[";
+      java.util.Iterator<String> keys = root.keys();
+      java.util.List<org.json.JSONObject> items = new java.util.ArrayList<>();
+      while (keys.hasNext()) {
+        String k = keys.next();
+        if (k != null && k.startsWith(prefix)) {
+          Object node = root.get(k);
+          if (node instanceof org.json.JSONObject) {
+            items.add((org.json.JSONObject) node);
+          }
+        }
+      }
+      if (!items.isEmpty()) {
+        WritableArray arr = Arguments.createArray();
+        for (org.json.JSONObject it : items) {
+          arr.pushMap(jsonObjectToWritableMap(it));
+        }
+        value.putArray(name, arr);
+        return value;
+      }
+    } catch (Throwable ignored3) {
+    }
+
+    return value;
+  }
+
+  // === Public RN API ===
   @ReactMethod
   public void getDevConfig(ReadableMap params, Promise promise) {
     ensureUser();
@@ -231,10 +455,6 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     mainHandler.postDelayed(r, timeout);
   }
 
-  /**
-   * Сохранение JSON-конфига на устройство (эквивалент iOS FUN_DevSetConfig_Json)
-   * params: { deviceId, name, param (json), channel, timeout }
-   */
   @ReactMethod
   public void setDevConfig(ReadableMap params, Promise promise) {
     ensureUser();
@@ -357,7 +577,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
   public int OnFunSDKResult(Message msg, MsgContent ex) {
     final int what = msg.what;
     final int arg1 = msg.arg1;
-    final int seq = msg.arg2; // FunSDK обычно возвращает seq в arg2
+    final int seq = msg.arg2;
 
     Pending pendingReq = pending.get(seq);
     if (pendingReq != null) {
@@ -381,8 +601,7 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
               data = ex.str.trim();
             }
           }
-          // Fallback-сопоставление по имени конфигурации, если seq не совпал
-          if (promise == null && data != null && !data.isEmpty()) {
+           if (promise == null && data != null && !data.isEmpty()) {
             String returnedName = extractNameFromJson(sanitizeJson(data));
             if (returnedName != null) {
               Integer matchedSeq = null;
@@ -402,14 +621,26 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
                 Runnable r2 = timeoutRunnables.remove(matchedSeq);
                 if (r2 != null) mainHandler.removeCallbacks(r2);
                 promise = matchedPending.promise;
+                pendingReq = matchedPending;
                 Log.e(TAG, "Matched pending by name fallback: name=" + returnedName + ", matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
               }
             }
           }
           if (promise != null) {
-          try {
-              String cleaned = sanitizeJson(data);
-            // Если пришёл только заголовок (Name/Ret/SessionID) без тела — ждём следующий пакет
+            String cleaned;
+            try {
+              cleaned = sanitizeJson(data);
+            } catch (Throwable t) {
+              promise.reject("ParseError", t);
+              pending.remove(seq);
+              return 0;
+            }
+
+            try {
+              Log.e(TAG, "DEV_GET_CONFIG raw (cleaned): len=" + (cleaned != null ? cleaned.length() : -1) +
+                ", head=" + (cleaned != null ? cleaned.substring(0, Math.min(500, cleaned.length())) : "null"));
+            } catch (Throwable ignored) {}
+
             try {
               JSONObject obj = new JSONObject(cleaned);
               String expectName = pendingReq != null ? pendingReq.name : extractNameFromJson(cleaned);
@@ -420,52 +651,63 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
                 headerOnly = hasNameOnly && len <= 3;
               }
               if (headerOnly) {
-                Log.e(TAG, "Header-only JSON received for name=" + expectName + ", waiting for full payload");
+                Log.e(TAG, "Header-only JSON for name=" + expectName + ", re-requesting with larger outLen");
+                try {
+                  int retryOutLen = 512 * 1024;
+                  FunSDK.DevGetConfigByJson(mUserId, pendingReq.devId, pendingReq.name, retryOutLen, pendingReq.channel, pendingReq.timeoutMs, seq);
+                } catch (Throwable t) {
+                  Log.e(TAG, "Re-request on header-only failed", t);
+                }
                 return 0;
               }
             } catch (Throwable ignored) {}
 
             if (cleaned == null || cleaned.isEmpty()) {
-                promise.reject("ParseError", "Empty JSON in DEV_GET_CONFIG");
+              promise.reject("ParseError", "Empty JSON in DEV_GET_CONFIG");
               pending.remove(seq);
-              } else {
+            } else {
+              try {
+                org.json.JSONObject root = new org.json.JSONObject(cleaned);
+                // Спец-агрегация для Record/ExtRecord/SupportExtRecord: собрать массив из Record.[i] при отсутствии прямого массива
                 try {
-                  WritableMap parsed = DataConverter.parseToWritableMap(cleaned);
-                  promise.resolve(parsed);
-                pending.remove(seq);
-                } catch (Throwable inner) {
-                  // резерв: вынем простые поля Name/SerialNo
-                  WritableMap fallback = Arguments.createMap();
-                  try {
-                    int nameIdx = cleaned.indexOf("\"Name\"");
-                    if (nameIdx >= 0) {
-                      int colon = cleaned.indexOf(':', nameIdx);
-                      int q1 = cleaned.indexOf('"', colon + 1);
-                      int q2 = cleaned.indexOf('"', q1 + 1);
-                      if (q1 > 0 && q2 > q1) fallback.putString("Name", cleaned.substring(q1 + 1, q2));
+                  String[] keysToAggregate = new String[]{"Record", "ExtRecord", "SupportExtRecord"};
+                  for (String aggKey : keysToAggregate) {
+                    if (!root.has(aggKey)) {
+                      String prefix = aggKey + ".[";
+                      java.util.Iterator<String> it = root.keys();
+                      java.util.List<org.json.JSONObject> bucket = new java.util.ArrayList<>();
+                      while (it.hasNext()) {
+                        String k = it.next();
+                        if (k != null && k.startsWith(prefix)) {
+                          Object node = root.opt(k);
+                          if (node instanceof org.json.JSONObject) {
+                            bucket.add((org.json.JSONObject) node);
+                          }
+                        }
+                      }
+                      if (!bucket.isEmpty()) {
+                        org.json.JSONArray arr = new org.json.JSONArray();
+                        for (org.json.JSONObject o : bucket) arr.put(o);
+                        root.put(aggKey, arr);
+                      }
                     }
-                  } catch (Throwable ignored) {}
-                  try {
-                    int snIdx = cleaned.indexOf("\"SerialNo\"");
-                    if (snIdx >= 0) {
-                      int colon = cleaned.indexOf(':', snIdx);
-                      int q1 = cleaned.indexOf('"', colon + 1);
-                      int q2 = cleaned.indexOf('"', q1 + 1);
-                      if (q1 > 0 && q2 > q1) fallback.putString("SerialNo", cleaned.substring(q1 + 1, q2));
-                    }
-                  } catch (Throwable ignored) {}
-                  promise.resolve(fallback);
+                  }
+                } catch (Throwable ignoredAgg) {}
+
+                WritableMap value = jsonObjectToWritableMap(root);
+                promise.resolve(value);
                 pending.remove(seq);
-                }
+              } catch (Throwable inner) {
+                Log.e(TAG, "Parse error, returning raw only", inner);
+                WritableMap resp = Arguments.createMap();
+                resp.putString("raw", cleaned);
+                promise.resolve(resp);
+                pending.remove(seq);
               }
-            } catch (Throwable t) {
-              promise.reject("ParseError", t);
-            pending.remove(seq);
             }
           }
           Log.e(TAG, "DEV_GET_CONFIG success: dataLen=" + (data != null ? data.length() : 0));
         } else {
-          // Ошибка: пробуем сопоставить pending, даже если seq не совпал
           if (promise == null) {
             Integer matchedSeq = null;
             Pending matchedPending = null;
@@ -510,7 +752,6 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
               data = ex.str.trim();
             }
           }
-          // Fallback: если seq не совпал (например, -1), найдём подходящий pending SET
           if (promise == null) {
             Integer matchedSeq = null;
             Pending matchedPending = null;
@@ -536,7 +777,6 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
           try {
             String cleaned = sanitizeJson(data);
             WritableMap value = DataConverter.parseToWritableMap(cleaned);
-            // Добьём Name, если SDK вернул пусто
             if (value != null) {
               boolean needName = true;
               try {
@@ -562,7 +802,6 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
           }
           Log.e(TAG, "DEV_SET_CONFIG success");
         } else {
-          // Ошибка: сопоставим pending SET даже при некорректном seq
           if (promise == null) {
             Integer matchedSeq = null;
             Pending matchedPending = null;
@@ -619,7 +858,6 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
         return 0;
       }
 
-      // Неизвестный what — оставим след в логе для диагностики
       Log.e(TAG, "Unhandled what: " + what + ", arg1=" + arg1 + ", seq=" + seq);
     } catch (Throwable t) {
       if (promise != null) {
