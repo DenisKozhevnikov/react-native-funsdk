@@ -1,6 +1,6 @@
 {
   "name": "react-native-funsdk",
-  "version": "0.17.9",
+  "version": "0.17.10",
   "description": "test",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
