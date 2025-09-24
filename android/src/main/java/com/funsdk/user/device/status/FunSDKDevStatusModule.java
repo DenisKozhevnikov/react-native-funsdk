@@ -5,6 +5,11 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.Callback;
@@ -804,17 +809,34 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
             pend.promise.reject("EMPTY", "SystemInfo empty");
             return 0;
           }
-          // Возвращаем плоский объект SystemInfo, как на iOS
+          // Возвращаем плоский объект SystemInfo, как на iOS + networkMode из pending
           com.facebook.react.bridge.WritableMap parsedAll = DataConverter.parseToWritableMap(data);
-          com.facebook.react.bridge.ReadableMap value = parsedAll;
+          com.facebook.react.bridge.WritableMap value = null;
           try {
             if (parsedAll != null && parsedAll.hasKey("SystemInfo")) {
               com.facebook.react.bridge.ReadableMap nested = parsedAll.getMap("SystemInfo");
               if (nested != null) {
-                value = nested; // отдать вложенный объект как есть (как на iOS)
+                value = new WritableNativeMap();
+                ReadableMapKeySetIterator it = nested.keySetIterator();
+                while (it.hasNextKey()) {
+                  String k = it.nextKey();
+                  ReadableType t = nested.getType(k);
+                  switch (t) {
+                    case Null: value.putNull(k); break;
+                    case Boolean: value.putBoolean(k, nested.getBoolean(k)); break;
+                    case Number: value.putDouble(k, nested.getDouble(k)); break;
+                    case String: value.putString(k, nested.getString(k)); break;
+                    case Map: value.putMap(k, (WritableMap) nested.getMap(k)); break;
+                    case Array: value.putArray(k, (com.facebook.react.bridge.WritableArray) nested.getArray(k)); break;
+                  }
+                }
               }
             }
           } catch (Throwable ignored) {}
+          if (value == null) {
+            value = parsedAll != null ? parsedAll : new WritableNativeMap();
+          }
+          try { value.putInt("networkMode", pend.networkMode); } catch (Throwable ignored) {}
 
           WritableMap res = Arguments.createMap();
           res.putString("s", pend.devId);

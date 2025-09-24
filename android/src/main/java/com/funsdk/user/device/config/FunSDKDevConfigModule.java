@@ -33,6 +33,9 @@ import java.util.Map.Entry;
 import java.util.ArrayList;
 import java.util.List;
 import com.funsdk.utils.DataConverter;
+import com.manager.db.DevDataCenter;
+import com.manager.db.XMDevInfo;
+import com.lib.sdk.struct.SDBDeviceInfo;
 
 /**
  * Android-аналог iOS-модуля FunSDKDevConfigModule.
@@ -668,6 +671,28 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
             } else {
               try {
                 org.json.JSONObject root = new org.json.JSONObject(cleaned);
+                // Добавим networkMode для SystemInfo, как на iOS, если можем получить из DevDataCenter
+                try {
+                  String cfgName = pendingReq != null ? pendingReq.name : null;
+                  if ("SystemInfo".equals(cfgName)) {
+                    int networkMode = -1;
+                    try {
+                      XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(pendingReq.devId);
+                      if (xmDevInfo != null) {
+                        SDBDeviceInfo sdb = xmDevInfo.getSdbDevInfo();
+                        if (sdb != null) networkMode = sdb.connectType;
+                      }
+                    } catch (Throwable ignoredNet) {}
+                    try {
+                      org.json.JSONObject sys = root.optJSONObject("SystemInfo");
+                      if (sys != null) {
+                        sys.put("networkMode", networkMode);
+                      } else {
+                        root.put("networkMode", networkMode);
+                      }
+                    } catch (Throwable ignoredPut) {}
+                  }
+                } catch (Throwable ignoredOuter) {}
                 // Спец-агрегация для Record/ExtRecord/SupportExtRecord: собрать массив из Record.[i] при отсутствии прямого массива
                 try {
                   String[] keysToAggregate = new String[]{"Record", "ExtRecord", "SupportExtRecord"};
