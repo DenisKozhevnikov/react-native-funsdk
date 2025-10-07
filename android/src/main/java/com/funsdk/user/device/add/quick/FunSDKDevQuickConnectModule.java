@@ -26,6 +26,9 @@ import com.manager.device.DeviceManager;
 import com.manager.db.XMDevInfo;
 import com.manager.account.AccountManager;
 import com.manager.account.BaseAccountManager;
+import com.manager.db.DevDataCenter;
+import com.lib.sdk.struct.SDBDeviceInfo;
+import com.basic.G;
 import com.utils.XUtils;
 
 import com.funsdk.utils.Constants;
@@ -41,6 +44,142 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
   public FunSDKDevQuickConnectModule(ReactApplicationContext context) {
     super(context);
     this.reactContext = context;
+  }
+
+  /**
+   * Поиск устройств через Wi‑Fi с явным ssid (аналог iOS startDeviceSearch)
+   */
+  @ReactMethod
+  public void startDeviceSearch(ReadableMap params) {
+    try {
+      String ssidWifi = params.hasKey("ssidWifi") && !params.isNull("ssidWifi") ? params.getString("ssidWifi") : null;
+      String passWifi = params.hasKey(Constants.PASS_WIFI) && !params.isNull(Constants.PASS_WIFI)
+          ? params.getString(Constants.PASS_WIFI)
+          : null;
+      boolean isDevDeleteFromOthers = params.hasKey(Constants.DEVICE_IS_DELETE_FROM_OTHERS)
+          && !params.isNull(Constants.DEVICE_IS_DELETE_FROM_OTHERS)
+              ? params.getBoolean(Constants.DEVICE_IS_DELETE_FROM_OTHERS)
+              : false;
+
+      WritableMap result = Arguments.createMap();
+      result.putString("status", "поиск начат");
+      EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
+      sendDeviceConnectStatus("start", null, null, null);
+
+      XMWifiManager xmWifiManager = XMWifiManager.getInstance((Context) reactContext);
+      // если ssid не передан — используем текущий
+      String targetSsid = ssidWifi != null && !ssidWifi.isEmpty() ? ssidWifi : xmWifiManager.getSSID();
+
+      WifiInfo wifiInfo = xmWifiManager.getWifiInfo();
+      DhcpInfo dhcpInfo = xmWifiManager.getDhcpInfo();
+      ScanResult scanResult = xmWifiManager.getCurScanResult(targetSsid);
+
+      if (scanResult == null || wifiInfo == null || dhcpInfo == null) {
+        WritableMap err = Arguments.createMap();
+        err.putString("data", "curSSID: " + targetSsid);
+        err.putString("status", "ошибка при получении wifi данных");
+        EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, err);
+        sendDeviceConnectStatus("error-wifi", null, null, null);
+        return;
+      }
+
+      WritableMap step = Arguments.createMap();
+      step.putString("data", "curSSID: " + targetSsid);
+      step.putString("status", "поиск продолжается");
+      EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, step);
+
+      final String ssidInited = XUtils.initSSID(targetSsid);
+      final String pwd = passWifi != null ? passWifi : "";
+
+      DeviceManager.getInstance().startQuickSetWiFi(
+          ssidInited,
+          pwd,
+          scanResult.capabilities,
+          dhcpInfo,
+          180 * 1000,
+          new DeviceManager.OnQuickSetWiFiListener() {
+            @Override
+            public void onQuickSetResult(XMDevInfo xmDevInfo, int errorId) {
+              if (xmDevInfo != null) {
+                WritableMap ok = Arguments.createMap();
+                ok.putString("status",
+                    "успешно найдено устройство, идём получать случайное имя пользователя и пароль");
+                EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, ok);
+
+                isNeedGetDevRandomUserPwdAgain = true;
+                getDevRandomUserPwd(xmDevInfo, isDevDeleteFromOthers);
+              } else {
+                WritableMap fail = Arguments.createMap();
+                fail.putString("error", "errorId: " + errorId);
+                fail.putString("status", "ошибка при поиске");
+                EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, fail);
+                sendDeviceConnectStatus("error", errorId, null, null);
+              }
+            }
+          });
+    } catch (Throwable t) {
+      WritableMap err = Arguments.createMap();
+      err.putString("status", "ошибка при запуске поиска: " + t.getMessage());
+      EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, err);
+      sendDeviceConnectStatus("error", -1, null, null);
+    }
+  }
+
+  /**
+   * Добавление найденного устройства (аналог iOS addFoundDevice)
+   * deviceInfo: { deviceMac, deviceName, loginName, loginPassword, deviceType }
+   */
+  @ReactMethod
+  public void addFoundDevice(ReadableMap deviceInfo, Promise promise) {
+    try {
+      SDBDeviceInfo sdb = new SDBDeviceInfo();
+
+      if (deviceInfo.hasKey("deviceMac") && !deviceInfo.isNull("deviceMac")) {
+        G.SetValue(sdb.st_0_Devmac, deviceInfo.getString("deviceMac"));
+      }
+      if (deviceInfo.hasKey("deviceName") && !deviceInfo.isNull("deviceName")) {
+        G.SetValue(sdb.st_1_Devname, deviceInfo.getString("deviceName"));
+      }
+      if (deviceInfo.hasKey("deviceIp") && !deviceInfo.isNull("deviceIp")) {
+        G.SetValue(sdb.st_2_Devip, deviceInfo.getString("deviceIp"));
+      }
+      if (deviceInfo.hasKey("loginName") && !deviceInfo.isNull("loginName")) {
+        G.SetValue(sdb.st_4_loginName, deviceInfo.getString("loginName"));
+      }
+      if (deviceInfo.hasKey("loginPassword") && !deviceInfo.isNull("loginPassword")) {
+        G.SetValue(sdb.st_5_loginPsw, deviceInfo.getString("loginPassword"));
+      }
+      if (deviceInfo.hasKey("deviceType") && !deviceInfo.isNull("deviceType")) {
+        sdb.st_7_nType = deviceInfo.getInt("deviceType");
+      }
+
+      XMDevInfo xmDevInfo = new XMDevInfo();
+      xmDevInfo.sdbDevInfoToXMDevInfo(sdb);
+
+      AccountManager.getInstance().addDev(xmDevInfo, false,
+          new BaseAccountManager.OnAccountManagerListener() {
+            @Override
+            public void onSuccess(int msgId) {
+              WritableMap res = Arguments.createMap();
+              res.putBoolean("success", true);
+              res.putString("deviceMac", xmDevInfo.getDevId());
+              res.putString("deviceName", xmDevInfo.getDevName());
+              res.putString("message", "added");
+              promise.resolve(res);
+            }
+
+            @Override
+            public void onFailed(int msgId, int errorId) {
+              promise.reject("addFoundDevice_error", msgId + " " + errorId);
+            }
+
+            @Override
+            public void onFunSDKResult(Message message, MsgContent msgContent) {
+            }
+          });
+    } catch (Throwable t) {
+      promise.reject("addFoundDevice_exception", t);
+    }
   }
 
   @Override
