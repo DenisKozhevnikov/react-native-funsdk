@@ -68,8 +68,11 @@ public class FunSDKDevLanConnectModule extends ReactContextBaseJavaModule implem
     // Если его нет, можно fallback на H264_DVR_SearchDevice через низкоуровневый биндинг.
     try {
       Log.e("LAN_ANDROID", "Start LAN search, timeout=" + timeout + ", seq=" + seq);
-      // Попытка вызвать скрытую обёртку; если метод отсутствует — выбросит NoSuchMethodError
-      FunSDK.DevSearchDevices(mUserId, timeout, seq);
+      try {
+        FunSDK.DevSearchDevice(mUserId, timeout, seq);
+      } catch (Throwable t2) {
+        throw t2;
+      }
     } catch (Throwable t) {
       // Если в данной версии обёртка недоступна — немедленно фейлим, чтобы не зависало
       Promise p = pending.remove(seq);
@@ -105,9 +108,9 @@ public class FunSDKDevLanConnectModule extends ReactContextBaseJavaModule implem
             SDBDeviceInfo it = infos[i];
             if (it == null) continue;
             WritableMap m = Arguments.createMap();
-            m.putString("devId", G.BytesToString(it.st_0_Devmac));
-            m.putString("deviceName", G.BytesToString(it.st_1_Devname));
-            m.putString("deviceIp", G.BytesToString(it.st_2_Devip));
+            m.putString("devId", G.ToString(it.st_0_Devmac));
+            m.putString("deviceName", G.ToString(it.st_1_Devname));
+            m.putString("deviceIp", G.ToString(it.st_2_Devip));
             m.putString("port", String.valueOf(it.st_6_nDMZTcpPort));
             m.putString("deviceType", String.valueOf(it.st_7_nType));
             arr.pushMap(m);
