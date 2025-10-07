@@ -334,41 +334,40 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
    */
   private void getDevRandomUserPwd(XMDevInfo xmDevInfo, boolean isDevDeleteFromOthers) {
     DeviceManager.getInstance().getDevRandomUserPwd(xmDevInfo, new DeviceManager.OnDevManagerListener() {
-      @Override
-      public void onSuccess(String devId, int operationType, Object result) {
-        // Получите информацию о токене входа в устройство: сначала войдите на
-        // устройство, а затем получите ее через DevGetLocalEncToken.
-        DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
           @Override
           public void onSuccess(String devId, int operationType, Object result) {
-            WritableMap resultMap = Arguments.createMap();
-            resultMap.putString("status", "успешно авторизовано на устройстве");
-            EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultMap);
+            // Получите информацию о токене входа в устройство: сначала войдите на
+            // устройство, а затем получите ее через DevGetLocalEncToken.
+            DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
+              @Override
+              public void onSuccess(String devId, int operationType, Object result) {
+                WritableMap resultMap = Arguments.createMap();
+                resultMap.putString("status", "успешно авторизовано на устройстве");
+                EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultMap);
 
-            // Получить информацию о токене входа в систему устройства
-            String devToken = FunSDK.DevGetLocalEncToken(devId);
-            xmDevInfo.setDevToken(devToken);
+                // Получить информацию о токене входа в систему устройства
+                String devToken = FunSDK.DevGetLocalEncToken(devId);
+                xmDevInfo.setDevToken(devToken);
 
-            WritableMap resultToken = Arguments.createMap();
-            resultToken.putString("status", "Начинаем добавление устройства. Токен устройства - " + devToken);
-            EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultToken);
+                WritableMap resultToken = Arguments.createMap();
+                resultToken.putString("status", "готово к добавлению. Токен устройства - " + devToken);
+                EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultToken);
 
-            // если будет необходимо выбирать на этой стадии добавлять устройство или нет,
-            // то надо будет переделать
-            addDevice(xmDevInfo, isDevDeleteFromOthers);
+                // Сообщаем в RN, что устройство готово к добавлению (как на iOS)
+                sendDeviceConnectStatus("readyToAdd", null, null, xmDevInfo);
+              }
+
+              @Override
+              public void onFailed(String devId, int msgId, String jsonName, int errorId) {
+                WritableMap result = Arguments.createMap();
+                result.putString("error", "errorId: " + errorId);
+                result.putString("status", "ошибка при авторизации на устройстве");
+                EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
+
+                sendDeviceConnectStatus("error", errorId, null, null);
+              }
+            });
           }
-
-          @Override
-          public void onFailed(String devId, int msgId, String jsonName, int errorId) {
-            WritableMap result = Arguments.createMap();
-            result.putString("error", "errorId: " + errorId);
-            result.putString("status", "ошибка при авторизации на устройстве");
-            EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
-
-            sendDeviceConnectStatus("error", errorId, null, null);
-          }
-        });
-      }
 
       @Override
       public void onFailed(String devId, int msgId, String jsonName, int errorId) {
@@ -398,16 +397,12 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
         }
 
         if (errorId == -400009) {
-          // Если случайное имя пользователя и пароль не поддерживаются, войдите на
-          // устройство с именем пользователя: admin и пустым паролем.
-          // Вы хотите удалить это устройство из других учетных записей?
+          // Случайные учетные данные не поддерживаются — сообщаем, что готово к добавлению
           WritableMap resultErr = Arguments.createMap();
-          resultErr.putString("status", "ошибка: -400009 но всё равно идём авторизовываться");
+          resultErr.putString("status", "случайные учетные данные не поддерживаются — готово к добавлению");
           EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultErr);
 
-          // если будет необходимо выбирать на этой стадии добавлять устройство или нет,
-          // то надо будет переделать
-          addDevice(xmDevInfo, isDevDeleteFromOthers);
+          sendDeviceConnectStatus("readyToAdd", null, null, xmDevInfo);
         } else {
           // Не удалось настроить сеть:
           // ToastUtils.showLong("配网失败：" + errorId);
