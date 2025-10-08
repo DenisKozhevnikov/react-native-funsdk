@@ -455,7 +455,13 @@ public class FunSDKDevAlarmModule extends ReactContextBaseJavaModule implements 
   }
 
   @Override
-  public void onAllUnLinkResult() {
+  public void onAllUnLinkResult(boolean isSuccess) {
+    // no-op
+  }
+
+  // Required by XMPushManager.OnXMPushLinkListener (distinct from IFunSDKResult)
+  @Override
+  public void onFunSDKResult(Message message, MsgContent msgContent) {
     // no-op
   }
 
@@ -572,11 +578,7 @@ public class FunSDKDevAlarmModule extends ReactContextBaseJavaModule implements 
     return 0;
   }
 
-  // Required by XMPushManager.OnXMPushLinkListener (distinct from IFunSDKResult)
-  @Override
-  public void onFunSDKResult(Message message, MsgContent msgContent) {
-    // no-op
-  }
+  // Note: Already implement IFunSDKResult.OnFunSDKResult below; remove duplicate override
 
   @ReactMethod
   public void deleteAlarmInfo(ReadableMap params, Promise promise) {

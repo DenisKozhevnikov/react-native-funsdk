@@ -190,13 +190,12 @@ public class FunSDKPushMessageModule extends ReactContextBaseJavaModule implemen
   }
 
   @Override
-  public void onAllUnLinkResult() {
-    System.out.println("onPush onAllUnLinkResult: ");
-
+  public void onAllUnLinkResult(boolean isSuccess) {
+    System.out.println("onPush onAllUnLinkResult: " + isSuccess);
   }
 
-  @Override
+  // Note: This class does not implement IFunSDKResult; remove @Override to avoid compilation issues
   public void onFunSDKResult(Message message, MsgContent msgContent) {
-
+    // no-op
   }
 }

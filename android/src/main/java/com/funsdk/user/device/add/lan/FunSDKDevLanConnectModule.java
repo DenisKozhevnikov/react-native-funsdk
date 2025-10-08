@@ -2,6 +2,8 @@ package com.funsdk.user.device.add.lan;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
@@ -87,6 +89,19 @@ public class FunSDKDevLanConnectModule extends ReactContextBaseJavaModule implem
         Log.w("LAN_ANDROID", "Failed to acquire multicast lock: " + e.getMessage());
       }
     }
+
+    // Фоллбек: если SDK не вернёт событие, завершаем промис пустым массивом
+    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+      @Override
+      public void run() {
+        Promise p = pending.remove(seq);
+        if (p != null) {
+          Log.w("LAN_ANDROID", "LAN search timeout (" + timeout + " ms), resolving empty result");
+          releaseMulticastLock();
+          p.resolve(Arguments.createArray());
+        }
+      }
+    }, timeout + 1000);
 
     // Все вызовы FunSDK выполняем на UI-потоке (требуется Looper)
     UiThreadUtil.runOnUiThread(new Runnable() {
