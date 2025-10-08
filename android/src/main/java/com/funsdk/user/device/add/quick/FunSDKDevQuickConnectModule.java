@@ -1,10 +1,12 @@
 package com.funsdk.user.device.add.quick;
 
 import android.content.Context;
+import android.location.LocationManager;
 import android.net.DhcpInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -46,12 +48,28 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
     this.reactContext = context;
   }
 
-  /**
-   * Поиск устройств через Wi‑Fi с явным ssid (аналог iOS startDeviceSearch)
-   */
+  
+  private boolean checkLocationService() {
+    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+      LocationManager locationManager = (LocationManager) reactContext.getSystemService(Context.LOCATION_SERVICE);
+      return locationManager != null && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    } else {
+      return true;
+    }
+  }
+
+  
   @ReactMethod
   public void startDeviceSearch(ReadableMap params) {
     try {
+      if (!checkLocationService()) {
+        WritableMap err = Arguments.createMap();
+        err.putString("status", "ошибка: геолокация отключена, включите GPS для WiFi поиска");
+        EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, err);
+        sendDeviceConnectStatus("error-location", null, null, null);
+        return;
+      }
+
       String ssidWifi = params.hasKey("ssidWifi") && !params.isNull("ssidWifi") ? params.getString("ssidWifi") : null;
       String passWifi = params.hasKey(Constants.PASS_WIFI) && !params.isNull(Constants.PASS_WIFI)
           ? params.getString(Constants.PASS_WIFI)
@@ -67,7 +85,6 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
       sendDeviceConnectStatus("start", null, null, null);
 
       XMWifiManager xmWifiManager = XMWifiManager.getInstance((Context) reactContext);
-      // если ssid не передан — используем текущий
       String targetSsid = ssidWifi != null && !ssidWifi.isEmpty() ? ssidWifi : xmWifiManager.getSSID();
 
       WifiInfo wifiInfo = xmWifiManager.getWifiInfo();
@@ -323,21 +340,13 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
   }
 
   boolean isInit = false;
-  // Вам нужно снова получить случайное имя пользователя и пароль (используется
-  // после успешной настройки сети, поскольку порт 34567 устройства еще не
-  // установлен, приложению не удастся получить доступ к устройству через IP,
-  // поэтому вам нужно повторить попытку)
   boolean isNeedGetDevRandomUserPwdAgain = true;
 
-  /**
-   * Получите случайное имя пользователя и пароль для устройства
-   */
+  
   private void getDevRandomUserPwd(XMDevInfo xmDevInfo, boolean isDevDeleteFromOthers) {
     DeviceManager.getInstance().getDevRandomUserPwd(xmDevInfo, new DeviceManager.OnDevManagerListener() {
           @Override
           public void onSuccess(String devId, int operationType, Object result) {
-            // Получите информацию о токене входа в устройство: сначала войдите на
-            // устройство, а затем получите ее через DevGetLocalEncToken.
             DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
               @Override
               public void onSuccess(String devId, int operationType, Object result) {
@@ -345,7 +354,6 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
                 resultMap.putString("status", "успешно авторизовано на устройстве");
                 EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultMap);
 
-                // Получить информацию о токене входа в систему устройства
                 String devToken = FunSDK.DevGetLocalEncToken(devId);
                 xmDevInfo.setDevToken(devToken);
 
@@ -353,7 +361,6 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
                 resultToken.putString("status", "готово к добавлению. Токен устройства - " + devToken);
                 EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultToken);
 
-                // Сообщаем в RN, что устройство готово к добавлению (как на iOS)
                 sendDeviceConnectStatus("readyToAdd", null, null, xmDevInfo);
               }
 
@@ -379,8 +386,6 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
         EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, result);
 
         if (isNeedGetDevRandomUserPwdAgain && (errorId == -10005 || errorId == -100000)) {
-          // Если время получения случайного имени пользователя и пароля истекло, вы
-          // можете подождать 1 секунду и повторить попытку.
           new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -397,15 +402,12 @@ public class FunSDKDevQuickConnectModule extends ReactContextBaseJavaModule {
         }
 
         if (errorId == -400009) {
-          // Случайные учетные данные не поддерживаются — сообщаем, что готово к добавлению
           WritableMap resultErr = Arguments.createMap();
           resultErr.putString("status", "случайные учетные данные не поддерживаются — готово к добавлению");
           EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultErr);
 
           sendDeviceConnectStatus("readyToAdd", null, null, xmDevInfo);
         } else {
-          // Не удалось настроить сеть:
-          // ToastUtils.showLong("配网失败：" + errorId);
           WritableMap resultErr = Arguments.createMap();
           resultErr.putString("status", "Не удалось настроить сеть - " + errorId);
           EventSender.sendEvent(getReactApplicationContext(), ON_SET_WIFI_DEBUG, resultErr);

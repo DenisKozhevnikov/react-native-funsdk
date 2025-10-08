@@ -1,10 +1,11 @@
 package com.funsdk.user.device.add.lan;
 
 import android.content.Context;
+import android.location.LocationManager;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -15,44 +16,33 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.UiThreadUtil;
 
-import com.lib.FunSDK;
-import com.lib.IFunSDKResult;
-import com.lib.MsgContent;
-import com.lib.EUIMSG;
-import com.lib.sdk.struct.SDBDeviceInfo;
-import com.basic.G;
+import com.manager.device.DeviceManager;
+import com.manager.db.XMDevInfo;
 
-import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-
-public class FunSDKDevLanConnectModule extends ReactContextBaseJavaModule implements IFunSDKResult {
+/**
+ * LAN поиск устройств через высокоуровневый DeviceManager API (как в официальном демо)
+ */
+public class FunSDKDevLanConnectModule extends ReactContextBaseJavaModule implements DeviceManager.OnSearchLocalDevListener {
   private final ReactApplicationContext reactContext;
-  private int mUserId = 0;
-  private int mSeq = 1;
   private final Map<Integer, Promise> pending = new HashMap<>();
   private WifiManager.MulticastLock multicastLock;
+  private int mSeq = 1;
 
   public FunSDKDevLanConnectModule(ReactApplicationContext context) {
     super(context);
     this.reactContext = context;
     
-    // Не запрашиваем handle здесь (поток create_react_context без Looper)
-    mUserId = 0;
-    Log.d("LAN_ANDROID", "Init module, userId=" + mUserId);
+    Log.d("LAN_ANDROID", "Init LAN module with DeviceManager API");
     
     WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
     if (wifiManager != null) {
       multicastLock = wifiManager.createMulticastLock("FunSDK_LAN_Search");
     }
-  }
-
-  @Override
-  public void onCatalystInstanceDestroy() {
-    super.onCatalystInstanceDestroy();
   }
 
   @Override
@@ -65,21 +55,30 @@ public class FunSDKDevLanConnectModule extends ReactContextBaseJavaModule implem
     return mSeq;
   }
 
-  private void ensureUser() {
-    // Ничего не делаем здесь; получение userId только на UI-потоке в момент вызова
+  
+  private boolean checkLocationService() {
+    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+      LocationManager locationManager = (LocationManager) reactContext.getSystemService(Context.LOCATION_SERVICE);
+      return locationManager != null && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    } else {
+      return true;
+    }
   }
 
   @ReactMethod
   public void searchDevice(ReadableMap params, Promise promise) {
-    ensureUser();
+    if (!checkLocationService()) {
+      promise.reject("LOCATION_DISABLED", "Геолокация отключена, включите GPS для LAN поиска");
+      return;
+    }
     final int timeout = (params != null && params.hasKey("timeout") && !params.isNull("timeout"))
         ? params.getInt("timeout")
-        : 4000; // как на iOS
-
+        : 4000;
+    
     final int seq = nextSeq();
     pending.put(seq, promise);
 
-    Log.d("LAN_ANDROID", "Starting LAN device search - timeout=" + timeout + ", seq=" + seq + ", userId=" + mUserId);
+    Log.d("LAN_ANDROID", "Starting LAN device search with DeviceManager - timeout=" + timeout + ", seq=" + seq);
 
     if (multicastLock != null && !multicastLock.isHeld()) {
       try {
@@ -90,7 +89,7 @@ public class FunSDKDevLanConnectModule extends ReactContextBaseJavaModule implem
       }
     }
 
-    // Фоллбек: если SDK не вернёт событие, завершаем промис пустым массивом
+    // Фоллбек: если DeviceManager не вернёт результат, завершаем промис пустым массивом
     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
       @Override
       public void run() {
@@ -103,37 +102,18 @@ public class FunSDKDevLanConnectModule extends ReactContextBaseJavaModule implem
       }
     }, timeout + 1000);
 
-    // Все вызовы FunSDK выполняем на UI-потоке (требуется Looper)
-    UiThreadUtil.runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          if (mUserId == 0) {
-            mUserId = FunSDK.GetId(0, FunSDKDevLanConnectModule.this);
-            Log.d("LAN_ANDROID", "Got SDK handle on UI thread: " + mUserId);
-          }
-
-          int result = FunSDK.DevSearchDevice(mUserId, timeout, seq);
-          Log.d("LAN_ANDROID", "DevSearchDevice called, result=" + result);
-
-          if (result < 0) {
-            Log.e("LAN_ANDROID", "Search device failed with result: " + result);
-            Promise p = pending.remove(seq);
-            if (p != null) {
-              p.reject("SEARCH_FAILED", "Search returned error code: " + result);
-            }
-            releaseMulticastLock();
-          }
-        } catch (Throwable t) {
-          Log.e("LAN_ANDROID", "Exception during device search: " + t.getMessage(), t);
-          Promise p = pending.remove(seq);
-          if (p != null) {
-            p.reject("LAN_SEARCH_EXCEPTION", t.getMessage(), t);
-          }
-          releaseMulticastLock();
-        }
+    try {
+      // Используем высокоуровневый API DeviceManager как в официальном демо
+      DeviceManager.getInstance().searchLanDevice(this);
+      Log.d("LAN_ANDROID", "DeviceManager.searchLanDevice() called");
+    } catch (Throwable t) {
+      Log.e("LAN_ANDROID", "Exception during device search: " + t.getMessage(), t);
+      Promise p = pending.remove(seq);
+      if (p != null) {
+        p.reject("LAN_SEARCH_EXCEPTION", t.getMessage(), t);
       }
-    });
+      releaseMulticastLock();
+    }
   }
   
   @ReactMethod
@@ -170,81 +150,70 @@ public class FunSDKDevLanConnectModule extends ReactContextBaseJavaModule implem
     }
   }
 
+  /**
+   * Callback от DeviceManager.searchLanDevice() - высокоуровневый результат
+   */
   @Override
-  public int OnFunSDKResult(Message msg, MsgContent ex) {
-    final int what = msg.what;
-    final int arg1 = msg.arg1;
-    final int seq = msg.arg2;
-    Promise promise = pending.get(seq);
-
-    Log.d("LAN_ANDROID", "OnFunSDKResult: what=" + what + ", arg1=" + arg1 + ", seq=" + seq + ", hasPromise=" + (promise != null));
-
-    if (what == EUIMSG.DEV_SEARCH_DEVICES) {
-      releaseMulticastLock();
+  public void onSearchLocalDevResult(List<XMDevInfo> localDevList) {
+    releaseMulticastLock();
+    
+    Log.d("LAN_ANDROID", "onSearchLocalDevResult: found " + (localDevList != null ? localDevList.size() : 0) + " devices");
+    
+    try {
+      // Берём первый pending промис (в нашем случае всегда один активный поиск)
+      Promise promise = null;
+      Integer seq = null;
+      for (Map.Entry<Integer, Promise> entry : pending.entrySet()) {
+        promise = entry.getValue();
+        seq = entry.getKey();
+        break;
+      }
       
-      try {
-        if (promise == null) {
-          Log.w("LAN_ANDROID", "No promise found for seq=" + seq);
-          return 0;
-        }
-        
-        if (arg1 < 0) {
-          Log.e("LAN_ANDROID", "Search failed with error code: " + arg1);
-          pending.remove(seq);
-          promise.reject("SEARCH_DEVICE_ERROR", "Search failed with error code: " + arg1);
-          return 0;
-        }
-
-        int count = arg1;
-        Log.d("LAN_ANDROID", "Found " + count + " devices");
-        
-        WritableArray arr = Arguments.createArray();
-        if (ex != null && ex.pData != null && count > 0) {
-          SDBDeviceInfo[] infos = new SDBDeviceInfo[count];
-          G.BytesToObj(infos, ex.pData);
+      if (promise == null) {
+        Log.w("LAN_ANDROID", "No pending promise found for search result");
+        return;
+      }
+      
+      pending.remove(seq);
+      
+      WritableArray arr = Arguments.createArray();
+      if (localDevList != null && !localDevList.isEmpty()) {
+        for (XMDevInfo devInfo : localDevList) {
+          if (devInfo == null) continue;
           
-          for (int i = 0; i < infos.length; i++) {
-            SDBDeviceInfo it = infos[i];
-            if (it == null) {
-              Log.w("LAN_ANDROID", "Device info at index " + i + " is null");
-              continue;
-            }
-            
-            WritableMap m = Arguments.createMap();
-            String devId = G.ToString(it.st_0_Devmac);
-            String deviceName = G.ToString(it.st_1_Devname);
-            String deviceIp = G.ToString(it.st_2_Devip);
-            int port = it.st_6_nDMZTcpPort;
-            int deviceType = it.st_7_nType;
-
-            Log.d("LAN_ANDROID", "Device " + i + ": id=" + devId + ", name=" + deviceName +
-                  ", ip=" + deviceIp + ", port=" + port + ", type=" + deviceType);
-
-            m.putString("devId", devId);
-            m.putString("deviceName", deviceName);
-            m.putString("deviceIp", deviceIp);
-            m.putInt("port", port);
-            m.putInt("deviceType", deviceType);
-            arr.pushMap(m);
-          }
-        }
-        
-        Log.d("LAN_ANDROID", "Resolving promise with " + arr.size() + " devices");
-        pending.remove(seq);
-        promise.resolve(arr);
-        
-      } catch (Throwable t) {
-        Log.e("LAN_ANDROID", "Exception in OnFunSDKResult: " + t.getMessage(), t);
-        pending.remove(seq);
-        if (promise != null) {
-          promise.reject("SEARCH_DEVICE_EXCEPTION", t.getMessage(), t);
+          WritableMap m = Arguments.createMap();
+          
+          // Используем методы XMDevInfo для получения данных
+          String devId = devInfo.getDevId();
+          String deviceName = devInfo.getDevName();
+          String deviceIp = devInfo.getDevIp();
+          int port = devInfo.getDevPort();
+          int deviceType = devInfo.getDevType();
+          
+          Log.d("LAN_ANDROID", "Device: id=" + devId + ", name=" + deviceName + 
+                ", ip=" + deviceIp + ", port=" + port + ", type=" + deviceType);
+          
+          m.putString("devId", devId != null ? devId : "");
+          m.putString("deviceName", deviceName != null ? deviceName : "");
+          m.putString("deviceIp", deviceIp != null ? deviceIp : "");
+          m.putInt("port", port);
+          m.putInt("deviceType", deviceType);
+          arr.pushMap(m);
         }
       }
-      return 0;
+      
+      Log.d("LAN_ANDROID", "Resolving promise with " + arr.size() + " devices");
+      promise.resolve(arr);
+      
+    } catch (Throwable t) {
+      Log.e("LAN_ANDROID", "Exception in onSearchLocalDevResult: " + t.getMessage(), t);
+      // Очищаем все pending промисы при ошибке
+      for (Promise p : pending.values()) {
+        if (p != null) {
+          p.reject("SEARCH_DEVICE_EXCEPTION", t.getMessage(), t);
+        }
+      }
+      pending.clear();
     }
-
-    return 0;
   }
 }
-
-
