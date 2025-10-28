@@ -607,29 +607,41 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
               data = ex.str.trim();
             }
           }
-           if (promise == null && data != null && !data.isEmpty()) {
-            String returnedName = extractNameFromJson(sanitizeJson(data));
-            if (returnedName != null) {
-              Integer matchedSeq = null;
-              Pending matchedPending = null;
-              Iterator<Entry<Integer, Pending>> it = pending.entrySet().iterator();
-              while (it.hasNext()) {
-                Entry<Integer, Pending> e = it.next();
-                Pending p = e.getValue();
-                if (p != null && returnedName.equals(p.name)) {
-                  matchedSeq = e.getKey();
-                  matchedPending = p;
-                  it.remove();
-                  break;
-                }
+          if (promise == null && data != null && !data.isEmpty()) {
+            String cleanedForMatch = sanitizeJson(data);
+            String returnedName = extractNameFromJson(cleanedForMatch);
+
+            Integer matchedSeq = null;
+            Pending matchedPending = null;
+            Iterator<Entry<Integer, Pending>> it = pending.entrySet().iterator();
+            while (it.hasNext()) {
+              Entry<Integer, Pending> e = it.next();
+              Pending p = e.getValue();
+              if (p == null || !"GET".equals(p.op)) continue;
+
+              boolean nameEquals = returnedName != null && returnedName.equals(p.name);
+              boolean jsonHasKey = false;
+              if (!nameEquals) {
+                try {
+                  String keyA = "\"" + p.name + "\"";
+                  String keyB = "\"" + p.name + ".[";
+                  jsonHasKey = (cleanedForMatch != null && (cleanedForMatch.contains(keyA) || cleanedForMatch.contains(keyB)));
+                } catch (Throwable ignoredScan) {}
               }
-              if (matchedSeq != null && matchedPending != null) {
-                Runnable r2 = timeoutRunnables.remove(matchedSeq);
-                if (r2 != null) mainHandler.removeCallbacks(r2);
-                promise = matchedPending.promise;
-                pendingReq = matchedPending;
-                Log.e(TAG, "Matched pending by name fallback: name=" + returnedName + ", matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
+
+              if (nameEquals || jsonHasKey) {
+                matchedSeq = e.getKey();
+                matchedPending = p;
+                it.remove();
+                break;
               }
+            }
+            if (matchedSeq != null && matchedPending != null) {
+              Runnable r2 = timeoutRunnables.remove(matchedSeq);
+              if (r2 != null) mainHandler.removeCallbacks(r2);
+              promise = matchedPending.promise;
+              pendingReq = matchedPending;
+              Log.e(TAG, "Matched pending by fallback: name=" + (returnedName != null ? returnedName : matchedPending.name) + ", matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
             }
           }
           if (promise != null) {
@@ -653,7 +665,14 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
               boolean headerOnly = false;
               if (obj != null) {
                 int len = obj.length();
-                boolean hasNameOnly = obj.has("Name") && (expectName == null || (!obj.has(expectName) && !cleaned.contains(expectName + ".[")));
+                boolean expectMissing = false;
+                if (expectName != null && !expectName.isEmpty()) {
+                  boolean hasExact = obj.has(expectName);
+                  boolean hasIndexed = false;
+                  try { hasIndexed = cleaned.contains("\"" + expectName + ".["); } catch (Throwable ignored) {}
+                  expectMissing = !(hasExact || hasIndexed);
+                }
+                boolean hasNameOnly = obj.has("Name") && expectMissing;
                 headerOnly = hasNameOnly && len <= 3;
               }
               if (headerOnly) {
