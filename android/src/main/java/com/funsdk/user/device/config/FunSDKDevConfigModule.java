@@ -302,7 +302,6 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
             arr.pushMap(m);
             value.putArray(name, arr);
           } else {
-            // Неожиданное — положим как строку в массив
             WritableArray arr = Arguments.createArray();
             arr.pushString(String.valueOf(node));
             value.putArray(name, arr);
@@ -340,21 +339,18 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     String name = expectName != null ? expectName : extractNameFromJson(cleaned);
     if (name == null) name = "";
 
-    // гарантируем поле Name
     try {
       if (!value.hasKey("Name") || value.isNull("Name") || value.getString("Name") == null || value.getString("Name").isEmpty()) {
         value.putString("Name", name);
       }
     } catch (Throwable ignored) {}
 
-    // уже есть корректный массив — выходим
     try {
       if (value.hasKey(name) && value.getType(name) == ReadableType.Array) {
         return value;
       }
     } catch (Throwable ignored) {}
 
-    // попытаемся собрать массив из JSON корня
     try {
       org.json.JSONObject root = new org.json.JSONObject(cleaned);
 
@@ -418,6 +414,13 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     pending.put(seq, new Pending(promise, devId, name, effectiveChannel, timeout, "GET"));
 
     int outLenEff = nOutBufLen;
+    if (outLenEff <= 0) {
+      if ("Users".equals(name)) {
+        outLenEff = 64 * 1024; // 64KB
+      } else {
+        outLenEff = 4096;
+      }
+    }
 
     Log.e(TAG, "getDevConfig: devId=" + devId + ", name=" + name + ", outLenRaw=" + nOutBufLen + ", outLenEff=" + outLenEff + ", chRaw=" + channel + ", effectiveCh=" + effectiveChannel + ", timeout=" + timeout + ", seq=" + seq);
     // int DevGetConfigByJson(int userId, String devId, String cmd, int outLen, int chn, int timeout, int seq)
