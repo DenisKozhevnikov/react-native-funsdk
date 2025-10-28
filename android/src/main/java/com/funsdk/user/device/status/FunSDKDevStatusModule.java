@@ -37,6 +37,11 @@ import com.funsdk.utils.DataConverter;
 import java.util.HashMap;
 import java.util.Map;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import android.os.Handler;
+import android.os.Looper;
 
 // // To reference the pop-up password input box below, if you don't want to
 // // participate in the pop-up dialog, you can follow the steps below:
@@ -254,12 +259,40 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     if (ReactParamsCheck
         .checkParams(new String[] { Constants.DEVICE_ID, Constants.DEVICE_LOGIN, Constants.DEVICE_PASSWORD,
             Constants.DEVICE_NEW_PASSWORD }, params)) {
-      DeviceManager.getInstance().modifyDevPwd(
-          params.getString(Constants.DEVICE_ID),
-          params.getString(Constants.DEVICE_LOGIN),
-          params.getString(Constants.DEVICE_PASSWORD),
-          params.getString(Constants.DEVICE_NEW_PASSWORD),
-          getResultCallback(promise));
+      // Выполним смену пароля через ModifyPassword (DevSetConfigByJson), как на iOS
+      final String devId = params.getString(Constants.DEVICE_ID);
+      final String userName = params.getString(Constants.DEVICE_LOGIN);
+      final String oldPwd = params.getString(Constants.DEVICE_PASSWORD);
+      final String newPwd = params.getString(Constants.DEVICE_NEW_PASSWORD);
+
+      ensureUser();
+
+      final int timeoutMs = 20000;
+      final int seq = nextSeq();
+
+      String json = buildModifyPasswordJson(userName, oldPwd, newPwd);
+
+      PendingSet pend = new PendingSet(promise, devId, "ModifyPassword", timeoutMs);
+      pendingSet.put(seq, pend);
+
+      int ret = FunSDK.DevSetConfigByJson(mUserId, devId, "ModifyPassword", json, -1, timeoutMs, seq);
+      if (ret < 0) {
+        pendingSet.remove(seq);
+        promise.reject("DevSetConfigByJson", String.valueOf(ret));
+        return;
+      }
+
+      Runnable r = new Runnable() {
+        @Override
+        public void run() {
+          PendingSet removed = pendingSet.remove(seq);
+          if (removed != null && removed.promise != null) {
+            removed.promise.reject("Timeout", "Timeout: ModifyPassword");
+          }
+        }
+      };
+      pendingSetTimeouts.put(seq, r);
+      mainHandler.postDelayed(r, timeoutMs);
     }
   }
 
@@ -741,6 +774,9 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
   private boolean isRegistered = false;
   private int mSeq = 1;
   private final Map<Integer, PendingLogin> pendingSystemInfo = new HashMap<>();
+  private final Map<Integer, PendingSet> pendingSet = new HashMap<>();
+  private final Map<Integer, Runnable> pendingSetTimeouts = new HashMap<>();
+  private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
   private static class PendingLogin {
     final Promise promise;
@@ -765,11 +801,78 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     return mSeq;
   }
 
+  private static class PendingSet {
+    final Promise promise;
+    final String devId;
+    final String name;
+    final int timeoutMs;
+    PendingSet(Promise promise, String devId, String name, int timeoutMs) {
+      this.promise = promise;
+      this.devId = devId;
+      this.name = name;
+      this.timeoutMs = timeoutMs;
+    }
+  }
+
+  private static String bytesToHex(byte[] bytes) {
+    StringBuilder sb = new StringBuilder(bytes.length * 2);
+    for (byte b : bytes) {
+      sb.append(String.format("%02x", b));
+    }
+    return sb.toString();
+  }
+
+  private static String md5_8(String s) {
+    try {
+      MessageDigest md = MessageDigest.getInstance("MD5");
+      byte[] d = md.digest(s != null ? s.getBytes(StandardCharsets.UTF_8) : new byte[0]);
+      String hex = bytesToHex(d);
+      return hex.substring(0, Math.min(8, hex.length()));
+    } catch (NoSuchAlgorithmException e) {
+      return "";
+    }
+  }
+
+  private static String buildModifyPasswordJson(String userName, String oldPwd, String newPwd) {
+    String old8 = md5_8(oldPwd);
+    String new8 = md5_8(newPwd);
+    // Сформируем JSON в формате FunSDK
+    StringBuilder sb = new StringBuilder();
+    sb.append('{')
+      .append("\"Name\":\"ModifyPassword\",")
+      .append("\"ModifyPassword\":{")
+      .append("\"EncryptType\":\"MD5\",")
+      .append("\"UserName\":\"").append(userName != null ? userName : "").append("\",")
+      .append("\"PassWord\":\"").append(old8).append("\",")
+      .append("\"NewPassWord\":\"").append(new8).append("\"")
+      .append('}')
+      .append('}');
+    return sb.toString();
+  }
+
   @Override
   public int OnFunSDKResult(android.os.Message msg, MsgContent ex) {
     final int what = msg.what;
     final int arg1 = msg.arg1;
     final int seq = msg.arg2;
+
+    // Обработка результатов SET-конфигов (в т.ч. ModifyPassword)
+    PendingSet pendSet = pendingSet.remove(seq);
+    if (pendSet != null && (what == EUIMSG.DEV_SET_JSON || what == EUIMSG.DEV_SET_CONFIG)) {
+      Runnable r = pendingSetTimeouts.remove(seq);
+      if (r != null) mainHandler.removeCallbacks(r);
+
+      if (arg1 >= 0) {
+        WritableMap res = Arguments.createMap();
+        res.putString("s", pendSet.devId);
+        res.putInt("i", 1);
+        res.putNull("value");
+        pendSet.promise.resolve(res);
+      } else {
+        pendSet.promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+      }
+      return 0;
+    }
 
     PendingLogin pend = pendingSystemInfo.remove(seq);
 
