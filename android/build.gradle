@@ -78,7 +78,7 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
 
-  implementation 'com.jftechsoft.funsdk:funsdk:5.0.6'
+  implementation 'com.jftechsoft.funsdk:funsdk:5.0.7'
   implementation 'io.github.xmcamera:uilibrary:2.1'
   
   implementation 'com.alibaba:fastjson:1.1.72.android'
