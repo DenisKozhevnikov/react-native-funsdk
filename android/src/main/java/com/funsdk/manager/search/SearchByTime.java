@@ -30,6 +30,11 @@ public class SearchByTime implements IFunSDKResult {
   private String devId;
   private RecordPlayerAttribute playerAttribute;
   private Promise promise;
+  private boolean retried = false;
+  private Calendar lastTime;
+  private int lastStreamType;
+  private int lastChannelId;
+  private int lastFileType;
 
   public SearchByTime(String deviceId, Promise currentPromise) {
     devDataCenter = DevDataCenter.getInstance();
@@ -50,9 +55,13 @@ public class SearchByTime implements IFunSDKResult {
       int channelId,
       int fileType,
       int seq) {
+    retried = false;
+    lastTime = (Calendar) time.clone();
+    lastStreamType = streamType;
+    lastChannelId = channelId;
+    lastFileType = fileType;
 
-    System.out.println("fileType: ");
-    System.out.println(playerAttribute.getFileType());
+    System.out.println("SEARCH_BY_TIME INPUT: devId=" + getDevId() + ", ch=" + channelId + ", streamType=" + streamType + ", fileType=" + fileType + ", seq=" + seq + ", day=" + time.get(Calendar.YEAR) + "-" + (time.get(Calendar.MONTH) + 1) + "-" + time.get(Calendar.DATE));
 
     SDK_SearchByTime search_info = new SDK_SearchByTime();
     search_info.st_6_nHighStreamType = 0;
@@ -84,7 +93,8 @@ public class SearchByTime implements IFunSDKResult {
     search_info.st_4_stEndTime.st_6_second = 59;
 
     // https://developer.jftech.com/docs/?menusId=ab9a6dddd50c46a6af8a913b472ed015&siderid=1101ce00e1ad4b2e9de5ead32e1cb26c&lang=en#docs-hash-4
-    FunSDK.DevFindFileByTime(userId, getDevId(), G.ObjToBytes(search_info), 10000, seq);
+    int callRet = FunSDK.DevFindFileByTime(userId, getDevId(), G.ObjToBytes(search_info), 15000, seq);
+    System.out.println("SEARCH_BY_TIME CALL ret=" + callRet + ", userId=" + userId + ", seq=" + seq);
     return 0;
   }
 
@@ -186,6 +196,18 @@ public class SearchByTime implements IFunSDKResult {
       case EUIMSG.DEV_FIND_FILE_BY_TIME:
         boolean hasRecords = false;
         if (msg.arg1 < 0) {
+          if ((msg.arg1 == -10005) && !retried) {
+            retried = true;
+            android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
+            h.postDelayed(new Runnable() {
+              @Override public void run() {
+                System.out.println("SEARCH_BY_TIME RETRY due to timeout: seq=" + msg.arg2 + ", devId=" + getDevId());
+                searchFileByTime(lastTime, lastStreamType, lastChannelId, lastFileType, msg.arg2 + 1);
+              }
+            }, 1200);
+            return 0;
+          }
+          System.out.println("SEARCH_BY_TIME ERROR: msgId=" + msg.what + ", err=" + msg.arg1 + ", seq=" + msg.arg2);
           onFailed(msg.what, msg.arg1);
         } else {
           byte[] pRet = getRecordTimes(msg.arg2, ex.pData, ex.str, 1);

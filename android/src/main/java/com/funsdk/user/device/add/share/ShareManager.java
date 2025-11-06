@@ -40,6 +40,8 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ShareManager extends BaseUrlManager {
   private int movedCard;
@@ -50,6 +52,10 @@ public class ShareManager extends BaseUrlManager {
   private ShareManagerServerInteraction serverInteraction;
   // private Map<Integer, OnShareManagerListener> shareManagerListenerMap;
   private static ShareManager shareManager;
+  
+  // Fields from BaseUrlManager that may not exist in new SDK
+  protected boolean isInit = false;
+  protected Retrofit mRetrofit = null;
 
   public static final String POWERS_DEV_INFO_KEY = "devInfo";
   private static final int TIME_OUT = 30;
@@ -91,6 +97,32 @@ public class ShareManager extends BaseUrlManager {
     mRetrofit = null;
     serverInteraction = null;
     // shareManagerListenerMap = null;
+  }
+  
+  // Implement initRetrofit if BaseUrlManager doesn't provide it
+  protected boolean initRetrofit() {
+    try {
+      String baseUrl = getBaseUrl();
+      if (baseUrl == null || baseUrl.isEmpty()) {
+        baseUrl = "https://api.xmcsrv.net/";
+      }
+      
+      mRetrofit = new Retrofit.Builder()
+          .baseUrl(baseUrl)
+          .addConverterFactory(GsonConverterFactory.create())
+          .build();
+      
+      return mRetrofit != null;
+    } catch (Throwable e) {
+      android.util.Log.e("ShareManager", "Failed to init Retrofit: " + e.getMessage());
+      return false;
+    }
+  }
+  
+  // Get base URL - BaseUrlManager.getBaseUrl() doesn't exist in SDK 5.0.6
+  protected String getBaseUrl() {
+    // Use default base URL
+    return "https://api.xmcsrv.net/";
   }
 
   public void userQuery(String searchUserName, Promise promise) {

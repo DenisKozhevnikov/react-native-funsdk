@@ -182,6 +182,7 @@ public class FunSDKRecordView extends LinearLayout
     recordManager.setChnId(getChannelId());
     recordManager.setVideoFullScreen(false);
     recordManager.setOnMediaManagerListener(this);
+    recordManager.setRecordManagerListener(this);
 
     // Log view dimensions
     android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - init() view dimensions: width=" + getWidth() + ", height=" + getHeight());
@@ -234,6 +235,7 @@ public class FunSDKRecordView extends LinearLayout
       recordManager.setChnId(getChannelId());
       recordManager.setVideoFullScreen(false);
       recordManager.setOnMediaManagerListener(this);
+      recordManager.setRecordManagerListener(this);
     }
   }
 
@@ -839,5 +841,16 @@ public class FunSDKRecordView extends LinearLayout
         onDownloadState(downloadInfo.getDownloadState(), downloadInfo.getSaveFileName());
       }
     }
+  }
+  
+  // Implement deleteVideoResult from OnRecordManagerListener (new in SDK 5.0.6)
+  @Override
+  public void deleteVideoResult(String devId, boolean isSuccess, int errorId) {
+    WritableMap map = Arguments.createMap();
+    map.putInt("target", getId());
+    map.putString("devId", devId);
+    map.putBoolean("isSuccess", isSuccess);
+    map.putInt("errorId", errorId);
+    eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_DELETE_VIDEO_RESULT);
   }
 }

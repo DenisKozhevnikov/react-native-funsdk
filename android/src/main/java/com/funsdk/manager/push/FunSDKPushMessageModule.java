@@ -15,7 +15,7 @@ import com.basic.G;
 import com.lib.FunSDK;
 import com.lib.IFunSDKResult;
 import com.lib.MsgContent;
-import com.lib.Mps.SMCInitInfo;
+import com.lib.Mps.SMCInitInfoV2;
 import com.utils.XUtils;
 
 import com.manager.push.XMPushManager;
@@ -58,11 +58,11 @@ public class FunSDKPushMessageModule extends ReactContextBaseJavaModule implemen
 
     String pushToken = XUtils.getPushToken((Context) reactContext);
 
-    SMCInitInfo info = new SMCInitInfo();
+    SMCInitInfoV2 info = new SMCInitInfoV2();
 
     G.SetValue(info.st_0_user, XMAccountManager.getInstance().getAccountName());
     G.SetValue(info.st_1_password, XMAccountManager.getInstance().getPassword());
-    G.SetValue(info.st_2_token, pushToken);
+    G.SetValue(info.st_3_token, pushToken);
 
     manager.initFunSDKPush((Context) reactContext, info, 1);
   }
@@ -75,11 +75,11 @@ public class FunSDKPushMessageModule extends ReactContextBaseJavaModule implemen
     String token = params.getString(Constants.TOKEN);
     int pushType = params.getInt("type");
 
-    SMCInitInfo info = new SMCInitInfo();
+    SMCInitInfoV2 info = new SMCInitInfoV2();
 
     G.SetValue(info.st_0_user, XMAccountManager.getInstance().getAccountName());
     G.SetValue(info.st_1_password, XMAccountManager.getInstance().getPassword());
-    G.SetValue(info.st_2_token, token);
+    G.SetValue(info.st_3_token, token);
 
     manager.initFunSDKPush((Context) reactContext, info, pushType);
     manager.linkAlarm(devId, 0);

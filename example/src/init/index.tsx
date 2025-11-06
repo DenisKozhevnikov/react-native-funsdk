@@ -60,11 +60,11 @@ export const useInit = () => {
 
   const reinit = async (credentials: Credentials) => {
     try {
-      initSDK();
+      await initSDK();
       await delay(1000);
       console.log('start somefunc');
       setStatus('start somefunc');
-      someFuncs(credentials);
+      await someFuncs(credentials);
     } catch (error) {
       console.log('error in someFuncs: ', error);
       setStatus('error in someFuncs: ', (error as Error)?.message);
@@ -173,6 +173,11 @@ export const useInit = () => {
         customPwd: PWD,
         customServerAddr: SERVER_ADDR,
         customPort: PORT,
+        // Передаем явные креды платформы как в демо
+        APPUUID: APPUUID,
+        APPKEY: APPKEY,
+        APPSECRET: APPSECRET,
+        MOVECARD: MOVECARD,
       });
       // setIsInit(true);
     }

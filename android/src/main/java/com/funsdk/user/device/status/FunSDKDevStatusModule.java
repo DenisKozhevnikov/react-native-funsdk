@@ -79,58 +79,89 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       final String devId = params.getString(Constants.DEVICE_ID);
       final String devUser = params.getString(Constants.DEVICE_LOGIN);
       final String devPwd = params.getString(Constants.DEVICE_PASSWORD);
+      android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: INPUT devId=" + devId + ", user=" + devUser + ", pwdLen=" + (devPwd != null ? devPwd.length() : -1));
 
-      // как на iOS: сохранить локальные креды и не вызывать фактический логин
       try {
         FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
-      } catch (Exception ignored) {
+        android.util.Log.e("DEV_STATUS_ANDROID", "DevSetLocalPwd OK for devId=" + devId);
+      } catch (Exception ex) {
+        android.util.Log.e("DEV_STATUS_ANDROID", "DevSetLocalPwd EX for devId=" + devId + ": " + ex);
       }
+      try {
+        XMDevInfo xm = DevDataCenter.getInstance().getDevInfo(devId);
+        if (xm != null) {
+          xm.setDevUserName(devUser);
+          try { xm.setDevPassword(devPwd); } catch (Throwable ignored2) {}
+        }
+        DeviceManager.getInstance().setLocalDevLoginInfo(devId, devUser, devPwd, "");
+        String localUser = null;
+        String localToken = null;
+        try { localUser = FunSDK.DevGetLocalUserName(devId); } catch (Throwable t) {}
+        try { localToken = FunSDK.DevGetLocalEncToken(devId); } catch (Throwable t) {}
+        android.util.Log.e("DEV_STATUS_ANDROID", "After setLocalDevLoginInfo: devId=" + devId + ", localUser=" + localUser + ", localTokenLen=" + (localToken != null ? localToken.length() : -1));
+      } catch (Throwable ignored) {}
 
-      int networkMode = 0;
+      final int networkMode;
+      int tmpMode = 0;
       try {
         XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
         if (xmDevInfo != null) {
           SDBDeviceInfo sdb = xmDevInfo.getSdbDevInfo();
-          if (sdb != null) {
-            networkMode = sdb.connectType;
-          }
+          if (sdb != null) tmpMode = sdb.connectType;
         }
-      } catch (Exception ignored) {
-      }
+      } catch (Exception ignored) {}
+      networkMode = tmpMode;
+      android.util.Log.e("DEV_STATUS_ANDROID", "Detected networkMode from DevDataCenter: " + networkMode + " for devId=" + devId);
 
-      // Как на iOS: запрашиваем SystemInfo и резолвим этим ответом
-      ensureUser();
-      final int seq = nextSeq();
-      android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: devId=" + devId + ", user=" + devUser + ", outLen=1024, ch=-1, timeout=15000, seq=" + seq);
-      // Отменим предыдущие ожидания SystemInfo, чтобы fallback не схватывал старый seq
-      try {
-        java.util.ArrayList<Integer> toRemove = new java.util.ArrayList<>();
-        for (java.util.Map.Entry<Integer, PendingLogin> e : pendingSystemInfo.entrySet()) {
-          Integer oldSeq = e.getKey();
-          PendingLogin oldPend = e.getValue();
-          if (oldPend != null && oldPend.promise != null) {
-            try { oldPend.promise.reject("Cancelled", "Superseded by newer loginDeviceWithCredential"); } catch (Throwable ignored) {}
-          }
-          toRemove.add(oldSeq);
+      DeviceManager.OnDevManagerListener<Object> afterLogin = new DeviceManager.OnDevManagerListener<Object>() {
+        @Override
+        public void onSuccess(String s, int i, Object abilityKey) {
+          try {
+            String token = FunSDK.DevGetLocalEncToken(devId);
+            DeviceManager.getInstance().setLocalDevLoginInfo(devId, devUser, devPwd, token != null ? token : "");
+            android.util.Log.e("DEV_STATUS_ANDROID", "loginDev SUCCESS: devId=" + devId + ", saved tokenLen=" + (token != null ? token.length() : -1));
+          } catch (Throwable ignored) {}
+          ensureUser();
+          mainHandler.postDelayed(new Runnable() {
+            @Override public void run() {
+              final int seq = nextSeq();
+              String localUserAfter = null;
+              String localTokenAfter = null;
+              try { localUserAfter = FunSDK.DevGetLocalUserName(devId); } catch (Throwable t) {}
+              try { localTokenAfter = FunSDK.DevGetLocalEncToken(devId); } catch (Throwable t) {}
+              android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential(LOGGED IN): devId=" + devId + ", user=" + devUser + ", seq=" + seq + ", localUserNow=" + localUserAfter + ", localTokenLenNow=" + (localTokenAfter != null ? localTokenAfter.length() : -1));
+              try {
+                java.util.ArrayList<Integer> toRemove = new java.util.ArrayList<>();
+                for (java.util.Map.Entry<Integer, PendingLogin> e : pendingSystemInfo.entrySet()) {
+                  Integer oldSeq = e.getKey();
+                  PendingLogin oldPend = e.getValue();
+                  if (oldPend != null && oldPend.promise != null) {
+                    try { oldPend.promise.reject("Cancelled", "Superseded by newer loginDeviceWithCredential"); } catch (Throwable ignored) {}
+                  }
+                  toRemove.add(oldSeq);
+                }
+                for (Integer k : toRemove) pendingSystemInfo.remove(k);
+              } catch (Throwable ignored) {}
+              pendingSystemInfo.put(seq, new PendingLogin(promise, devId, networkMode));
+              int ret = FunSDK.DevGetConfigByJson(mUserId, devId, "SystemInfo", 4096, -1, 15000, seq);
+              android.util.Log.e("DEV_STATUS_ANDROID", "DevGetConfigByJson(SystemInfo) after login ret=" + ret + ", mUserId=" + mUserId + ", seq=" + seq + ", devId=" + devId);
+            }
+          }, 1200);
         }
-        for (Integer k : toRemove) pendingSystemInfo.remove(k);
-      } catch (Throwable ignored) {}
-      pendingSystemInfo.put(seq, new PendingLogin(promise, devId, networkMode));
-      int ret = FunSDK.DevGetConfigByJson(mUserId, devId, "SystemInfo", 4096, -1, 15000, seq);
-      android.util.Log.e("DEV_STATUS_ANDROID", "DevGetConfigByJson(SystemInfo) returned ret=" + ret);
-      if (ret < 0) {
-        PendingLogin removed = pendingSystemInfo.remove(seq);
-        if (removed != null && removed.promise != null) {
-          WritableMap value = Arguments.createMap();
-          value.putInt("networkMode", removed.networkMode);
-          WritableMap res = Arguments.createMap();
-          res.putString("s", removed.devId);
-          res.putInt("i", 0);
-          res.putMap("value", value);
-          removed.promise.resolve(res);
-          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo immediate error ret=" + ret + ", resolved with fallback for devId=" + removed.devId);
+
+        @Override
+        public void onFailed(String s, int i, String jsonName, int errorId) {
+          promise.reject(s + ", " + i + ", " + jsonName + ", " + errorId);
         }
-        return;
+      };
+
+      boolean isLowPower = false;
+      try { isLowPower = DevDataCenter.getInstance().isLowPowerDev(devId); } catch (Throwable t) {}
+      android.util.Log.e("DEV_STATUS_ANDROID", "login path for devId=" + devId + ": isLowPower=" + isLowPower);
+      if (isLowPower) {
+        DeviceManager.getInstance().loginDevByLowPower(devId, afterLogin);
+      } else {
+        DeviceManager.getInstance().loginDev(devId, afterLogin);
       }
     }
   }
@@ -782,10 +813,15 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     final Promise promise;
     final String devId;
     final int networkMode;
+    final int retryCount;
     PendingLogin(Promise promise, String devId, int networkMode) {
+      this(promise, devId, networkMode, 0);
+    }
+    PendingLogin(Promise promise, String devId, int networkMode, int retryCount) {
       this.promise = promise;
       this.devId = devId;
       this.networkMode = networkMode;
+      this.retryCount = retryCount;
     }
   }
 
@@ -948,8 +984,23 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
           pend.promise.resolve(res);
           android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo RESOLVED for devId=" + pend.devId + ", seq=" + seq);
         } else {
-          pend.promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
-          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo REJECT what=" + what + " arg1=" + arg1 + " seq=" + seq);
+          // Один ретрай на -10005 (timeout) или -11307 (device offline/not connected yet)
+          if ((arg1 == -10005 || arg1 == -11307) && pend.retryCount == 0) {
+            final String devIdRetry = pend.devId;
+            final int networkModeRetry = pend.networkMode;
+            final Promise promiseRetry = pend.promise;
+            mainHandler.postDelayed(new Runnable() {
+              @Override public void run() {
+                final int newSeq = nextSeq();
+                pendingSystemInfo.put(newSeq, new PendingLogin(promiseRetry, devIdRetry, networkModeRetry, 1));
+                int rr = FunSDK.DevGetConfigByJson(mUserId, devIdRetry, "SystemInfo", 4096, -1, 15000, newSeq);
+                android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo RETRY ret=" + rr + ", devId=" + devIdRetry + ", seq=" + newSeq);
+              }
+            }, 1200);
+          } else {
+            pend.promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+            android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo REJECT what=" + what + " arg1=" + arg1 + " seq=" + seq);
+          }
         }
       } catch (Throwable t) {
         pend.promise.reject("FunSDKDevStatusModule", t);

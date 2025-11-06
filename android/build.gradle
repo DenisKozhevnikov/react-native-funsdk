@@ -38,6 +38,10 @@ android {
     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+    
+     ndk {
+      abiFilters "armeabi-v7a", "arm64-v8a"
+    }
   }
   buildTypes {
     release {
@@ -64,6 +68,7 @@ android {
 repositories {
   mavenCentral()
   google()
+   maven { url 'https://repo.jftechsoft.com/repository/maven-releases/' }
 }
 
 
@@ -73,10 +78,13 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
 
-  // implementation 'io.github.xmcamera:libxmfunsdk:2.4'
-  // implementation 'io.github.xmcamera:libxmfunsdk:4.4'
-  implementation 'io.github.xmcamera:libxmfunsdk:4.7'
-  // implementation 'io.github.xmcamera:uilibrary:1.0'
+  implementation 'com.jftechsoft.funsdk:funsdk:5.0.6'
+  implementation 'io.github.xmcamera:uilibrary:2.1'
+  
+  implementation 'com.alibaba:fastjson:1.1.72.android'
+  implementation 'org.apache.commons:commons-lang3:3.12.0'
+  implementation 'com.squareup.okhttp3:logging-interceptor:4.9.2'
+  implementation 'com.squareup.okhttp3:okhttp:4.9.2'
 }
 
 if (isNewArchitectureEnabled()) {

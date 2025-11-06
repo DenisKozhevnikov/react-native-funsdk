@@ -70,18 +70,48 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
       xmFunSDKManager = XMFunSDKManager.getInstance();
     }
 
-    // public void init(String name, String location) {
-    xmFunSDKManager.initXMCloudPlatform(reactContext);
+    // Инициализация облачной платформы: предпочитаем явные параметры (uuid/key/secret/movedCard),
+    // если переданы; иначе используем meta-data из AndroidManifest
+    String appUUID = null;
+    String appKey = null;
+    String appSecret = null;
+    Integer appMovedCard = null;
 
-    // uuid, key, secret, movedcard in AndroidManifest.xml
-    // https://libraries.io/maven/io.github.xmcamera:libxmfunsdk - 2 paragraph
-    // xmFunSDKManager.initXMCloudPlatform(
-    // reactContext,
-    // params.getString(Constants.APP_UUID),
-    // params.getString(Constants.APP_KEY),
-    // params.getString(Constants.APP_SECRET),
-    // params.getInt(Constants.APP_MOVEDCARD),
-    // true);
+    try {
+      if (params != null) {
+        // Принимаем оба варианта ключей: Constants (uuid/key/secret/movedCard)
+        // и iOS-стиль (APPUUID/APPKEY/APPSECRET/MOVECARD)
+        if (params.hasKey(Constants.APP_UUID)) appUUID = params.getString(Constants.APP_UUID);
+        if (params.hasKey(Constants.APP_KEY)) appKey = params.getString(Constants.APP_KEY);
+        if (params.hasKey(Constants.APP_SECRET)) appSecret = params.getString(Constants.APP_SECRET);
+        if (params.hasKey(Constants.APP_MOVEDCARD)) appMovedCard = params.getInt(Constants.APP_MOVEDCARD);
+
+        if (appUUID == null && params.hasKey("APPUUID")) appUUID = params.getString("APPUUID");
+        if (appKey == null && params.hasKey("APPKEY")) appKey = params.getString("APPKEY");
+        if (appSecret == null && params.hasKey("APPSECRET")) appSecret = params.getString("APPSECRET");
+        if (appMovedCard == null && params.hasKey("MOVECARD")) appMovedCard = params.getInt("MOVECARD");
+      }
+    } catch (Throwable ignored) {}
+
+    if (appUUID != null && appKey != null && appSecret != null && appMovedCard != null) {
+      xmFunSDKManager.initXMCloudPlatform(
+        reactContext,
+        appUUID,
+        appKey,
+        appSecret,
+        appMovedCard,
+        true
+      );
+    } else {
+      // Fallback: читать из AndroidManifest meta-data
+      xmFunSDKManager.initXMCloudPlatform(reactContext);
+    }
+
+    // Дополнительно как в демо: логирование и нужные атрибуты SDK
+    try { xmFunSDKManager.initLog(); } catch (Throwable ignored) {}
+    try { FunSDK.SetFunIntAttr(EFUN_ATTR.SUP_RPS_VIDEO_DEFAULT, SDKCONST.Switch.Open); } catch (Throwable ignored) {}
+    try { FunSDK.SetFunIntAttr(EFUN_ATTR.ENABLE_REAL_TIME_BUFFER_ADJUSTMENT, SDKCONST.Switch.Close); } catch (Throwable ignored) {}
+    try { FunSDK.SetFunIntAttr(EFUN_ATTR.ENABLE_DYNAMIC_THREAD_DECODE_ADJUSTER, SDKCONST.Switch.Close); } catch (Throwable ignored) {}
 
     /**
      * 有其他定制的服务，在initXMCloudPlatform之后再按照你的需求调用不同的接口

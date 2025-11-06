@@ -36,9 +36,20 @@ public class UpdatedDevRecordManager extends RecordManager {
 
   private H264_DVR_FINDINFO fileInfo;
   private List<H264_DVR_FILE_DATA> fileDataList;
+  
+  // Fields that were in parent class in older SDK version
+  protected int userId = 0;
+  protected boolean isSearching = false;
+  protected RecordPlayerAttribute playerAttribute;
+  protected ViewGroup surfaceView;
+  protected int playMode = 0;
+  protected RecordManager.OnRecordManagerListener recordManagerLs;
 
   public UpdatedDevRecordManager(ViewGroup playView, RecordPlayerAttribute playerAttribute) {
     super(playView, playerAttribute);
+    
+    this.playerAttribute = playerAttribute;
+    this.surfaceView = playView;
     
     // Ensure userId is properly initialized like in iOS msgHandle
     if (userId <= 0) {
@@ -50,6 +61,11 @@ public class UpdatedDevRecordManager extends RecordManager {
     fileInfo.st_0_nChannelN0 = playerAttribute.getChnnel();
     fileInfo.st_1_nFileType = playerAttribute.getFileType();
     fileInfo.st_6_StreamType = playerAttribute.getStreamType();
+  }
+  
+  // Store listener reference
+  public void setRecordManagerListener(RecordManager.OnRecordManagerListener listener) {
+    this.recordManagerLs = listener;
   }
 
   @Override
@@ -66,7 +82,6 @@ public class UpdatedDevRecordManager extends RecordManager {
     return 0;
   }
 
-  @Override
   public int searchFileByTime(int[] time) {
     fileInfo.st_3_endTime.st_0_dwYear = fileInfo.st_2_startTime.st_0_dwYear = time[0];
     fileInfo.st_3_endTime.st_1_dwMonth = fileInfo.st_2_startTime.st_1_dwMonth = time[1];
@@ -137,6 +152,19 @@ public class UpdatedDevRecordManager extends RecordManager {
     int ret = FunSDK.DevFindFile(userId, getDevId(), G.ObjToBytes(fileInfo), 2000, 10000, 0);
     return ret;
   }
+  
+  // Implement abstract method searchFileByTime(Calendar) from RecordManagerInterface
+  public int searchFileByTime(Calendar calendar) {
+    if (calendar == null) {
+      return -1;
+    }
+    int[] time = new int[] {
+      calendar.get(Calendar.YEAR),
+      calendar.get(Calendar.MONTH) + 1,
+      calendar.get(Calendar.DATE)
+    };
+    return searchFileByTime(time);
+  }
 
   @Override
   public MediaManager setChnId(int chnId) {
@@ -150,8 +178,7 @@ public class UpdatedDevRecordManager extends RecordManager {
       return 0;
     }
 
-    // Ensure underlying render surface and handlers are initialized
-    super.start();
+    // Note: super.start() doesn't exist in SDK 5.0.6
 
     int[] sTime = {
         startTimes.get(Calendar.YEAR),
@@ -218,7 +245,7 @@ public class UpdatedDevRecordManager extends RecordManager {
 
   @Override
   public int seekToTime(int nTimes, int absTime) {
-    super.start();
+    // Note: super.start() doesn't exist in SDK 5.0.6
     if (playerAttribute.getPlayHandle() == 0) {
       fileInfo.st_2_startTime.st_3_dwHour = nTimes / 3600;
       fileInfo.st_2_startTime.st_4_dwMinute = (nTimes % 3600) / 60;
@@ -254,7 +281,6 @@ public class UpdatedDevRecordManager extends RecordManager {
     return 0;
   }
 
-  @Override
   public byte[] getRecordTimes(int arg1, byte[] pData, String dataJson, int chnNum) {
     if (null == pData) {
       return null;
@@ -286,13 +312,13 @@ public class UpdatedDevRecordManager extends RecordManager {
             fileDataList.add(datas[i]);
           }
 
-          if (null != mediaManagerLs) {
-            mediaManagerLs.searchResult(playerAttribute, hasRecords ? datas : null);
+          if (null != recordManagerLs) {
+            recordManagerLs.searchResult(playerAttribute, hasRecords ? datas : null);
           }
         } else {
-          if (null != mediaManagerLs) {
-            mediaManagerLs.onFailed(playerAttribute, msg.what, msg.arg1);
-            mediaManagerLs.searchResult(playerAttribute, null);
+          if (null != recordManagerLs) {
+            recordManagerLs.onFailed(playerAttribute, msg.what, msg.arg1);
+            recordManagerLs.searchResult(playerAttribute, null);
           }
         }
         break;
@@ -301,30 +327,30 @@ public class UpdatedDevRecordManager extends RecordManager {
       case EUIMSG.START_PLAY:
         if (msg.arg1 == 0) {
           // Play started successfully - emit BUFFER state like iOS
-          if (null != mediaManagerLs) {
-            mediaManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_BUFFER);
+          if (null != recordManagerLs) {
+            recordManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_BUFFER);
           }
         } else {
           // Play failed
-          if (null != mediaManagerLs) {
-            mediaManagerLs.onFailed(playerAttribute, msg.what, msg.arg1);
-            mediaManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_STOP);
+          if (null != recordManagerLs) {
+            recordManagerLs.onFailed(playerAttribute, msg.what, msg.arg1);
+            recordManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_STOP);
           }
         }
         break;
         
       case EUIMSG.ON_PLAY_BUFFER_BEGIN:
         // Buffering started - emit BUFFER state like iOS
-        if (null != mediaManagerLs) {
-          mediaManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_BUFFER);
+        if (null != recordManagerLs) {
+          recordManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_BUFFER);
         }
         break;
         
       case EUIMSG.ON_PLAY_BUFFER_END:
         // Buffering ended - emit PLAY state like iOS
         if (msg.arg1 == 0) {
-          if (null != mediaManagerLs) {
-            mediaManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_PlAY);
+          if (null != recordManagerLs) {
+            recordManagerLs.onMediaPlayState(playerAttribute, PlayerAttribute.E_STATE_PlAY);
           }
         }
         break;
@@ -366,5 +392,14 @@ public class UpdatedDevRecordManager extends RecordManager {
       android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - Released userId: " + userId);
       userId = 0;
     }
+  }
+  
+  // Implement abstract method from RecordManager (new in SDK 5.0.6)
+  // This method name 'a' is obfuscated in the SDK
+  // Must return byte[] not void
+  public byte[] a(int var1, byte[] var2, int var3) {
+    android.util.Log.d("RECORD_DEBUG", "UpdatedDevRecordManager - a() called with: " + var1 + ", " + var3);
+    // Return the input data or empty array
+    return var2 != null ? var2 : new byte[0];
   }
 }

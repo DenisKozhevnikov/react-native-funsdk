@@ -54,7 +54,7 @@ public class FunSDKDeviceFileSearch extends ReactContextBaseJavaModule implement
       final int channel = params.getInt(Constants.DEVICE_CHANNEL);
       final int fileType = params.getInt("fileType");
       final int maxFileCount = params.getInt("maxFileCount");
-      final int timeout = params.getInt("timeout");
+      final int timeoutIn = params.getInt("timeout");
       final int streamType = params.hasKey("streamType") ? params.getInt("streamType") : 0;
       final String fileName = params.hasKey("fileName") ? params.getString("fileName") : null;
 
@@ -100,7 +100,8 @@ public class FunSDKDeviceFileSearch extends ReactContextBaseJavaModule implement
           info.st_3_endTime.st_4_dwMinute = end.getInt("minute");
           info.st_3_endTime.st_5_dwSecond = end.getInt("second");
 
-          FunSDK.DevFindFile(userId, devId, G.ObjToBytes(info), maxFileCount, timeout, seq);
+          int effectiveTimeout = timeoutIn < 15000 ? 15000 : timeoutIn;
+          FunSDK.DevFindFile(userId, devId, G.ObjToBytes(info), maxFileCount, effectiveTimeout, seq);
         } catch (Throwable t) {
           Promise p = seqToPromise.remove(seq);
           if (p != null) {

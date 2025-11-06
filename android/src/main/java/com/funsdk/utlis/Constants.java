@@ -72,12 +72,43 @@ public class Constants {
 
             @Override
             public void onFailed(int msgId, int errorId) {
-                promise.reject(msgId + " " + errorId);
+                // Формируем информативное сообщение об ошибке
+                String errorMessage = getErrorMessage(msgId, errorId);
+                String errorCode = msgId + " " + errorId;
+                promise.reject(errorCode, errorMessage);
             }
 
             @Override
             public void onFunSDKResult(Message message, MsgContent msgContent) {
             }
         };
+    }
+
+    /**
+     * Получить информативное сообщение об ошибке по кодам
+     */
+    private static String getErrorMessage(int msgId, int errorId) {
+        // msgId 5000 = EMSG_SYS_GET_DEV_INFO_BY_USER (логин)
+        // msgId 5004 = EMSG_SYS_ADD_DEVICE (добавление устройства)
+        
+        if (errorId == -603001) {
+            return "Ошибка валидации JSON формата данных. Проверьте инициализацию SDK и параметры";
+        } else if (errorId == -604000) {
+            return "Неверное имя пользователя или пароль";
+        } else if (errorId == -605009) {
+            if (msgId == 5004) {
+                return "Ошибка дешифрования: неверные учетные данные устройства (имя пользователя или пароль)";
+            } else {
+                return "Ошибка дешифрования: неверные учетные данные";
+            }
+        } else if (errorId == -99992 || errorId == -604101) {
+            return "Устройство уже существует";
+        } else if (msgId == 5000) {
+            return "Ошибка входа: " + errorId;
+        } else if (msgId == 5004) {
+            return "Ошибка добавления устройства: " + errorId;
+        } else {
+            return "Ошибка (" + msgId + "): " + errorId;
+        }
     }
 }

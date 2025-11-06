@@ -34,13 +34,24 @@ public class FunSDKLoginModule extends ReactContextBaseJavaModule {
   /* account login */
   @ReactMethod
   public void loginByAccount(ReadableMap params, Promise promise) {
-    if (ReactParamsCheck.checkParams(new String[] { Constants.USERNAME, Constants.PASSWORD }, params)) {
-      AccountManager.getInstance().xmLogin( // LOGIN_BY_INTERNET（1） Account login type
-          params.getString(Constants.USERNAME),
-          params.getString(Constants.PASSWORD),
-          LOGIN_BY_INTERNET,
-          Constants.getResultCallback(promise));
+    if (!ReactParamsCheck.checkParams(new String[] { Constants.USERNAME, Constants.PASSWORD }, params)) {
+      promise.reject("invalid_params", "username и password обязательны");
+      return;
     }
+    
+    String username = params.getString(Constants.USERNAME);
+    String password = params.getString(Constants.PASSWORD);
+    
+    if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+      promise.reject("invalid_params", "username и password не могут быть пустыми");
+      return;
+    }
+    
+    AccountManager.getInstance().xmLogin( // LOGIN_BY_INTERNET（1） Account login type
+        username,
+        password,
+        LOGIN_BY_INTERNET,
+        Constants.getResultCallback(promise));
   }
 
   /*
