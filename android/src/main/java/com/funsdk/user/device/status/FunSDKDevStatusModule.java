@@ -73,7 +73,6 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     }
   }
 
-  // SDK 5.0.7: Используем DeviceManager.loginDev как в официальном демо
   @ReactMethod
   public void loginDeviceWithCredential(ReadableMap params, Promise promise) {
     if (ReactParamsCheck
@@ -89,16 +88,14 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
         @Override
         public void onSuccess(String s, int i, Object result) {
           android.util.Log.e("DEV_STATUS_ANDROID", "loginDev SUCCESS: devId=" + s);
-          // Пытаемся распарсить result (как на iOS), но если не получится - берем из DevDataCenter
           WritableMap value = null;
           if (result != null) {
             try {
               value = DataConverter.parseToWritableMap(result);
               if (value != null && value.hasKey("SerialNo")) {
-                // Это SystemInfo! Добавляем networkMode
                 android.util.Log.e("DEV_STATUS_ANDROID", "Got SystemInfo from result");
               } else {
-                value = null; // Это не SystemInfo
+                value = null;
               }
             } catch (Exception e) {
               value = null;
@@ -106,12 +103,10 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
           }
           
           if (value == null) {
-            // Fallback: берем из DevDataCenter
             value = Arguments.createMap();
             android.util.Log.e("DEV_STATUS_ANDROID", "Using fallback - only networkMode");
           }
           
-          // Добавляем networkMode в любом случае
           try {
             XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
             if (xmDevInfo != null && xmDevInfo.getSdbDevInfo() != null) {
@@ -296,7 +291,7 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
         }
       };
       pendingSetTimeouts.put(seq, r);
-      mainHandler.postDelayed(r, timeoutMs);
+      getMainHandler().postDelayed(r, timeoutMs);
     }
   }
 
@@ -779,7 +774,14 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
   private int mSeq = 1;
   private final Map<Integer, PendingSet> pendingSet = new HashMap<>();
   private final Map<Integer, Runnable> pendingSetTimeouts = new HashMap<>();
-  private final Handler mainHandler = new Handler(Looper.getMainLooper());
+  private Handler mainHandler;
+
+  private Handler getMainHandler() {
+    if (mainHandler == null) {
+      mainHandler = new Handler(Looper.getMainLooper());
+    }
+    return mainHandler;
+  }
 
   private void ensureUser() {
     if (!isRegistered) {
@@ -850,9 +852,9 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
 
     // Обработка результатов SET-конфигов (только ModifyPassword)
     PendingSet pendSet = pendingSet.remove(seq);
-    if (pendSet != null && (what == EUIMSG.DEV_SET_JSON || what == EUIMSG.DEV_SET_CONFIG)) {
+    if (pendSet != null && what == EUIMSG.DEV_SET_CONFIG) {
       Runnable r = pendingSetTimeouts.remove(seq);
-      if (r != null) mainHandler.removeCallbacks(r);
+      if (r != null) getMainHandler().removeCallbacks(r);
 
       if (arg1 >= 0) {
         WritableMap res = Arguments.createMap();
