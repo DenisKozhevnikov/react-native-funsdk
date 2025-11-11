@@ -226,6 +226,11 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       String devUser = params.getString(Constants.DEVICE_LOGIN);
       String pwd = params.getString(Constants.DEVICE_PASSWORD);
 
+      if (devId == null || devId.trim().isEmpty()) {
+        promise.reject("INVALID_DEV_ID", "devId cannot be empty");
+        return;
+      }
+
       int iRet = FunSDK.DevSetLocalPwd(devId,
           devUser,
           pwd);

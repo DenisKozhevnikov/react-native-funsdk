@@ -245,7 +245,9 @@ public class FunSDKDevAlarmModule extends ReactContextBaseJavaModule implements 
               !params.isNull("deviceLogin") && !params.isNull("devicePassword")) {
             String deviceLogin = params.getString("deviceLogin");
             String devicePassword = params.getString("devicePassword");
-            FunSDK.DevSetLocalPwd(devId, deviceLogin, devicePassword);
+            if (devId != null && !devId.trim().isEmpty()) {
+              FunSDK.DevSetLocalPwd(devId, deviceLogin, devicePassword);
+            }
           }
         } catch (Throwable ignored) {}
         pendingLinkPromises.put(devId, promise);
@@ -288,7 +290,7 @@ public class FunSDKDevAlarmModule extends ReactContextBaseJavaModule implements 
       try {
         String devUserName = params.hasKey("devUserName") && !params.isNull("devUserName") ? params.getString("devUserName") : null;
         String devUserPwd = params.hasKey("devUserPwd") && !params.isNull("devUserPwd") ? params.getString("devUserPwd") : null;
-        if (devUserName != null && devUserPwd != null) {
+        if (devUserName != null && devUserPwd != null && !devId.trim().isEmpty()) {
           FunSDK.DevSetLocalPwd(devId, devUserName, devUserPwd);
         }
       } catch (Throwable ignored) {}
