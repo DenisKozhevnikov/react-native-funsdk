@@ -81,17 +81,25 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       final String devUser = params.getString(Constants.DEVICE_LOGIN);
       final String devPwd = params.getString(Constants.DEVICE_PASSWORD);
 
+      // Жёсткая валидация, чтобы не падать внутри DeviceManager
       if (devId == null || devId.trim().isEmpty()) {
-        android.util.Log.w(
-            "DEV_STATUS_ANDROID",
-            "DevSetLocalPwd skipped because devId is empty. Ensure callers provide a valid device identifier."
-        );
-      } else {
-        FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
-        android.util.Log.e("DEV_STATUS_ANDROID", "DevSetLocalPwd: devId=" + devId + ", user=" + devUser);
+        promise.reject("FunSDK", "DeviceId is empty");
+        return;
+      }
+      if (devUser == null || devUser.trim().isEmpty()) {
+        promise.reject("FunSDK", "Device login is empty");
+        return;
+      }
+      if (devPwd == null || devPwd.trim().isEmpty()) {
+        promise.reject("FunSDK", "Device password is empty");
+        return;
       }
 
-      DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
+      try {
+        FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
+        android.util.Log.e("DEV_STATUS_ANDROID", "DevSetLocalPwd: devId=" + devId + ", user=" + devUser);
+
+        DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
         @Override
         public void onSuccess(String s, int i, Object result) {
           android.util.Log.e("DEV_STATUS_ANDROID", "loginDev SUCCESS: devId=" + s);
@@ -138,6 +146,9 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
           promise.reject(String.valueOf(errorId), "Login failed: " + s1);
         }
       });
+      } catch (Throwable t) {
+        promise.reject("FunSDK", t);
+      }
     }
   }
 
