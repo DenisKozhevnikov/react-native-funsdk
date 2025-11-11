@@ -412,21 +412,6 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
 
     final int seq = nextSeq();
     
-    try {
-      for (Iterator<Entry<Integer, Pending>> it = pending.entrySet().iterator(); it.hasNext();) {
-        Entry<Integer, Pending> e = it.next();
-        if (e.getKey() == seq) continue;
-        Pending p = e.getValue();
-        if (p != null && "GET".equals(p.op) && devId.equals(p.devId) && name.equals(p.name)) {
-          Runnable r2 = timeoutRunnables.remove(e.getKey());
-          if (r2 != null) mainHandler.removeCallbacks(r2);
-          try { p.promise.reject("Cancelled", "Superseded by newer getDevConfig"); } catch (Throwable ignored) {}
-          it.remove();
-          Log.e(TAG, "Cancelled previous GET for devId=" + devId + ", name=" + name + ", oldSeq=" + e.getKey());
-        }
-      }
-    } catch (Throwable ignored) {}
-    
     pending.put(seq, new Pending(promise, devId, name, effectiveChannel, timeout, "GET"));
 
     int outLenEff = nOutBufLen;
