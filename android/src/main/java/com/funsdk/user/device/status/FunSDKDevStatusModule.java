@@ -81,8 +81,15 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       final String devUser = params.getString(Constants.DEVICE_LOGIN);
       final String devPwd = params.getString(Constants.DEVICE_PASSWORD);
 
-      FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
-      android.util.Log.e("DEV_STATUS_ANDROID", "DevSetLocalPwd: devId=" + devId + ", user=" + devUser);
+      if (devId == null || devId.trim().isEmpty()) {
+        android.util.Log.w(
+            "DEV_STATUS_ANDROID",
+            "DevSetLocalPwd skipped because devId is empty. Ensure callers provide a valid device identifier."
+        );
+      } else {
+        FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
+        android.util.Log.e("DEV_STATUS_ANDROID", "DevSetLocalPwd: devId=" + devId + ", user=" + devUser);
+      }
 
       DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
         @Override
