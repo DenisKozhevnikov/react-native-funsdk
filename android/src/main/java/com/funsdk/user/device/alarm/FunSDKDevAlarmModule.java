@@ -27,7 +27,7 @@ import com.lib.MsgContent;
 
 import com.manager.push.XMPushManager;
 import com.manager.account.XMAccountManager;
-import com.lib.Mps.SMCInitInfo;
+import com.lib.Mps.SMCInitInfoV2;
 import com.basic.G;
 import com.lib.FunSDK;
 import com.lib.EUIMSG;
@@ -187,10 +187,10 @@ public class FunSDKDevAlarmModule extends ReactContextBaseJavaModule implements 
       String token = params.hasKey("token") && !params.isNull("token") ? params.getString("token") : "";
       int pushType = params.hasKey("pushType") ? params.getInt("pushType") : XMPushManager.PUSH_TYPE_GOOGLE_V2;
 
-      SMCInitInfo info = new SMCInitInfo();
+      SMCInitInfoV2 info = new SMCInitInfoV2();
       G.SetValue(info.st_0_user, username != null ? username : "");
       G.SetValue(info.st_1_password, password != null ? password : "");
-      G.SetValue(info.st_2_token, token != null ? token : "");
+      G.SetValue(info.st_3_token, token != null ? token : "");
 
       pendingInitPromise = promise;
       pushManager.initFunSDKPush((Context) reactContext, info, pushType);
@@ -297,10 +297,10 @@ public class FunSDKDevAlarmModule extends ReactContextBaseJavaModule implements 
         if ((params.hasKey("appToken") && !params.isNull("appToken")) || (params.hasKey("appType") && !params.isNull("appType"))) {
           String token = params.hasKey("appToken") ? params.getString("appToken") : "";
           int pushType = XMPushManager.PUSH_TYPE_GOOGLE_V2;
-          SMCInitInfo info = new SMCInitInfo();
+          SMCInitInfoV2 info = new SMCInitInfoV2();
           G.SetValue(info.st_0_user, XMAccountManager.getInstance().getAccountName());
           G.SetValue(info.st_1_password, XMAccountManager.getInstance().getPassword());
-          G.SetValue(info.st_2_token, token);
+          G.SetValue(info.st_3_token, token);
           pushManager.initFunSDKPush((Context) reactContext, info, pushType);
         }
       } catch (Throwable ignored) {}

@@ -36,9 +36,18 @@ public class UpdatedDevRecordManager extends RecordManager {
 
   private H264_DVR_FINDINFO fileInfo;
   private List<H264_DVR_FILE_DATA> fileDataList;
+  private int userId = 0; // SDK user handle for callbacks
+  
+  // Fields removed from parent class in SDK 5.0.7
+  private MediaManager.OnMediaManagerListener mediaManagerLs;
+  private RecordPlayerAttribute playerAttribute;
+  private android.view.SurfaceView surfaceView;
+  private int playMode = 0;
+  private boolean isSearching = false;
 
   public UpdatedDevRecordManager(ViewGroup playView, RecordPlayerAttribute playerAttribute) {
     super(playView, playerAttribute);
+    this.playerAttribute = playerAttribute;
     
     // Ensure userId is properly initialized like in iOS msgHandle
     if (userId <= 0) {
@@ -66,7 +75,7 @@ public class UpdatedDevRecordManager extends RecordManager {
     return 0;
   }
 
-  @Override
+  // Method signature changed in SDK 5.0.7 - removed @Override
   public int searchFileByTime(int[] time) {
     fileInfo.st_3_endTime.st_0_dwYear = fileInfo.st_2_startTime.st_0_dwYear = time[0];
     fileInfo.st_3_endTime.st_1_dwMonth = fileInfo.st_2_startTime.st_1_dwMonth = time[1];
@@ -138,36 +147,35 @@ public class UpdatedDevRecordManager extends RecordManager {
     return ret;
   }
 
-  @Override
   public MediaManager setChnId(int chnId) {
     fileInfo.st_0_nChannelN0 = chnId;
     return super.setChnId(chnId);
   }
 
-  @Override
-  public int startPlay(Calendar startTimes, Calendar endTimes) {
-    if (startTimes == null || endTimes == null) {
+  // Method signature changed in SDK 5.0.7 - removed @Override
+  public int searchRecordByTime(Calendar startTime, Calendar endTime, int nFileType) {
+    if (startTime == null || endTime == null) {
       return 0;
     }
 
     // Ensure underlying render surface and handlers are initialized
-    super.start();
+    // super.start(); - method removed in SDK 5.0.7
 
     int[] sTime = {
-        startTimes.get(Calendar.YEAR),
-        startTimes.get(Calendar.MONTH) + 1,
-        startTimes.get(Calendar.DAY_OF_MONTH),
-        startTimes.get(Calendar.HOUR_OF_DAY),
-        startTimes.get(Calendar.MINUTE),
-        startTimes.get(Calendar.SECOND) };
+        startTime.get(Calendar.YEAR),
+        startTime.get(Calendar.MONTH) + 1,
+        startTime.get(Calendar.DAY_OF_MONTH),
+        startTime.get(Calendar.HOUR_OF_DAY),
+        startTime.get(Calendar.MINUTE),
+        startTime.get(Calendar.SECOND) };
 
     int[] eTime = {
-        endTimes.get(Calendar.YEAR),
-        endTimes.get(Calendar.MONTH) + 1,
-        endTimes.get(Calendar.DAY_OF_MONTH),
-        endTimes.get(Calendar.HOUR_OF_DAY),
-        endTimes.get(Calendar.MINUTE),
-        endTimes.get(Calendar.SECOND) };
+        endTime.get(Calendar.YEAR),
+        endTime.get(Calendar.MONTH) + 1,
+        endTime.get(Calendar.DAY_OF_MONTH),
+        endTime.get(Calendar.HOUR_OF_DAY),
+        endTime.get(Calendar.MINUTE),
+        endTime.get(Calendar.SECOND) };
 
     fileInfo.st_2_startTime.st_0_dwYear = sTime[0];
     fileInfo.st_2_startTime.st_1_dwMonth = sTime[1];
@@ -218,7 +226,7 @@ public class UpdatedDevRecordManager extends RecordManager {
 
   @Override
   public int seekToTime(int nTimes, int absTime) {
-    super.start();
+    // super.start(); - method removed in SDK 5.0.7
     if (playerAttribute.getPlayHandle() == 0) {
       fileInfo.st_2_startTime.st_3_dwHour = nTimes / 3600;
       fileInfo.st_2_startTime.st_4_dwMinute = (nTimes % 3600) / 60;
@@ -254,7 +262,7 @@ public class UpdatedDevRecordManager extends RecordManager {
     return 0;
   }
 
-  @Override
+  // Method signature changed in SDK 5.0.7 - removed @Override
   public byte[] getRecordTimes(int arg1, byte[] pData, String dataJson, int chnNum) {
     if (null == pData) {
       return null;
@@ -286,13 +294,14 @@ public class UpdatedDevRecordManager extends RecordManager {
             fileDataList.add(datas[i]);
           }
 
-          if (null != mediaManagerLs) {
-            mediaManagerLs.searchResult(playerAttribute, hasRecords ? datas : null);
-          }
+          // searchResult removed in SDK 5.0.7 - results available via getFileDataList()
+          // if (null != mediaManagerLs) {
+          //   mediaManagerLs.searchResult(playerAttribute, hasRecords ? datas : null);
+          // }
         } else {
           if (null != mediaManagerLs) {
             mediaManagerLs.onFailed(playerAttribute, msg.what, msg.arg1);
-            mediaManagerLs.searchResult(playerAttribute, null);
+            // searchResult removed in SDK 5.0.7
           }
         }
         break;
@@ -330,6 +339,34 @@ public class UpdatedDevRecordManager extends RecordManager {
         break;
     }
     return super.OnFunSDKResult(msg, ex);
+  }
+
+  public void setMediaManagerListener(MediaManager.OnMediaManagerListener listener) {
+    this.mediaManagerLs = listener;
+  }
+
+  // Abstract method added in SDK 5.0.7
+  @Override
+  public byte[] a(int arg1, byte[] pData, int chnNum) {
+    // Default implementation - can be overridden if needed
+    return getRecordTimes(arg1, pData, null, chnNum);
+  }
+
+  public int startPlay(Calendar startTime, Calendar endTime) {
+    return searchRecordByTime(startTime, endTime, 0);
+  }
+
+  // Required by RecordManagerInterface in SDK 5.0.7
+  public int searchFileByTime(Calendar calendar) {
+    if (calendar == null) {
+      return 0;
+    }
+    int[] time = {
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH) + 1,
+        calendar.get(Calendar.DAY_OF_MONTH)
+    };
+    return searchFileByTime(time);
   }
 
   public List<H264_DVR_FILE_DATA> getFileDataList() {

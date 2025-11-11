@@ -64,6 +64,10 @@ android {
 repositories {
   mavenCentral()
   google()
+  // JFTECH Maven repository for FunSDK 5.x
+  maven {
+    url 'https://repo.jftechsoft.com/repository/maven-releases/'
+  }
 }
 
 
@@ -73,9 +77,13 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
 
+  // Old artifact (deprecated):
   // implementation 'io.github.xmcamera:libxmfunsdk:2.4'
   // implementation 'io.github.xmcamera:libxmfunsdk:4.4'
-  implementation 'io.github.xmcamera:libxmfunsdk:4.7'
+  // implementation 'io.github.xmcamera:libxmfunsdk:4.7'
+  
+  // New official artifact from JFTECH (as per official demo):
+  implementation 'com.jftechsoft.funsdk:funsdk:5.0.7'
   // implementation 'io.github.xmcamera:uilibrary:1.0'
 }
 

@@ -19,3 +19,15 @@ buildscript {
         classpath("com.facebook.react:react-native-gradle-plugin")
     }
 }
+
+allprojects {
+    repositories {
+        // Standard repos first (fast and reliable)
+        google()
+        mavenCentral()
+        // JFTECH repo last as fallback (slow, only for FunSDK)
+        maven {
+            url 'https://repo.jftechsoft.com/repository/maven-releases/'
+        }
+    }
+}

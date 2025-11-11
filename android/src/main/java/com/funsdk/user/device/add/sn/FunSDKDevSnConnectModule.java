@@ -17,9 +17,12 @@ import android.util.Log;
 
 import com.basic.G;
 import com.lib.sdk.struct.SDBDeviceInfo;
+import com.lib.FunSDK;
 import com.manager.account.AccountManager;
 import com.manager.account.BaseAccountManager;
 import com.manager.db.XMDevInfo;
+import com.manager.db.DevDataCenter;
+import static com.manager.db.Define.LOGIN_NONE;
 
 import com.funsdk.utils.Constants;
 import com.funsdk.utils.ReactParamsCheck;
@@ -66,12 +69,6 @@ public class FunSDKDevSnConnectModule extends ReactContextBaseJavaModule {
   // // params.getString(Constants.EMAIL),
   // // Constants.getResultCallback(promise)
   // // );
-
-  // AccountManager.getInstance().addDev(xmDevInfo,
-  // Constants.getResultCallback(promise));
-  // }
-  // }
-
   @ReactMethod
   public void addDev(ReadableMap params, Promise promise) {
     // https://oppf.jftech.com/#/docs?md=androidSysFn&lang=en
@@ -121,7 +118,14 @@ public class FunSDKDevSnConnectModule extends ReactContextBaseJavaModule {
     XMDevInfo xmDevInfo = new XMDevInfo();
     xmDevInfo.sdbDevInfoToXMDevInfo(deviceInfo);
 
-    AccountManager.getInstance().addDev(xmDevInfo, Constants.getResultCallback(promise));
+    // SDK 5.0.7: Если нет облачного аккаунта - добавляем локально (как в официальном демо)
+    if (DevDataCenter.getInstance().getLoginType() == LOGIN_NONE) {
+      DevDataCenter.getInstance().addDev(xmDevInfo);
+      FunSDK.AddDevInfoToDataCenter(G.ObjToBytes(xmDevInfo.getSdbDevInfo()), 0, 0, "");
+      promise.resolve(true);
+    } else {
+      AccountManager.getInstance().addDev(xmDevInfo, Constants.getResultCallback(promise));
+    }
   }
 
   @ReactMethod

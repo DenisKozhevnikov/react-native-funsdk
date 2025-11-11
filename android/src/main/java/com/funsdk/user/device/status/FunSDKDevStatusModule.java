@@ -62,16 +62,18 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     return "FunSDKDevStatusModule";
   }
 
-  // not tested
+  // SDK 5.0.7: Обновлено для поддержки P2P
   @ReactMethod
   public void loginDevice(ReadableMap params, Promise promise) {
     if (ReactParamsCheck
         .checkParams(new String[] { Constants.DEVICE_ID }, params)) {
-      DeviceManager.getInstance().loginDev(params.getString(Constants.DEVICE_ID), getResultCallback(promise));
+      final String devId = params.getString(Constants.DEVICE_ID);
+      android.util.Log.e("DEV_STATUS_ANDROID", "loginDevice: devId=" + devId);
+      DeviceManager.getInstance().loginDev(devId, getResultCallback(promise));
     }
   }
 
-  // works
+  // SDK 5.0.7: Используем DeviceManager.loginDev как в официальном демо
   @ReactMethod
   public void loginDeviceWithCredential(ReadableMap params, Promise promise) {
     if (ReactParamsCheck
@@ -80,58 +82,60 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       final String devUser = params.getString(Constants.DEVICE_LOGIN);
       final String devPwd = params.getString(Constants.DEVICE_PASSWORD);
 
-      // как на iOS: сохранить локальные креды и не вызывать фактический логин
-      try {
-        FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
-      } catch (Exception ignored) {
-      }
+      FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
+      android.util.Log.e("DEV_STATUS_ANDROID", "DevSetLocalPwd: devId=" + devId + ", user=" + devUser);
 
-      int networkMode = 0;
-      try {
-        XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
-        if (xmDevInfo != null) {
-          SDBDeviceInfo sdb = xmDevInfo.getSdbDevInfo();
-          if (sdb != null) {
-            networkMode = sdb.connectType;
+      DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
+        @Override
+        public void onSuccess(String s, int i, Object result) {
+          android.util.Log.e("DEV_STATUS_ANDROID", "loginDev SUCCESS: devId=" + s);
+          // Пытаемся распарсить result (как на iOS), но если не получится - берем из DevDataCenter
+          WritableMap value = null;
+          if (result != null) {
+            try {
+              value = DataConverter.parseToWritableMap(result);
+              if (value != null && value.hasKey("SerialNo")) {
+                // Это SystemInfo! Добавляем networkMode
+                android.util.Log.e("DEV_STATUS_ANDROID", "Got SystemInfo from result");
+              } else {
+                value = null; // Это не SystemInfo
+              }
+            } catch (Exception e) {
+              value = null;
+            }
           }
-        }
-      } catch (Exception ignored) {
-      }
-
-      // Как на iOS: запрашиваем SystemInfo и резолвим этим ответом
-      ensureUser();
-      final int seq = nextSeq();
-      android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: devId=" + devId + ", user=" + devUser + ", outLen=1024, ch=-1, timeout=15000, seq=" + seq);
-      // Отменим предыдущие ожидания SystemInfo, чтобы fallback не схватывал старый seq
-      try {
-        java.util.ArrayList<Integer> toRemove = new java.util.ArrayList<>();
-        for (java.util.Map.Entry<Integer, PendingLogin> e : pendingSystemInfo.entrySet()) {
-          Integer oldSeq = e.getKey();
-          PendingLogin oldPend = e.getValue();
-          if (oldPend != null && oldPend.promise != null) {
-            try { oldPend.promise.reject("Cancelled", "Superseded by newer loginDeviceWithCredential"); } catch (Throwable ignored) {}
+          
+          if (value == null) {
+            // Fallback: берем из DevDataCenter
+            value = Arguments.createMap();
+            android.util.Log.e("DEV_STATUS_ANDROID", "Using fallback - only networkMode");
           }
-          toRemove.add(oldSeq);
-        }
-        for (Integer k : toRemove) pendingSystemInfo.remove(k);
-      } catch (Throwable ignored) {}
-      pendingSystemInfo.put(seq, new PendingLogin(promise, devId, networkMode));
-      int ret = FunSDK.DevGetConfigByJson(mUserId, devId, "SystemInfo", 4096, -1, 15000, seq);
-      android.util.Log.e("DEV_STATUS_ANDROID", "DevGetConfigByJson(SystemInfo) returned ret=" + ret);
-      if (ret < 0) {
-        PendingLogin removed = pendingSystemInfo.remove(seq);
-        if (removed != null && removed.promise != null) {
-          WritableMap value = Arguments.createMap();
-          value.putInt("networkMode", removed.networkMode);
+          
+          // Добавляем networkMode в любом случае
+          try {
+            XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
+            if (xmDevInfo != null && xmDevInfo.getSdbDevInfo() != null) {
+              value.putInt("networkMode", xmDevInfo.getSdbDevInfo().connectType);
+            } else {
+              value.putInt("networkMode", 0);
+            }
+          } catch (Exception e) {
+            value.putInt("networkMode", 0);
+          }
+          
           WritableMap res = Arguments.createMap();
-          res.putString("s", removed.devId);
-          res.putInt("i", 0);
+          res.putString("s", devId);
+          res.putInt("i", 1);
           res.putMap("value", value);
-          removed.promise.resolve(res);
-          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo immediate error ret=" + ret + ", resolved with fallback for devId=" + removed.devId);
+          promise.resolve(res);
         }
-        return;
-      }
+
+        @Override
+        public void onFailed(String s, int i, String s1, int errorId) {
+          android.util.Log.e("DEV_STATUS_ANDROID", "loginDev FAILED: devId=" + s + ", errorId=" + errorId);
+          promise.reject(String.valueOf(errorId), "Login failed: " + s1);
+        }
+      });
     }
   }
 
@@ -768,26 +772,14 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     };
   }
 
-  // === Прямой запрос SystemInfo для loginDeviceWithCredential ===
+  // === Для modifyDevicePassword ===
 
   private int mUserId = 0;
   private boolean isRegistered = false;
   private int mSeq = 1;
-  private final Map<Integer, PendingLogin> pendingSystemInfo = new HashMap<>();
   private final Map<Integer, PendingSet> pendingSet = new HashMap<>();
   private final Map<Integer, Runnable> pendingSetTimeouts = new HashMap<>();
   private final Handler mainHandler = new Handler(Looper.getMainLooper());
-
-  private static class PendingLogin {
-    final Promise promise;
-    final String devId;
-    final int networkMode;
-    PendingLogin(Promise promise, String devId, int networkMode) {
-      this.promise = promise;
-      this.devId = devId;
-      this.networkMode = networkMode;
-    }
-  }
 
   private void ensureUser() {
     if (!isRegistered) {
@@ -856,7 +848,7 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     final int arg1 = msg.arg1;
     final int seq = msg.arg2;
 
-    // Обработка результатов SET-конфигов (в т.ч. ModifyPassword)
+    // Обработка результатов SET-конфигов (только ModifyPassword)
     PendingSet pendSet = pendingSet.remove(seq);
     if (pendSet != null && (what == EUIMSG.DEV_SET_JSON || what == EUIMSG.DEV_SET_CONFIG)) {
       Runnable r = pendingSetTimeouts.remove(seq);
@@ -870,89 +862,6 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
         pendSet.promise.resolve(res);
       } else {
         pendSet.promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
-      }
-      return 0;
-    }
-
-    PendingLogin pend = pendingSystemInfo.remove(seq);
-
-    if (what == EUIMSG.DEV_GET_JSON || what == EUIMSG.DEV_GET_CONFIG) {
-      android.util.Log.e("DEV_STATUS_ANDROID", "OnFunSDKResult: what=" + what + ", arg1=" + arg1 + ", seq=" + seq + ", ex.strLen=" + (ex != null && ex.str != null ? ex.str.length() : -1) + ", pDataLen=" + (ex != null && ex.pData != null ? ex.pData.length : -1));
-      if (pend == null) {
-        Integer matchedSeq = null;
-        PendingLogin matched = null;
-        for (java.util.Map.Entry<Integer, PendingLogin> e : pendingSystemInfo.entrySet()) {
-          if (matchedSeq == null || e.getKey() > matchedSeq) {
-            matchedSeq = e.getKey();
-            matched = e.getValue();
-          }
-        }
-        if (matched != null) {
-          // Снимем таймаут с подобранного запроса
-          pendingSystemInfo.remove(matchedSeq);
-          pend = matched;
-          android.util.Log.e("DEV_STATUS_ANDROID", "OnFunSDKResult: fallback matched pending by name SystemInfo, matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
-        } else {
-          android.util.Log.e("DEV_STATUS_ANDROID", "OnFunSDKResult: no pending for seq=" + seq + ", ignoring");
-          return 0;
-        }
-      }
-      try {
-        if (arg1 >= 0) {
-          String data = null;
-          if (ex != null) {
-            if (ex.pData != null && ex.pData.length > 0) {
-              data = new String(ex.pData, Charset.forName("UTF-8")).trim();
-            } else if (ex.str != null) {
-              data = ex.str.trim();
-            }
-          }
-          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo raw len=" + (data != null ? data.length() : -1));
-          if (data == null || data.isEmpty()) {
-            pend.promise.reject("EMPTY", "SystemInfo empty");
-            return 0;
-          }
-          // Возвращаем плоский объект SystemInfo, как на iOS + networkMode из pending
-          com.facebook.react.bridge.WritableMap parsedAll = DataConverter.parseToWritableMap(data);
-          com.facebook.react.bridge.WritableMap value = null;
-          try {
-            if (parsedAll != null && parsedAll.hasKey("SystemInfo")) {
-              com.facebook.react.bridge.ReadableMap nested = parsedAll.getMap("SystemInfo");
-              if (nested != null) {
-                value = new WritableNativeMap();
-                ReadableMapKeySetIterator it = nested.keySetIterator();
-                while (it.hasNextKey()) {
-                  String k = it.nextKey();
-                  ReadableType t = nested.getType(k);
-                  switch (t) {
-                    case Null: value.putNull(k); break;
-                    case Boolean: value.putBoolean(k, nested.getBoolean(k)); break;
-                    case Number: value.putDouble(k, nested.getDouble(k)); break;
-                    case String: value.putString(k, nested.getString(k)); break;
-                    case Map: value.putMap(k, (WritableMap) nested.getMap(k)); break;
-                    case Array: value.putArray(k, (com.facebook.react.bridge.WritableArray) nested.getArray(k)); break;
-                  }
-                }
-              }
-            }
-          } catch (Throwable ignored) {}
-          if (value == null) {
-            value = parsedAll != null ? parsedAll : new WritableNativeMap();
-          }
-          try { value.putInt("networkMode", pend.networkMode); } catch (Throwable ignored) {}
-
-          WritableMap res = Arguments.createMap();
-          res.putString("s", pend.devId);
-          res.putInt("i", 1);
-          res.putMap("value", value);
-          pend.promise.resolve(res);
-          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo RESOLVED for devId=" + pend.devId + ", seq=" + seq);
-        } else {
-          pend.promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
-          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo REJECT what=" + what + " arg1=" + arg1 + " seq=" + seq);
-        }
-      } catch (Throwable t) {
-        pend.promise.reject("FunSDKDevStatusModule", t);
       }
       return 0;
     }

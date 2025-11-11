@@ -840,4 +840,11 @@ public class FunSDKRecordView extends LinearLayout
       }
     }
   }
+
+  // Required by OnRecordManagerListener in SDK 5.0.7
+  @Override
+  public void deleteVideoResult(String devId, boolean isSuccess, int errorId) {
+    // Default implementation - can be overridden if needed
+    android.util.Log.d("FunSDKRecordView", "deleteVideoResult: devId=" + devId + ", success=" + isSuccess + ", error=" + errorId);
+  }
 }

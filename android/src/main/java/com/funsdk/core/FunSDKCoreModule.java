@@ -57,31 +57,51 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
    */
   @ReactMethod
   public void init(ReadableMap params) {
-    if (ReactParamsCheck.checkParamsV2(
-        new String[] { Constants.APP_CUSTOM_PWD_TYPE, Constants.APP_CUSTOM_PWD, Constants.APP_CUSTOM_SERVER_ADDR,
-            Constants.APP_CUSTOM_CUSTOM_PORT },
-        params)) {
-      int customPwdType = params.getInt(Constants.APP_CUSTOM_PWD_TYPE); // 0
-      String customPwd = params.getString(Constants.APP_CUSTOM_PWD);
-      String customServerAddr = params.getString(Constants.APP_CUSTOM_SERVER_ADDR);
-      int customPort = params.getInt(Constants.APP_CUSTOM_CUSTOM_PORT);
-      xmFunSDKManager = XMFunSDKManager.getInstance(customPwdType, customPwd, customServerAddr, customPort);
-    } else {
-      xmFunSDKManager = XMFunSDKManager.getInstance();
+    // SDK 5.0.7: Использовать дефолтные серверы (как в официальном demo)
+    // НЕ устанавливать кастомные серверы - пусть SDK определяет автоматически
+    xmFunSDKManager = XMFunSDKManager.getInstance();
+    Log.d("FunSDKCoreModule", "XMFunSDKManager instance created");
+
+    // SDK 5.0.7: Read credentials from AndroidManifest.xml
+    // 从 AndroidManifest.xml 读取凭证
+    try {
+      android.content.pm.ApplicationInfo appInfo = reactContext.getPackageManager()
+          .getApplicationInfo(reactContext.getPackageName(), android.content.pm.PackageManager.GET_META_DATA);
+      
+      if (appInfo.metaData == null) {
+        Log.e("FunSDKCoreModule", "ERROR: No meta-data in AndroidManifest.xml!");
+        return;
+      }
+      
+      String appUuid = appInfo.metaData.getString("APP_UUID");
+      String appKey = appInfo.metaData.getString("APP_KEY");
+      String appSecret = appInfo.metaData.getString("APP_SECRET");
+      int appMovedCard = appInfo.metaData.getInt("APP_MOVECARD", 2);
+      
+      Log.d("FunSDKCoreModule", "========== SDK INITIALIZATION ==========");
+      Log.d("FunSDKCoreModule", "APP_UUID: " + (appUuid != null ? appUuid : "NULL"));
+      Log.d("FunSDKCoreModule", "APP_KEY: " + (appKey != null ? appKey : "NULL"));
+      Log.d("FunSDKCoreModule", "APP_SECRET: " + (appSecret != null ? appSecret.substring(0, Math.min(8, appSecret.length())) + "..." : "NULL"));
+      Log.d("FunSDKCoreModule", "APP_MOVECARD: " + appMovedCard);
+      
+      if (appUuid == null || appUuid.isEmpty() || appKey == null || appKey.isEmpty() || 
+          appSecret == null || appSecret.isEmpty() || appMovedCard <= 0) {
+        Log.e("FunSDKCoreModule", "ERROR: Invalid credentials in AndroidManifest.xml!");
+        Log.e("FunSDKCoreModule", "Please register at https://oppf.xmcsrv.com and set valid APP_UUID, APP_KEY, APP_SECRET, APP_MOVECARD");
+        return;
+      }
+      
+      // Initialize with explicit parameters (required in SDK 5.0.7)
+      Log.d("FunSDKCoreModule", "Calling initXMCloudPlatform...");
+      xmFunSDKManager.initXMCloudPlatform(reactContext, appUuid, appKey, appSecret, appMovedCard, true);
+      Log.d("FunSDKCoreModule", "SDK 5.0.7 initialized successfully!");
+      Log.d("FunSDKCoreModule", "========================================");
+    } catch (Exception e) {
+      Log.e("FunSDKCoreModule", "Failed to read credentials from AndroidManifest.xml", e);
+      Log.e("FunSDKCoreModule", "Stack trace:", e);
     }
 
-    // public void init(String name, String location) {
-    xmFunSDKManager.initXMCloudPlatform(reactContext);
-
-    // uuid, key, secret, movedcard in AndroidManifest.xml
-    // https://libraries.io/maven/io.github.xmcamera:libxmfunsdk - 2 paragraph
-    // xmFunSDKManager.initXMCloudPlatform(
-    // reactContext,
-    // params.getString(Constants.APP_UUID),
-    // params.getString(Constants.APP_KEY),
-    // params.getString(Constants.APP_SECRET),
-    // params.getInt(Constants.APP_MOVEDCARD),
-    // true);
+    Log.d("FunSDKCoreModule", "SDK initialization complete");
 
     /**
      * 有其他定制的服务，在initXMCloudPlatform之后再按照你的需求调用不同的接口
@@ -125,6 +145,47 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
     FunSDK.SetFunIntAttr(EFUN_ATTR.SUP_RPS_VIDEO_DEFAULT, SDKCONST.Switch.Open);
   }
   // }
+
+  /**
+   * 用户主动重新初始化SDK - 使用自定义的AppKey、AppSecret等参数
+   * Re-initialize SDK with custom AppKey, AppSecret and other parameters
+   * 
+   * @param params {
+   *   appUuid: string,      // APP_UUID from open platform
+   *   appKey: string,       // APP_KEY from open platform  
+   *   appSecret: string,    // APP_SECRET from open platform
+   *   appMovedCard: number, // APP_MOVECARD from open platform (usually 2)
+   *   customPwdType: number (optional), // 加密类型 默认0
+   *   customPwd: string (optional),     // 加密字段 默认""
+   *   customServerAddr: string (optional), // P2P服务器域名或IP
+   *   customPort: number (optional)     // P2P服务器端口
+   * }
+   */
+  @ReactMethod
+  public void reInitByUser(ReadableMap params) {
+    if (!ReactParamsCheck.checkParams(
+        new String[] { Constants.APP_UUID, Constants.APP_KEY, Constants.APP_SECRET, Constants.APP_MOVEDCARD },
+        params)) {
+      Log.e("FunSDKCoreModule", "reInitByUser: Missing required parameters (appUuid, appKey, appSecret, appMovedCard)");
+      return;
+    }
+
+    String appUuid = params.getString(Constants.APP_UUID);
+    String appKey = params.getString(Constants.APP_KEY);
+    String appSecret = params.getString(Constants.APP_SECRET);
+    int appMovedCard = params.getInt(Constants.APP_MOVEDCARD);
+
+    xmFunSDKManager = XMFunSDKManager.getInstance();
+    Log.d("FunSDKCoreModule", "reInitByUser: XMFunSDKManager instance created");
+    Log.d("FunSDKCoreModule", "reInitByUser: Initializing with UUID: " + appUuid + ", Key: " + appKey + ", MovedCard: " + appMovedCard);
+    
+    // Initialize with explicit parameters from user
+    xmFunSDKManager.initXMCloudPlatform(reactContext, appUuid, appKey, appSecret, appMovedCard, true);
+    xmFunSDKManager.initLog();
+    FunSDK.SetFunIntAttr(EFUN_ATTR.SUP_RPS_VIDEO_DEFAULT, SDKCONST.Switch.Open);
+    
+    Log.d("FunSDKCoreModule", "reInitByUser: SDK re-initialized successfully");
+  }
 
   @ReactMethod
   public void SysSetServerIPPort(ReadableMap params) {

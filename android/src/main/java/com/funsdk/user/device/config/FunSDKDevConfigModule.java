@@ -405,18 +405,37 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final String name = params.getString("name");
     final int nOutBufLen = params.getInt("nOutBufLen");
     final int channel = params.getInt("channel");
-    final int timeoutRaw = params.getInt("timeout");
+    final int timeoutRaw = params.hasKey("timeout") ? params.getInt("timeout") : 5000;
 
     int effectiveChannel = channel;
     int timeout = timeoutRaw;
 
     final int seq = nextSeq();
+    
+    try {
+      for (Iterator<Entry<Integer, Pending>> it = pending.entrySet().iterator(); it.hasNext();) {
+        Entry<Integer, Pending> e = it.next();
+        if (e.getKey() == seq) continue;
+        Pending p = e.getValue();
+        if (p != null && "GET".equals(p.op) && devId.equals(p.devId) && name.equals(p.name)) {
+          Runnable r2 = timeoutRunnables.remove(e.getKey());
+          if (r2 != null) mainHandler.removeCallbacks(r2);
+          try { p.promise.reject("Cancelled", "Superseded by newer getDevConfig"); } catch (Throwable ignored) {}
+          it.remove();
+          Log.e(TAG, "Cancelled previous GET for devId=" + devId + ", name=" + name + ", oldSeq=" + e.getKey());
+        }
+      }
+    } catch (Throwable ignored) {}
+    
     pending.put(seq, new Pending(promise, devId, name, effectiveChannel, timeout, "GET"));
 
     int outLenEff = nOutBufLen;
     if (outLenEff <= 0) {
       if ("Users".equals(name)) {
         outLenEff = 64 * 1024; // 64KB
+      } else if (name != null && (name.contains("Alarm") || name.contains("Detect") || name.contains("ability"))) {
+        // SDK 5.0.7: Alarm/Detect конфиги требуют больший буфер
+        outLenEff = 32 * 1024; // 32KB
       } else {
         outLenEff = 4096;
       }
@@ -468,7 +487,13 @@ public class FunSDKDevConfigModule extends ReactContextBaseJavaModule implements
     final String name = params.getString("name");
     final String json = params.getString("param");
     final int channel = params.hasKey("channel") ? params.getInt("channel") : -1;
-    final int timeoutRaw = params.hasKey("timeout") ? params.getInt("timeout") : 15000;
+    // Увеличенный дефолтный таймаут для SDK 5.0.7
+    int defaultTimeout = 30000;
+    // Alarm/Detect конфиги требуют еще больше времени в SDK 5.0.7
+    if (name != null && (name.contains("Alarm") || name.contains("Detect"))) {
+      defaultTimeout = 45000; // 45 секунд
+    }
+    final int timeoutRaw = params.hasKey("timeout") ? params.getInt("timeout") : defaultTimeout;
 
     int effectiveChannel = channel;
     int timeout = timeoutRaw;

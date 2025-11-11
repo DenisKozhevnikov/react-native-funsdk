@@ -28,6 +28,44 @@ export function funSDKInit(params: FunSDKInitParams): Promise<any> {
   return funsdk.init(params);
 }
 
+export type FunSDKReInitParams = {
+  appUuid: string; // APP_UUID from open platform (https://oppf.xmcsrv.com)
+  appKey: string; // APP_KEY from open platform
+  appSecret: string; // APP_SECRET from open platform
+  appMovedCard: number; // APP_MOVECARD from open platform (usually 2)
+  // Optional custom P2P server configuration
+  customPwdType?: CUSTOM_PWD_TYPE | number;
+  customPwd?: string;
+  customServerAddr?: string;
+  customPort?: number;
+};
+
+/**
+ * Re-initialize FunSDK with custom open platform credentials
+ * 重新初始化SDK - 使用开放平台申请的AppKey、AppSecret等参数
+ *
+ * Register at: https://oppf.xmcsrv.com/#/docs?md=readGuide
+ * 1. Create Android app in console
+ * 2. Get AppKey, AppSecret, AppUuid, MovedCard after approval
+ * 3. Call this method to re-initialize SDK with your credentials
+ *
+ * @param params - Open platform credentials
+ * @example
+ * ```typescript
+ * import { funSDKReInitByUser } from 'react-native-funsdk';
+ *
+ * funSDKReInitByUser({
+ *   appUuid: 'your-app-uuid',
+ *   appKey: 'your-app-key',
+ *   appSecret: 'your-app-secret',
+ *   appMovedCard: 2
+ * });
+ * ```
+ */
+export function funSDKReInitByUser(params: FunSDKReInitParams): void {
+  funsdk.reInitByUser(params);
+}
+
 export type FunSDKSysSetServerIPPortParams = {
   serverKey:
     | 'APP_SERVER'

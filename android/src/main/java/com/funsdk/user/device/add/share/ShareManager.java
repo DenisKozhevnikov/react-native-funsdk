@@ -50,6 +50,10 @@ public class ShareManager extends BaseUrlManager {
   private ShareManagerServerInteraction serverInteraction;
   // private Map<Integer, OnShareManagerListener> shareManagerListenerMap;
   private static ShareManager shareManager;
+  
+  // Fields moved from BaseUrlManager in SDK 5.0.7
+  private boolean isInit = false;
+  private retrofit2.Retrofit mRetrofit;
 
   public static final String POWERS_DEV_INFO_KEY = "devInfo";
   private static final int TIME_OUT = 30;
@@ -69,6 +73,33 @@ public class ShareManager extends BaseUrlManager {
     }
 
     return shareManager;
+  }
+
+  private boolean initRetrofit() {
+    try {
+      if (mRetrofit == null) {
+        okhttp3.OkHttpClient okHttpClient = new okhttp3.OkHttpClient.Builder()
+          .connectTimeout(TIME_OUT, java.util.concurrent.TimeUnit.SECONDS)
+          .readTimeout(TIME_OUT, java.util.concurrent.TimeUnit.SECONDS)
+          .writeTimeout(TIME_OUT, java.util.concurrent.TimeUnit.SECONDS)
+          .build();
+        
+        // getBaseUrl removed from BaseUrlManager in SDK 5.0.7
+        // Use default server URL
+        String baseUrl = "https://api.jftech.com/";
+        if (!baseUrl.endsWith("/")) {
+          baseUrl += "/";
+        }
+        
+        mRetrofit = new retrofit2.Retrofit.Builder()
+          .baseUrl(baseUrl)
+          .client(okHttpClient)
+          .build();
+      }
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   @Override
