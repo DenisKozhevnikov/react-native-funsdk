@@ -85,6 +85,7 @@ const DeviceCard = ({ device }: { device: DetailDeviceType }) => {
     args: Parameters<T>[0],
     resFunc?: (res: PromiseType<ReturnType<StdFunc<T>>>) => void
   ) => {
+    // Request queue is now handled by native module
     setStatus(`${func.name}: in process`);
     try {
       const res = await func(args);
