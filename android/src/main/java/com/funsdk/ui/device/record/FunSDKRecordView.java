@@ -178,6 +178,17 @@ public class FunSDKRecordView extends LinearLayout
     map.putString("status", "start");
     eventEmitter.sendEvent(map, RecordEventEmitter.EVENT_START_INIT);
 
+    // Guard: devId must be provided to initialize record manager
+    if (this.devId == null || this.devId.trim().isEmpty()) {
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - init aborted: devId is empty");
+      WritableMap err = Arguments.createMap();
+      err.putInt("target", getId());
+      err.putInt("msgId", 5501);
+      err.putInt("errorId", -400009);
+      eventEmitter.sendEvent(err, RecordEventEmitter.EVENT_FAILED);
+      return;
+    }
+
     recordManager = new UpdatedDevRecordManager(this, new RecordPlayerAttribute(getDevId()));
     recordManager.setChnId(getChannelId());
     recordManager.setVideoFullScreen(false);
@@ -230,6 +241,16 @@ public class FunSDKRecordView extends LinearLayout
 
   public void initRecordPlayer() {
     if (recordManager == null) {
+      // Guard: devId must be provided
+      if (this.devId == null || this.devId.trim().isEmpty()) {
+        android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - initRecordPlayer aborted: devId is empty");
+        WritableMap err = Arguments.createMap();
+        err.putInt("target", getId());
+        err.putInt("msgId", 5501);
+        err.putInt("errorId", -400009);
+        eventEmitter.sendEvent(err, RecordEventEmitter.EVENT_FAILED);
+        return;
+      }
       recordManager = new UpdatedDevRecordManager(this, new RecordPlayerAttribute(getDevId()));
       recordManager.setChnId(getChannelId());
       recordManager.setVideoFullScreen(false);
@@ -276,6 +297,15 @@ public class FunSDKRecordView extends LinearLayout
   public void startPlayRecord(Calendar startTime, Calendar endTime) {
     android.util.Log.d("FunSDKRecordView", "startPlayRecord(Calendar) called");
     android.util.Log.d("FunSDKRecordView", "recordManager: " + (recordManager != null ? "exists" : "null"));
+    if (this.devId == null || this.devId.trim().isEmpty()) {
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - startPlayRecord aborted: devId is empty");
+      WritableMap err = Arguments.createMap();
+      err.putInt("target", getId());
+      err.putInt("msgId", 5501);
+      err.putInt("errorId", -400009);
+      eventEmitter.sendEvent(err, RecordEventEmitter.EVENT_FAILED);
+      return;
+    }
     // Defer start until we have non-zero size to avoid a 0x0 surface
     if (getWidth() == 0 || getHeight() == 0) {
       android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - view size is 0, deferring start until layout");
@@ -294,6 +324,15 @@ public class FunSDKRecordView extends LinearLayout
     public void startPlayRecordByTime(Map<String, Object> start, Map<String, Object> end) {
     android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - startPlayRecordByTime called");
     android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - recordManager: " + (recordManager != null ? "exists" : "null"));
+    if (this.devId == null || this.devId.trim().isEmpty()) {
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - startPlayRecordByTime aborted: devId is empty");
+      WritableMap err = Arguments.createMap();
+      err.putInt("target", getId());
+      err.putInt("msgId", 5501);
+      err.putInt("errorId", -400009);
+      eventEmitter.sendEvent(err, RecordEventEmitter.EVENT_FAILED);
+      return;
+    }
     
     Calendar startCalendar = Calendar.getInstance();
     Calendar endCalendar = Calendar.getInstance();
