@@ -8,6 +8,7 @@ import {
   updateAllDevStateFromServer,
   logout,
   registerByNotBind,
+  updateAreaCode,
 } from 'react-native-funsdk';
 import {
   APPKEY,
@@ -60,6 +61,7 @@ export const useInit = () => {
 
   const reinit = async (credentials: Credentials) => {
     try {
+      updateAreaCode();
       initSDK();
       await delay(1000);
       console.log('start somefunc');
@@ -173,6 +175,9 @@ export const useInit = () => {
         customPwd: PWD,
         customServerAddr: SERVER_ADDR,
         customPort: PORT,
+        APPUUID,
+        APPKEY,
+        APPSECRET,
       });
       // setIsInit(true);
     }

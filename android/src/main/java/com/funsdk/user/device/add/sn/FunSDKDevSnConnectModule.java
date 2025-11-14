@@ -121,8 +121,16 @@ public class FunSDKDevSnConnectModule extends ReactContextBaseJavaModule {
     // SDK 5.0.7: Если нет облачного аккаунта - добавляем локально (как в официальном демо)
     if (DevDataCenter.getInstance().getLoginType() == LOGIN_NONE) {
       DevDataCenter.getInstance().addDev(xmDevInfo);
-      FunSDK.AddDevInfoToDataCenter(G.ObjToBytes(xmDevInfo.getSdbDevInfo()), 0, 0, "");
-      promise.resolve(true);
+      DevDataCenter.getInstance().addDevSyncToSDK(deviceInfo, new DevDataCenter.OnSyncDevInfoToSDKListener() {
+        @Override
+        public void onSyncToSDKResult(boolean isSuccess, int errorId) {
+          if (isSuccess) {
+            promise.resolve(true);
+          } else {
+            promise.reject(String.valueOf(errorId), "addDevSyncToSDK failed: " + errorId);
+          }
+        }
+      });
     } else {
       AccountManager.getInstance().addDev(xmDevInfo, Constants.getResultCallback(promise));
     }

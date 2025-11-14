@@ -81,7 +81,9 @@ export type FunSDKSysSetServerIPPortParams = {
   serverIpOrDomain: string;
   serverPort: number;
 };
-
+export function updateAreaCode(): void {
+  funsdk.updateAreaCode();
+}
 /**
  * Use after initialization
  * 
