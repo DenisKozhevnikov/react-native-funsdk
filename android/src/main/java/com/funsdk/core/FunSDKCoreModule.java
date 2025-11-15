@@ -95,6 +95,7 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
       Log.d("FunSDKCoreModule", "XMFunSDKManager instance created with default server");
     }
 
+
     // SDK 5.0.7: Read credentials from AndroidManifest.xml
     // 从 AndroidManifest.xml 读取凭证
     try {
@@ -128,6 +129,20 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
       Log.d("FunSDKCoreModule", "Calling initXMCloudPlatform...");
       xmFunSDKManager.initXMCloudPlatform(reactContext, appUuid, appKey, appSecret, appMovedCard, true);
       Log.d("FunSDKCoreModule", "SDK 5.0.7 initialized successfully!");
+      try {
+        if (!TextUtils.isEmpty(customServerAddr) && customPort > 0) {
+          FunSDK.SysSetServerIPPort("STATUS_P2P_SERVER", customServerAddr, customPort);
+          Log.d("FunSDKCoreModule", "STATUS_P2P_SERVER set: " + customServerAddr + ":" + customPort);
+        }
+      } catch (Throwable t) {
+        Log.e("FunSDKCoreModule", "Failed to set STATUS_P2P_SERVER after init", t);
+      }
+      try {
+        Log.d("FunSDKCoreModule", "Calling updateAreaCode() to set MI_SERVER/CAPS_SERVER");
+        updateAreaCode(null);
+      } catch (Throwable t) {
+        Log.w("FunSDKCoreModule", "updateAreaCode call failed", t);
+      }
       Log.d("FunSDKCoreModule", "========================================");
     } catch (Exception e) {
       Log.e("FunSDKCoreModule", "Failed to read credentials from AndroidManifest.xml", e);
@@ -168,6 +183,50 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
      */
     xmFunSDKManager.initLog();
 
+    // Добавляем настройки как в iOS для улучшения работы с offline устройствами
+    try {
+      // Хранилище паролей (как в iOS)
+      String passwordDbPath = reactContext.getFilesDir().getPath() + "/password.txt";
+      FunSDK.SetFunStrAttr(EFUN_ATTR.USER_PWD_DB, passwordDbPath);
+      Log.d("FunSDKCoreModule", "Set USER_PWD_DB path: " + passwordDbPath);
+      
+      // Сохранение информации о логине (как в iOS)
+      String userInfoPath = reactContext.getFilesDir().getPath() + "/UserInfo.db";
+      FunSDK.SetFunStrAttr(EFUN_ATTR.SAVE_LOGIN_USER_INFO, userInfoPath);
+      Log.d("FunSDKCoreModule", "Set SAVE_LOGIN_USER_INFO path: " + userInfoPath);
+      
+      // Пути для обновлений и конфигураций (как в iOS)
+      String updateFilePath = reactContext.getFilesDir().getPath() + "/UpgradeFiles";
+      FunSDK.SetFunStrAttr(EFUN_ATTR.UPDATE_FILE_PATH, updateFilePath);
+      Log.d("FunSDKCoreModule", "Set UPDATE_FILE_PATH: " + updateFilePath);
+      
+      String configPath = reactContext.getFilesDir().getPath() + "/ConfigPath";
+      FunSDK.SetFunStrAttr(EFUN_ATTR.CONFIG_PATH, configPath);
+      Log.d("FunSDKCoreModule", "Set CONFIG_PATH: " + configPath);
+      try {
+        new java.io.File(updateFilePath).mkdirs();
+        new java.io.File(configPath).mkdirs();
+      } catch (Throwable t) {
+        Log.w("FunSDKCoreModule", "Failed to ensure Upgrade/Config directories", t);
+      }
+      
+      // Отключение автоматических обновлений (как в iOS)
+      FunSDK.SetFunIntAttr(EFUN_ATTR.AUTO_DL_UPGRADE, 0);
+      Log.d("FunSDKCoreModule", "Set AUTO_DL_UPGRADE: 0");
+      FunSDK.SetFunIntAttr(LOGIN_SUP_RSA_ENC, 1);
+      Log.d("FunSDKCoreModule", "Set LOGIN_SUP_RSA_ENC: 1");
+      
+      // Определение типа сети (как в iOS)
+      int netType = getNetworkType();
+      FunSDK.SetFunIntAttr(EFUN_ATTR.SET_NET_TYPE, netType);
+      Log.d("FunSDKCoreModule", "Set SET_NET_TYPE: " + netType);
+      
+     Log.d("FunSDKCoreModule", "Using SDK's built-in network initialization on Android");
+      
+    } catch (Exception e) {
+      Log.e("FunSDKCoreModule", "Error setting additional attributes", e);
+    }
+
     // /**
     // * 低功耗设备：包括 门铃、门锁等，需要调用此方法否则可能无法登录设备，其他设备无需调用
     // * Low-power devices: including doorbells, door locks, etc., you need to call
@@ -194,6 +253,32 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
    *   customPort: number (optional)     // P2P服务器端口
    * }
    */
+  /**
+   * Определение типа сети (аналог iOS версии)
+   */
+  private int getNetworkType() {
+    try {
+      android.net.ConnectivityManager connManager = (android.net.ConnectivityManager) reactContext.getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+      android.net.NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
+      
+      if (networkInfo == null || !networkInfo.isConnected()) {
+        return 0; // Нет сети
+      }
+      
+      int type = networkInfo.getType();
+      if (type == android.net.ConnectivityManager.TYPE_WIFI) {
+        return 1; // WiFi
+      } else if (type == android.net.ConnectivityManager.TYPE_MOBILE) {
+        return 2; // Мобильная сеть
+      }
+      
+      return 0;
+    } catch (Exception e) {
+      Log.e("FunSDKCoreModule", "Error getting network type", e);
+      return 0;
+    }
+  }
+  
   @ReactMethod
   public void reInitByUser(ReadableMap params) {
     // Позволяем пользователю полностью переинициализировать SDK c указанием
@@ -206,7 +291,6 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
       return;
     }
 
-    // Кастомный P2P-сервер (аналогично init)
     int customPwdType = 0;
     String customPwd = "";
     String customServerAddr = "";
@@ -252,6 +336,59 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
     // Initialize with explicit parameters from user
     xmFunSDKManager.initXMCloudPlatform(reactContext, appUuid, appKey, appSecret, appMovedCard, true);
     xmFunSDKManager.initLog();
+    try {
+      if (!TextUtils.isEmpty(customServerAddr) && customPort > 0) {
+        FunSDK.SysSetServerIPPort("STATUS_P2P_SERVER", customServerAddr, customPort);
+        Log.d("FunSDKCoreModule", "reInitByUser: STATUS_P2P_SERVER set: " + customServerAddr + ":" + customPort);
+      }
+    } catch (Throwable t) {
+      Log.e("FunSDKCoreModule", "reInitByUser: Failed to set STATUS_P2P_SERVER after init", t);
+    }
+    
+    // Добавляем те же настройки, что и в init()
+    try {
+      // Хранилище паролей (как в iOS)
+      String passwordDbPath = reactContext.getFilesDir().getPath() + "/password.txt";
+      FunSDK.SetFunStrAttr(EFUN_ATTR.USER_PWD_DB, passwordDbPath);
+      Log.d("FunSDKCoreModule", "reInitByUser: Set USER_PWD_DB path: " + passwordDbPath);
+      
+      // Сохранение информации о логине (как в iOS)
+      String userInfoPath = reactContext.getFilesDir().getPath() + "/UserInfo.db";
+      FunSDK.SetFunStrAttr(EFUN_ATTR.SAVE_LOGIN_USER_INFO, userInfoPath);
+      Log.d("FunSDKCoreModule", "reInitByUser: Set SAVE_LOGIN_USER_INFO path: " + userInfoPath);
+      
+      // Пути для обновлений и конфигураций (как в iOS)
+      String updateFilePath = reactContext.getFilesDir().getPath() + "/UpgradeFiles";
+      FunSDK.SetFunStrAttr(EFUN_ATTR.UPDATE_FILE_PATH, updateFilePath);
+      Log.d("FunSDKCoreModule", "reInitByUser: Set UPDATE_FILE_PATH: " + updateFilePath);
+      
+      String configPath = reactContext.getFilesDir().getPath() + "/ConfigPath";
+      FunSDK.SetFunStrAttr(EFUN_ATTR.CONFIG_PATH, configPath);
+      Log.d("FunSDKCoreModule", "reInitByUser: Set CONFIG_PATH: " + configPath);
+      try {
+        new java.io.File(updateFilePath).mkdirs();
+        new java.io.File(configPath).mkdirs();
+      } catch (Throwable t) {
+        Log.w("FunSDKCoreModule", "reInitByUser: Failed to ensure Upgrade/Config directories", t);
+      }
+      
+      // Отключение автоматических обновлений (как в iOS)
+      FunSDK.SetFunIntAttr(EFUN_ATTR.AUTO_DL_UPGRADE, 0);
+      Log.d("FunSDKCoreModule", "reInitByUser: Set AUTO_DL_UPGRADE: 0");
+      FunSDK.SetFunIntAttr(LOGIN_SUP_RSA_ENC, 1);
+      Log.d("FunSDKCoreModule", "reInitByUser: Set LOGIN_SUP_RSA_ENC: 1");
+      
+      // Определение типа сети (как в iOS)
+      int netType = getNetworkType();
+      FunSDK.SetFunIntAttr(EFUN_ATTR.SET_NET_TYPE, netType);
+      Log.d("FunSDKCoreModule", "reInitByUser: Set SET_NET_TYPE: " + netType);
+
+      Log.d("FunSDKCoreModule", "reInitByUser: Using SDK's built-in network initialization on Android");
+      
+    } catch (Exception e) {
+      Log.e("FunSDKCoreModule", "reInitByUser: Error setting additional attributes", e);
+    }
+    
     FunSDK.SetFunIntAttr(EFUN_ATTR.SUP_RPS_VIDEO_DEFAULT, SDKCONST.Switch.Open);
 
     Log.d("FunSDKCoreModule", "reInitByUser: SDK re-initialized successfully");
@@ -308,8 +445,8 @@ public class FunSDKCoreModule extends ReactContextBaseJavaModule {
       int serverPort = params.getInt("serverPort");
 
       Log.d("FunSDKCoreModule",
-          "SysSetServerIPPort: key=" + serverKey + ", addr=" + serverIpOrDomain + ", port=" + serverPort);
-      xmFunSDKManager.sysSetServerIPPort(serverKey, serverIpOrDomain, serverPort);
+          "sysSetServerIPPort: key=" + serverKey + ", addr=" + serverIpOrDomain + ", port=" + serverPort);
+      FunSDK.SysSetServerIPPort(serverKey, serverIpOrDomain, serverPort);
     }
   }
 }

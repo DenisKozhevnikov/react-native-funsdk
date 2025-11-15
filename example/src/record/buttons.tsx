@@ -129,16 +129,16 @@ export const RecordButtons = ({
           year: 2025,
           // Отсчет от 1
           // Если нужен ноябрь, то это 10 месяц + 1 = 11
-          month: 8,
-          day: 21,
+          month: 11,
+          day: 14,
           hour: 0,
           minute: 0,
           second: 0,
         },
         end: {
           year: 2025,
-          month: 8,
-          day: 22,
+          month: 11,
+          day: 14,
           hour: 23,
           minute: 59,
           second: 59,

@@ -61,8 +61,8 @@ export const useInit = () => {
 
   const reinit = async (credentials: Credentials) => {
     try {
-      updateAreaCode();
       initSDK();
+      updateAreaCode();
       await delay(1000);
       console.log('start somefunc');
       setStatus('start somefunc');

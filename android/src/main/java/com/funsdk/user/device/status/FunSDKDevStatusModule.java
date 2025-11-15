@@ -10,7 +10,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.Callback;
 
@@ -22,6 +21,8 @@ import com.manager.device.config.DevConfigInfo;
 import com.manager.account.AccountManager;
 import com.manager.account.BaseAccountManager;
 import com.manager.XMFunSDKManager;
+import com.manager.sysability.SysAbilityManager;
+import com.manager.sysability.OnSysAbilityResultListener;
 import com.utils.SignatureUtil;
 import com.utils.TimeMillisUtil;
 
@@ -30,6 +31,7 @@ import com.funsdk.utils.ReactParamsCheck;
 
 import com.lib.FunSDK;
 import com.lib.IFunSDKResult;
+import com.basic.G;
 import com.lib.MsgContent;
 import com.lib.EUIMSG;
 import com.lib.SDKCONST;
@@ -103,6 +105,12 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
                   ", devPwdLen=" + (pwd != null ? pwd.length() : -1) +
                   ", devToken=" + token +
                   ", connectType=" + connectType);
+
+          // Устанавливаем креды локально перед loginDev, если они известны
+          if (userName != null && !userName.isEmpty() && pwd != null && !pwd.isEmpty()) {
+            int r = FunSDK.DevSetLocalPwd(devId, userName, pwd);
+            android.util.Log.e("DEV_STATUS_ANDROID", "loginDevice: DevSetLocalPwd result=" + r + ", devId=" + devId);
+          }
         } else {
           android.util.Log.e(
               "DEV_STATUS_ANDROID",
@@ -112,11 +120,46 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
         android.util.Log.e("DEV_STATUS_ANDROID", "loginDevice: error logging XMDevInfo: " + t.getMessage());
       }
 
-      DeviceManager.getInstance().loginDev(devId, getResultCallback(promise));
+      DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
+        @Override
+        public void onSuccess(String s, int operationType, Object abilityKey) {
+          android.util.Log.e("DEV_STATUS_ANDROID", "loginDevice: loginDev SUCCESS devId=" + s + ", opType=" + operationType);
+          try {
+            requestSystemInfo(devId, promise);
+          } catch (Throwable t) {
+            promise.reject("FunSDK", t);
+          }
+        }
+
+        @Override
+        public void onFailed(String s, int msgId, String jsonName, int errorId) {
+          android.util.Log.e("DEV_STATUS_ANDROID",
+              "loginDevice: loginDev FAILED devId=" + s + ", msgId=" + msgId + ", jsonName=" + jsonName + ", errorId=" + errorId);
+          promise.reject(String.valueOf(errorId),
+              "loginDevice: loginDev failed, msgId=" + msgId + ", jsonName=" + jsonName + ", errorId=" + errorId);
+        }
+      });
     }
   }
 
-    @ReactMethod
+    // Вспомогательные структуры для прямого запроса SystemInfo (как в 0.18.7)
+  private final Map<Integer, PendingLogin> pendingSystemInfo = new HashMap<>();
+
+  private static class PendingLogin {
+    final Promise promise;
+    final String devId;
+    final int networkMode;
+    PendingLogin(Promise promise, String devId, int networkMode) {
+      this.promise = promise;
+      this.devId = devId;
+      this.networkMode = networkMode;
+    }
+  }
+
+  /**
+   * Вход в устройство - реализация как в iOS: установка кредов + прямой запрос SystemInfo
+   */
+  @ReactMethod
   public void loginDeviceWithCredential(ReadableMap params, Promise promise) {
     if (ReactParamsCheck
         .checkParams(new String[] { Constants.DEVICE_ID, Constants.DEVICE_LOGIN, Constants.DEVICE_PASSWORD }, params)) {
@@ -124,7 +167,7 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       final String devUser = params.getString(Constants.DEVICE_LOGIN);
       final String devPwd = params.getString(Constants.DEVICE_PASSWORD);
 
-      // Жёсткая валидация, чтобы не падать внутри DeviceManager
+      // Валидация параметров
       if (devId == null || devId.trim().isEmpty()) {
         promise.reject("FunSDK", "DeviceId is empty");
         return;
@@ -139,74 +182,83 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       }
 
       try {
-        // Определяем, есть ли активный вход по аккаунту и кэш устройства в DevDataCenter
-        DevDataCenter devDataCenter = DevDataCenter.getInstance();
-        XMDevInfo xmDevInfo = devDataCenter.getDevInfo(devId);
-        boolean hasAccountLogin = devDataCenter.getLoginType() != com.manager.db.Define.LOGIN_NONE;
-        final boolean useCachedLogin = hasAccountLogin && xmDevInfo != null;
+        // 1) Устанавливаем локальные креды для FunSDK
+        int pwdResult = FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
+        android.util.Log.e("DEV_STATUS_ANDROID", "DevSetLocalPwd: devId=" + devId + ", user=" + devUser + ", result=" + pwdResult);
+        if (pwdResult < 0) {
+          promise.reject("DevSetLocalPwd", "Failed to set device credentials, error: " + pwdResult);
+          return;
+        }
 
-        if (!useCachedLogin) {
-          // Локальный SN‑сценарий: сбрасываем состояние и задаём пароль через DevSetLocalPwd
-          DeviceManager.getInstance().logoutDev(devId);
-
-          int pwdResult = FunSDK.DevSetLocalPwd(devId, devUser, devPwd);
-          android.util.Log.e("DEV_STATUS_ANDROID", "DevSetLocalPwd: devId=" + devId + ", user=" + devUser + ", result=" + pwdResult);
-
+        // 2) Обновляем XMDevInfo в DevDataCenter, как делает демо через XMDevInfo/FunSDK.AddDevInfoToDataCenter
+        XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
+        if (xmDevInfo != null) {
+          SDBDeviceInfo sdbInfo = xmDevInfo.getSdbDevInfo();
+          int networkMode = 2;
+          if (sdbInfo != null) {
+            networkMode = sdbInfo.connectType;
+          }
+          xmDevInfo.setDevUserName(devUser);
+          xmDevInfo.setDevPassword(devPwd);
+          // Как DevAboutPresenter: прописываем PID в FunSDK, если есть
           try {
-            Thread.sleep(500);
-          } catch (InterruptedException e) {
-            // Игнорируем прерывание
+            String pid = xmDevInfo.getPid();
+            if (pid != null && !pid.isEmpty()) {
+              FunSDK.DevSetPid(xmDevInfo.getDevId(), pid);
+              android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: DevSetPid devId=" + xmDevInfo.getDevId() + ", pid=" + pid);
+            }
+          } catch (Throwable t) {
+            android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: DevSetPid error=" + t.getMessage());
           }
+          android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: devId=" + devId + ", networkMode=" + networkMode);
         } else {
-          android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: use cached DevDataCenter login info for devId=" + devId + "; hasAccountLogin=" + hasAccountLogin);
-        }
+          android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: XMDevInfo is null for devId=" + devId);
+          try {
+            SDBDeviceInfo sdbDeviceInfo = new SDBDeviceInfo();
+            G.SetValue(sdbDeviceInfo.st_0_Devmac, devId);
+            G.SetValue(sdbDeviceInfo.st_4_loginName, devUser);
+            G.SetValue(sdbDeviceInfo.st_5_loginPsw, devPwd);
 
-        // Логируем тип подключения до логина, если он уже известен
-        if (xmDevInfo != null && xmDevInfo.getSdbDevInfo() != null) {
-          android.util.Log.e("DEV_STATUS_ANDROID", "Device connection type before login: " + xmDevInfo.getSdbDevInfo().connectType);
-        }
-
-        // Универсальный listener для loginDev (с явными кредами или без, как в демо)
-        DeviceManager.OnDevManagerListener listener = new DeviceManager.OnDevManagerListener() {
-          @Override
-          public void onSuccess(String s, int i, Object result) {
-            android.util.Log.e("DEV_STATUS_ANDROID", "loginDev SUCCESS: devId=" + s);
-            resolveLoginWithSystemInfo(devId, promise);
-          }
-
-          @Override
-          public void onFailed(String s, int i, String s1, int errorId) {
-            android.util.Log.e("DEV_STATUS_ANDROID", "loginDev FAILED: devId=" + s + ", msgId=" + i + ", jsonName=" + s1 + ", errorId=" + errorId);
-
-            // В демо для f920... login считается успешным, даже если SystemInfo сыпется с -11307.
-            // Если ошибка относится к SystemInfo и код -11307, считаем логин успешным и
-            // продолжаем через resolveLoginWithSystemInfo, а не роняем промис.
-            if ("SystemInfo".equals(s1) && errorId == -11307) {
-              android.util.Log.e("DEV_STATUS_ANDROID", "loginDev: treating SystemInfo -11307 as success fallback for devId=" + devId);
-              resolveLoginWithSystemInfo(devId, promise);
-              return;
+            String devToken = FunSDK.DevGetLocalEncToken(devId);
+            if (!TextUtils.isEmpty(devToken)) {
+              sdbDeviceInfo.setDevToken(devToken);
             }
 
-            // Все остальные ошибки по-прежнему считаем фатальными для логина
-            promise.reject(String.valueOf(errorId), "Login failed: " + s1);
+            DevDataCenter.getInstance().addDevSyncToSDK(sdbDeviceInfo,
+                new DevDataCenter.OnSyncDevInfoToSDKListener() {
+                  @Override
+                  public void onSyncToSDKResult(boolean isSuccess, int errorId) {
+                    android.util.Log.e("DEV_STATUS_ANDROID",
+                        "addDevSyncToSDK result: success=" + isSuccess + ", errorId=" + errorId + ", devId=" + devId);
+                  }
+                });
+          } catch (Throwable t) {
+            android.util.Log.e("DEV_STATUS_ANDROID", "addDevSyncToSDK error: " + t.getMessage());
           }
-        };
-
-        // Пробуем авторизоваться
-        if (useCachedLogin) {
-          // Как в официальном демо: опираемся на данные DevDataCenter/аккаунта
-          DeviceManager.getInstance().loginDev(devId, listener);
-        } else {
-          // Локальный SN‑сценарий: используем явные логин/пароль
-          DeviceManager.getInstance().loginDev(devId, devUser, devPwd, listener);
         }
+
+        // 3) Логиним девайс через DeviceManager, как в jlink-android-funsdk-demo
+        DeviceManager.getInstance().loginDev(devId, new DeviceManager.OnDevManagerListener() {
+          @Override
+          public void onSuccess(String s, int operationType, Object abilityKey) {
+            android.util.Log.e("DEV_STATUS_ANDROID", "loginDeviceWithCredential: loginDev SUCCESS devId=" + s + ", opType=" + operationType);
+            // 4) После успешного логина запрашиваем SystemInfo через DevConfigManager, как делает демо (CloudWebPresenter)
+            requestSystemInfo(devId, promise);
+          }
+
+          @Override
+          public void onFailed(String s, int msgId, String jsonName, int errorId) {
+            android.util.Log.e("DEV_STATUS_ANDROID",
+                "loginDeviceWithCredential: loginDev FAILED devId=" + s + ", msgId=" + msgId + ", jsonName=" + jsonName + ", errorId=" + errorId);
+            promise.reject(String.valueOf(errorId),
+                "loginDeviceWithCredential: loginDev failed, msgId=" + msgId + ", jsonName=" + jsonName + ", errorId=" + errorId);
+          }
+        });
       } catch (Throwable t) {
         promise.reject("FunSDK", t);
       }
     }
   }
-
-
 
   private void resolveLoginWithSystemInfo(final String devId, final Promise promise) {
     try {
@@ -223,11 +275,17 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
         return;
       }
 
-      DevConfigInfo devConfigInfo = DevConfigInfo.create(new DeviceManager.OnDevManagerListener<String>() {
+      DevConfigInfo devConfigInfo = DevConfigInfo.create(new DevConfigManager.OnDevConfigResultListener() {
         @Override
-        public void onSuccess(String devIdInner, int operationType, String result) {
+        public void onSuccess(String devIdInner, int msgId, Object result) {
           try {
-            WritableMap value = buildSystemInfoValue(devId, result);
+            String jsonStr;
+            if (result instanceof String) {
+              jsonStr = (String) result;
+            } else {
+              jsonStr = JSON.toJSONString(result);
+            }
+            WritableMap value = buildSystemInfoValue(devId, jsonStr);
             WritableMap res = Arguments.createMap();
             res.putString("s", devId);
             res.putInt("i", 1);
@@ -260,6 +318,23 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
           res.putMap("value", value);
           promise.resolve(res);
         }
+
+        @Override
+        public void onFunSDKResult(android.os.Message msg, MsgContent ex) {
+          // Как в DevAboutPresenter: msg.arg2 содержит тип подключения (network mode)
+          if (msg.arg1 >= 0) {
+            try {
+              int netConnectType = msg.arg2;
+              XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
+              if (xmDevInfo != null && xmDevInfo.getSdbDevInfo() != null) {
+                xmDevInfo.getSdbDevInfo().connectType = netConnectType;
+              }
+              android.util.Log.e("DEV_STATUS_ANDROID", "resolveLoginWithSystemInfo: onFunSDKResult netConnectType=" + netConnectType + " for devId=" + devId);
+            } catch (Throwable t) {
+              android.util.Log.e("DEV_STATUS_ANDROID", "resolveLoginWithSystemInfo: onFunSDKResult error=" + t.getMessage());
+            }
+          }
+        }
       });
 
       devConfigInfo.setJsonName(JsonConfig.SYSTEM_INFO);
@@ -273,6 +348,7 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
       res.putInt("i", 1);
       res.putMap("value", value);
       promise.resolve(res);
+    } finally {
     }
   }
 
@@ -306,7 +382,6 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
           value.putInt("AlarmOutChannel", bean.getAlarmOutChannel());
           value.putInt("AudioInChannel", bean.getAudioInChannel());
           value.putInt("TalkInChannel", bean.getTalkInChannel());
-          value.putInt("TalkOutChannel", bean.getTalkOutChannel());
           value.putInt("DigChannel", bean.getDigChannel());
           value.putInt("ExtraChannel", bean.getExtraChannel());
           value.putInt("CombineSwitch", bean.getCombineSwitch());
@@ -318,7 +393,6 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
         }
       }
     }
-
     return value;
   }
 
@@ -341,47 +415,181 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     return s != null ? s : "";
   }
 
-  // not tested
-  // @ReactMethod
-  // public void loginDeviceByLowPower(ReadableMap params, Promise promise) {
-  // if (ReactParamsCheck
-  // .checkParams(new String[] { Constants.DEVICE_ID }, params)) {
-  // DeviceManager.getInstance().loginDevByLowPower(params.getString(Constants.DEVICE_ID),
-  // getResultCallback(promise));
-  // }
-  // }
+  private void requestSystemInfo(final String devId, final Promise promise) {
+    try {
+      com.facebook.react.bridge.WritableMap params = com.facebook.react.bridge.Arguments.createMap();
+      params.putString(com.funsdk.utils.Constants.DEVICE_ID, devId);
+      getSystemInfo(params, promise);
+    } catch (Throwable t) {
+      promise.reject("FunSDK", t);
+    }
+  }
+
+  @ReactMethod
+  public void getSystemInfo(ReadableMap params, final Promise promise) {
+    if (ReactParamsCheck.checkParams(new String[] { Constants.DEVICE_ID }, params)) {
+      final String devId = params.getString(Constants.DEVICE_ID);
+      try {
+        final DevConfigManager devConfigManager = DeviceManager.getInstance().getDevConfigManager(devId);
+        if (devConfigManager == null) {
+          WritableMap value = buildBasicDeviceInfo(devId);
+          WritableMap res = Arguments.createMap();
+          res.putString("s", devId);
+          res.putInt("i", 1);
+          res.putMap("value", value);
+          promise.resolve(res);
+          return;
+        }
+
+        DevConfigInfo devConfigInfo = DevConfigInfo.create(new DevConfigManager.OnDevConfigResultListener() {
+          @Override
+          public void onSuccess(String devIdInner, int msgId, Object result) {
+            try {
+              String jsonStr = (result instanceof String) ? (String) result : JSON.toJSONString(result);
+              WritableMap value = buildSystemInfoValue(devId, jsonStr);
+              WritableMap res = Arguments.createMap();
+              res.putString("s", devId);
+              res.putInt("i", 1);
+              res.putMap("value", value);
+              promise.resolve(res);
+            } catch (Exception e) {
+              WritableMap value = buildBasicDeviceInfo(devId);
+              value.putBoolean("systemInfoParseError", true);
+              WritableMap res = Arguments.createMap();
+              res.putString("s", devId);
+              res.putInt("i", 1);
+              res.putMap("value", value);
+              promise.resolve(res);
+            }
+          }
+
+          @Override
+          public void onFailed(String devIdInner, int msgId, String jsonName, int errorId) {
+            if (msgId == 5128 && errorId == -11307) {
+              fallbackSystemInfoFromCaps(devId, promise);
+              return;
+            }
+            WritableMap value = buildBasicDeviceInfo(devId);
+            value.putBoolean("systemInfoFailed", true);
+            value.putInt("systemInfoError", errorId);
+            if (jsonName != null) {
+              value.putString("systemInfoName", jsonName);
+            }
+            WritableMap res = Arguments.createMap();
+            res.putString("s", devId);
+            res.putInt("i", 1);
+            res.putMap("value", value);
+            promise.resolve(res);
+          }
+
+          @Override
+          public void onFunSDKResult(android.os.Message msg, MsgContent ex) {
+            if (msg.arg1 >= 0) {
+              try {
+                int netConnectType = msg.arg2;
+                XMDevInfo xmDevInfo = DevDataCenter.getInstance().getDevInfo(devId);
+                if (xmDevInfo != null && xmDevInfo.getSdbDevInfo() != null) {
+                  xmDevInfo.getSdbDevInfo().connectType = netConnectType;
+                }
+              } catch (Throwable t) {
+              }
+            }
+          }
+        });
+
+        devConfigInfo.setJsonName(JsonConfig.SYSTEM_INFO);
+        devConfigInfo.setChnId(-1);
+        devConfigManager.getDevConfig(devConfigInfo);
+      } catch (Throwable t) {
+        promise.reject("FunSDK", t);
+      }
+    }
+  }
+
+  private void fallbackSystemInfoFromCaps(final String devId, final Promise promise) {
+    try {
+      final ReactApplicationContext ctx = getReactApplicationContext();
+      final boolean[] capsResolved = new boolean[] { false };
+      SysAbilityManager.getInstance().getCellularAbility(ctx, devId, false,
+          new OnSysAbilityResultListener<Map<String, Object>>() {
+            @Override
+            public void onSupportResult(Map<String, Object> supportMap, boolean isFromServer) {
+              try {
+                android.util.Log.e("DEV_STATUS_ANDROID",
+                    "fallbackSystemInfoFromCaps: caps supportMap=" + String.valueOf(supportMap)
+                        + ", isFromServer=" + isFromServer + ", devId=" + devId);
+                if (capsResolved[0]) {
+                  return;
+                }
+                if ((supportMap == null || supportMap.isEmpty()) && !isFromServer) {
+                  return;
+                }
+
+                WritableMap value = buildBasicDeviceInfo(devId);
+
+                if (supportMap != null) {
+                  Object iccid = supportMap.get("net.cellular.iccid");
+                  if (iccid instanceof String) {
+                    value.putString("iccid", (String) iccid);
+                  }
+
+                  Object imei = supportMap.get("net.cellular.imei");
+                  if (imei instanceof String) {
+                    value.putString("imei", (String) imei);
+                  }
+
+                  Object mfrsOemId = supportMap.get("mfrsOemId");
+                  if (mfrsOemId instanceof String) {
+                    value.putString("mfrsOemId", (String) mfrsOemId);
+                  }
+
+                  Object model = supportMap.get("model");
+                  if (model instanceof String) {
+                    value.putString("model", (String) model);
+                  }
+
+                  Object hw = supportMap.get("hw");
+                  if (hw instanceof String) {
+                    value.putString("HardWare", (String) hw);
+                  }
+
+                  Object swVer = supportMap.get("swVer");
+                  if (swVer instanceof String) {
+                    value.putString("SoftWareVersion", (String) swVer);
+                  }
+
+                  Object pwd = supportMap.get("pwd");
+                  if (pwd instanceof String) {
+                    value.putString("pwd", (String) pwd);
+                  }
+                }
+
+                WritableMap res = Arguments.createMap();
+                res.putString("s", devId);
+                res.putInt("i", 1);
+                res.putMap("value", value);
+                capsResolved[0] = true;
+                promise.resolve(res);
+              } catch (Throwable t) {
+                promise.reject("FunSDK", t);
+              }
+            }
+          });
+    } catch (Throwable t) {
+      try {
+        WritableMap value = buildBasicDeviceInfo(devId);
+        WritableMap res = Arguments.createMap();
+        res.putString("s", devId);
+        res.putInt("i", 1);
+        res.putMap("value", value);
+        promise.resolve(res);
+      } catch (Throwable t2) {
+        promise.reject("FunSDK", t2);
+      }
+    }
+  }
 
   // not tested
-  // @ReactMethod
-  // public void loginDeviceByLowPowerWithCredential(ReadableMap params, Promise
-  // promise) {
-  // if (ReactParamsCheck
-  // .checkParams(new String[] { Constants.DEVICE_ID, Constants.DEVICE_LOGIN,
-  // Constants.DEVICE_PASSWORD }, params)) {
-  // DeviceManager.getInstance().loginDevByLowPower(
-  // params.getString(Constants.DEVICE_ID),
-  // params.getString(Constants.DEVICE_LOGIN),
-  // params.getString(Constants.DEVICE_PASSWORD),
-  // getResultCallback(promise));
-  // }
-  // }
-
-  // not tested
-  // вероятно есть проблемы с невозвратом промиса
-  // @ReactMethod
-  // public void wakeUpAndSendCtrl(ReadableMap params, Promise promise) {
-  // if (ReactParamsCheck
-  // .checkParams(new String[] { Constants.DEVICE_ID, Constants.JSON_AS_STRING },
-  // params)) {
-  // DeviceManager.getInstance().wakeUpAndSendCtrl(
-  // params.getString(Constants.DEVICE_ID),
-  // params.getString(Constants.JSON_AS_STRING),
-  // getResultCallback(promise));
-  // }
-  // }
-
-  // not tested
-  // отключение от подключенного устройства
   @ReactMethod
   public void logoutDevice(ReadableMap params, Promise promise) {
     if (ReactParamsCheck
@@ -1115,7 +1323,8 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
     final int what = msg.what;
     final int arg1 = msg.arg1;
     final int seq = msg.arg2;
-
+    
+    // Обработка SET-конфигов (ModifyPassword и т.д.)
     PendingSet pendSet = pendingSet.remove(seq);
     if (pendSet != null && what == EUIMSG.DEV_SET_CONFIG) {
       Runnable r = pendingSetTimeouts.remove(seq);
@@ -1129,6 +1338,72 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
         pendSet.promise.resolve(res);
       } else {
         pendSet.promise.reject("FunSDK", String.valueOf(what) + " " + String.valueOf(arg1));
+      }
+      return 0;
+    }
+    
+    // Обработка результатов SystemInfo для 0.18.7-style loginDeviceWithCredential
+    if (what == EUIMSG.DEV_GET_JSON || what == EUIMSG.DEV_GET_CONFIG) {
+      android.util.Log.e("DEV_STATUS_ANDROID", "OnFunSDKResult: what=" + what + ", arg1=" + arg1 + ", seq=" + seq + ", exStrLen=" + (ex != null && ex.str != null ? ex.str.length() : -1) + ", pDataLen=" + (ex != null && ex.pData != null ? ex.pData.length : -1));
+      
+      PendingLogin pend = pendingSystemInfo.remove(seq);
+      if (pend == null) {
+        // Пробуем найти последний запрос, если точное соответствие не найдено
+        Integer matchedSeq = null;
+        PendingLogin matched = null;
+        for (java.util.Map.Entry<Integer, PendingLogin> e : pendingSystemInfo.entrySet()) {
+          if (matchedSeq == null || e.getKey() > matchedSeq) {
+            matchedSeq = e.getKey();
+            matched = e.getValue();
+          }
+        }
+        if (matched != null) {
+          pendingSystemInfo.remove(matchedSeq);
+          pend = matched;
+          android.util.Log.e("DEV_STATUS_ANDROID", "OnFunSDKResult: fallback matched pending, matchedSeq=" + matchedSeq + ", actualSeq=" + seq);
+        } else {
+          android.util.Log.e("DEV_STATUS_ANDROID", "OnFunSDKResult: no pending for seq=" + seq + ", ignoring");
+          return 0;
+        }
+      }
+
+      try {
+        if (arg1 >= 0) {
+          // Успешный ответ SystemInfo
+          String data = null;
+          if (ex != null) {
+            if (ex.pData != null && ex.pData.length > 0) {
+              data = new String(ex.pData, java.nio.charset.StandardCharsets.UTF_8).trim();
+            } else if (ex.str != null) {
+              data = ex.str.trim();
+            }
+          }
+
+          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo raw len=" + (data != null ? data.length() : -1));
+          if (data == null || data.isEmpty()) {
+            // как на iOS: пустой ответ считаем ошибкой
+            pend.promise.reject("EMSG_DEV_GET_CONFIG_JSON_error", "SystemInfo empty");
+            return 0;
+          }
+
+          // Успешно получили данные, парсим и возвращаем (аналог iOS dicInfo/responseObject)
+          WritableMap value = buildSystemInfoValue(pend.devId, data);
+          WritableMap res = Arguments.createMap();
+          res.putString("s", pend.devId);
+          res.putInt("i", 1);
+          res.putMap("value", value);
+          pend.promise.resolve(res);
+          android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo RESOLVED for devId=" + pend.devId);
+        } else {
+          // Ошибка получения SystemInfo: как на iOS, отклоняем промис
+          String errorMsg = String.valueOf(what) + " " + String.valueOf(arg1);
+          pend.promise.reject("EMSG_DEV_GET_CONFIG_JSON_error", errorMsg);
+          android.util.Log.e("DEV_STATUS_ANDROID",
+              "SystemInfo REJECT what=" + what + " arg1=" + arg1 + " seq=" + seq);
+        }
+      } catch (Throwable t) {
+        android.util.Log.e("DEV_STATUS_ANDROID", "SystemInfo exception", t);
+        pend.promise.reject("FunSDKDevStatusModule", t);
       }
       return 0;
     }
