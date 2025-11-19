@@ -6,6 +6,8 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.facebook.react.bridge.WritableArray;
+
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
@@ -54,6 +56,8 @@ import java.security.NoSuchAlgorithmException;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Base64;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -591,17 +595,6 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
 
   // not tested
   @ReactMethod
-  public void logoutDevice(ReadableMap params, Promise promise) {
-    if (ReactParamsCheck
-        .checkParams(new String[] { Constants.DEVICE_ID }, params)) {
-      DeviceManager.getInstance().logoutDev(
-          params.getString(Constants.DEVICE_ID));
-      promise.resolve("success");
-    }
-  }
-
-  // not tested
-  @ReactMethod
   public void getChannelInfo(ReadableMap params, Promise promise) {
     if (ReactParamsCheck
         .checkParams(new String[] { Constants.DEVICE_ID }, params)) {
@@ -620,9 +613,70 @@ public class FunSDKDevStatusModule extends ReactContextBaseJavaModule implements
               if (channelInfos == null) {
                 map.putNull("value");
               } else {
-                WritableMap value = Arguments.createMap();
-                value.putInt("nChnCount", channelInfos.nChnCount);
-                map.putMap("value", value);
+                try {
+                  // Логируем сырые данные для отладки структуры
+                  String jsonStr = JSON.toJSONString(channelInfos);
+                  android.util.Log.e("DEV_STATUS_ANDROID", "getChannelInfo SUCCESS: devId=" + s + ", json=" + jsonStr);
+
+                  WritableMap value = Arguments.createMap();
+                  value.putInt("nChnCount", channelInfos.nChnCount);
+
+                  // Пытаемся вытащить массив названий каналов из JSON
+                  WritableArray titlesArray = Arguments.createArray();
+                  try {
+                    JSONObject obj = JSON.parseObject(jsonStr);
+                    if (obj != null) {
+                      JSONArray titlesJson = null;
+
+                      // Сначала пробуем ключ st_channelTitle, как на iOS
+                      if (obj.containsKey("st_channelTitle")) {
+                        titlesJson = obj.getJSONArray("st_channelTitle");
+                      } else {
+                        // Иначе берём первый JSON-массив строк
+                        for (Map.Entry<String, Object> entry : obj.entrySet()) {
+                          Object v = entry.getValue();
+                          if (v instanceof JSONArray) {
+                            titlesJson = (JSONArray) v;
+                            break;
+                          }
+                        }
+                      }
+
+                      if (titlesJson != null) {
+                        int size = Math.min(titlesJson.size(), channelInfos.nChnCount);
+                        for (int i = 0; i < size; i++) {
+                          String title = titlesJson.getString(i);
+                          if (title == null) {
+                            title = "";
+                          } else {
+                            try {
+                              byte[] bytes = Base64.decode(title, Base64.DEFAULT);
+                              String decoded = new String(bytes, StandardCharsets.UTF_8);
+                              decoded = decoded.replace("\u0000", "").trim();
+                              if (!decoded.isEmpty()) {
+                                title = decoded;
+                              }
+                            } catch (Throwable ignore) {
+                              // оставляем исходное значение, если это не base64
+                            }
+                          }
+                          titlesArray.pushString(title);
+                        }
+                      }
+                    }
+                  } catch (Throwable t) {
+                    android.util.Log.e("DEV_STATUS_ANDROID", "getChannelInfo: parse titles error=" + t.getMessage());
+                  }
+
+                  value.putArray("st_channelTitle", titlesArray);
+                  map.putMap("value", value);
+                } catch (Throwable t) {
+                  // В случае любой ошибки хотя бы вернём количество каналов
+                  android.util.Log.e("DEV_STATUS_ANDROID", "getChannelInfo: error building value=" + t.getMessage());
+                  WritableMap value = Arguments.createMap();
+                  value.putInt("nChnCount", channelInfos.nChnCount);
+                  map.putMap("value", value);
+                }
               }
 
               promise.resolve(map);

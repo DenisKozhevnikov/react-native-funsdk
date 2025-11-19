@@ -64,6 +64,7 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
     public static final int ORIGINAL_IMG = 0; // Оригинальное изображение
     public static final int THUMB_IMG = 1; // Миниатюрное изображение
     String mDevId;
+    int mChannelId;
     int mType;
     int mSeq;
     int mWidth = 0; // Размер изображения (0 для оригинального размера)
@@ -135,6 +136,7 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
     down.mTimes = times;
     down.mType = SDKCONST.MediaType.VIDEO;
     down.mDevId = mDevId;
+    down.mChannelId = channelId;
     down.mSeq = seq;
     down.mListener = getResultCallback(promise);
 
@@ -165,7 +167,7 @@ public class FunSDKDeviceImageModule extends ReactContextBaseJavaModule implemen
     mDownloadResultMap.put(down.mSeq, down);
 
     FunSDK.DownloadRecordBImage(mUserId, down.mDevId,
-        0, down.mTimes, down.mPath, 0, down.mSeq);
+        down.mChannelId, down.mTimes, down.mPath, 0, down.mSeq);
   }
 
   public static FunSDKDeviceImageModule.OnImageManagerListener getResultCallback(Promise promise) {
