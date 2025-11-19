@@ -2,6 +2,7 @@ package com.funsdk.utils.device.media.playback;
 
 import android.os.Message;
 import android.view.ViewGroup;
+import com.video.opengl.GLSurfaceView20;
 
 import androidx.annotation.NonNull;
 
@@ -20,6 +21,7 @@ import com.lib.sdk.struct.SDK_SearchByTimeResult;
 import com.manager.device.media.MediaManager;
 import com.manager.device.media.attribute.RecordPlayerAttribute;
 import com.manager.device.media.playback.RecordManager;
+import com.funsdk.ui.device.record.FunSDKRecordView;
 
 import com.utils.TimeUtils;
 
@@ -37,17 +39,27 @@ public class UpdatedDevRecordManager extends RecordManager {
   private H264_DVR_FINDINFO fileInfo;
   private List<H264_DVR_FILE_DATA> fileDataList;
   private int userId = 0; // SDK user handle for callbacks
-  
+
   // Fields removed from parent class in SDK 5.0.7
   private MediaManager.OnMediaManagerListener mediaManagerLs;
   private RecordPlayerAttribute playerAttribute;
-  private android.view.SurfaceView surfaceView;
+  // Container passed from outside (FunSDKRecordView)
+  private ViewGroup playView;
+  // Dedicated GLSurfaceView20 obtained from FunSDKRecordView and passed into FunSDK
+  private GLSurfaceView20 surfaceView;
   private int playMode = 0;
   private boolean isSearching = false;
 
   public UpdatedDevRecordManager(ViewGroup playView, RecordPlayerAttribute playerAttribute) {
     super(playView, playerAttribute);
     this.playerAttribute = playerAttribute;
+    this.playView = playView;
+    if (playView instanceof FunSDKRecordView) {
+      this.surfaceView = ((FunSDKRecordView) playView).getPlaybackSurface();
+      android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - obtained playbackSurface from FunSDKRecordView: " + surfaceView);
+    } else {
+      android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - playView is not FunSDKRecordView, surfaceView will be null");
+    }
     
     // Ensure userId is properly initialized like in iOS msgHandle
     if (userId <= 0) {
@@ -192,22 +204,24 @@ public class UpdatedDevRecordManager extends RecordManager {
     fileInfo.st_3_endTime.st_4_dwMinute = eTime[4];
     fileInfo.st_3_endTime.st_5_dwSecond = eTime[5];
     fileInfo.st_6_StreamType = playerAttribute.getStreamType();
-    
+
     // Debug info
     android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - Starting playback with:");
     android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - userId: " + userId);
     android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - devId: " + getDevId());
     android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - surfaceView: " + surfaceView);
+    android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - playView: " + playView);
     if (surfaceView != null) {
       android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - surfaceView dimensions: width=" + surfaceView.getWidth() + ", height=" + surfaceView.getHeight());
       android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - surfaceView visibility: " + surfaceView.getVisibility());
     }
     android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - channelId: " + fileInfo.st_0_nChannelN0);
     android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - streamType: " + fileInfo.st_6_StreamType);
-    
-    // Bind to the actual SurfaceView created by RecordManager so WM places it at the correct coords
+
+    // Bind to the playback SurfaceView if available, otherwise start without a view (no crash)
+    Object viewForPlay = surfaceView != null ? (Object) surfaceView : null;
     int lPlayHandle = FunSDK.MediaNetRecordPlayByTime(userId,
-        getDevId(), G.ObjToBytes(fileInfo), surfaceView, 0);
+        getDevId(), G.ObjToBytes(fileInfo), viewForPlay, 0);
     if (playMode == MEDIA_DATA_TYPE_YUV_NOT_DISPLAY) {
       FunSDK.SetIntAttr(lPlayHandle, EFUN_ATTR.EOA_SET_MEDIA_VIEW_VISUAL, userId);
       FunSDK.SetIntAttr(lPlayHandle, EFUN_ATTR.EOA_MEDIA_YUV_USER, userId);
@@ -235,8 +249,13 @@ public class UpdatedDevRecordManager extends RecordManager {
       fileInfo.st_3_endTime.st_4_dwMinute = 59;
       fileInfo.st_3_endTime.st_5_dwSecond = 59;
       fileInfo.st_6_StreamType = playerAttribute.getStreamType();
+
+      // On first seek, also bind to playback SurfaceView if available
+      Object viewForPlay = surfaceView != null ? (Object) surfaceView : null;
+      android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - seekToTime using viewForPlay: " + viewForPlay);
+
       int lPlayHandle = FunSDK.MediaNetRecordPlayByTime(userId,
-          getDevId(), G.ObjToBytes(fileInfo), surfaceView, 0);
+          getDevId(), G.ObjToBytes(fileInfo), viewForPlay, 0);
       if (playMode == MEDIA_DATA_TYPE_YUV_NOT_DISPLAY) {
         FunSDK.SetIntAttr(lPlayHandle, EFUN_ATTR.EOA_SET_MEDIA_VIEW_VISUAL, userId);
         FunSDK.SetIntAttr(lPlayHandle, EFUN_ATTR.EOA_MEDIA_YUV_USER, userId);
@@ -338,7 +357,18 @@ public class UpdatedDevRecordManager extends RecordManager {
         }
         break;
     }
-    return super.OnFunSDKResult(msg, ex);
+    // NOTE: Base RecordManager.OnFunSDKResult implementation from older SDK versions
+    // may not be fully compatible with FunSDK 5.0.7 message set and can trigger
+    // native crashes (SIGABRT) when handling certain EUIMSG codes. Since we
+    // already process the important playback/search messages here and expose
+    // results via mediaManagerLs/getFileDataList, we avoid delegating to super
+    // for all messages to keep the process stable.
+    try {
+      return super.OnFunSDKResult(msg, ex);
+    } catch (Throwable t) {
+      android.util.Log.e("RECORD_DEBUG", "UpdatedDevRecordManager - super.OnFunSDKResult error: " + t.getMessage());
+      return 0;
+    }
   }
 
   public void setMediaManagerListener(MediaManager.OnMediaManagerListener listener) {

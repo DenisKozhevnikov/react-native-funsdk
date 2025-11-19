@@ -62,6 +62,7 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 import com.funsdk.utils.device.media.playback.UpdatedDevRecordManager;
+import com.video.opengl.GLSurfaceView20;
 
 // public class FunSDKRecordView extends LinearLayout {
 public class FunSDKRecordView extends LinearLayout
@@ -74,11 +75,16 @@ public class FunSDKRecordView extends LinearLayout
   private Activity activity = null;
   private final RecordEventEmitter eventEmitter;
 
+  // Dedicated GLSurfaceView20 used as render target for archive playback
+  private GLSurfaceView20 playbackSurface;
+
   private UpdatedDevRecordManager recordManager;
   private DownloadManager downloadManager;
   private List<H264_DVR_FILE_DATA> recordList;
   private int recordPlayType = PLAY_DEV_PLAYBACK;
   private int currentAbsTime = 0; // seconds since epoch used by FunSDK.ToTimeType
+  // Tracks whether we have an active playback session, to avoid multiple MediaStop
+  private boolean hasActivePlayback = false;
 
   public FunSDKRecordView(ThemedReactContext context) {
     super(context);
@@ -87,6 +93,17 @@ public class FunSDKRecordView extends LinearLayout
     this.activity = ((ReactContext) getContext()).getCurrentActivity();
     recordList = new ArrayList<>();
     downloadManager = DownloadManager.getInstance(this);
+
+    // Create an internal GLSurfaceView20 that FunSDK can render into.
+    // FunSDK's native drawer expects a GLSurfaceView20 instance and calls
+    // GLSurfaceView20.ReDraw() via JNI; passing a plain SurfaceView causes
+    // "can't call ...ReDraw() on instance of android.view.SurfaceView".
+    playbackSurface = new GLSurfaceView20(context);
+    playbackSurface.setLayoutParams(new LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT));
+    playbackSurface.setBackgroundColor(Color.TRANSPARENT);
+    addView(playbackSurface);
   }
 
   // используется для того чтобы видеопроигрыватель смог использовать размеры
@@ -144,8 +161,7 @@ public class FunSDKRecordView extends LinearLayout
       sv.setBackgroundColor(Color.TRANSPARENT);
       sv.setZOrderOnTop(false);
       sv.setZOrderMediaOverlay(true);
-      sv.setX(parentWidth);
-      sv.setY(0);
+      // Располагаем SurfaceView во всём контейнере без смещения за его пределы
       sv.layout(0, 0, parentWidth, parentHeight);
       sv.bringToFront();
       try {
@@ -237,6 +253,10 @@ public class FunSDKRecordView extends LinearLayout
 
   public void setChannelId(int channelId) {
     this.channelId = channelId;
+  }
+
+  public GLSurfaceView20 getPlaybackSurface() {
+    return this.playbackSurface;
   }
 
   public void initRecordPlayer() {
@@ -373,6 +393,7 @@ public class FunSDKRecordView extends LinearLayout
 
   private void startPlayWithAdjustments(Calendar startCalendar, Calendar endCalendar) {
     recordManager.startPlay(startCalendar, endCalendar);
+    hasActivePlayback = true;
     // Initialize absolute playback time immediately so +/- seek works before first time callback
     try {
       int[] sTime = new int[] {
@@ -470,7 +491,14 @@ public class FunSDKRecordView extends LinearLayout
   }
 
   public void stopPlay() {
-    recordManager.stopPlay();
+    try {
+      if (recordManager != null && hasActivePlayback) {
+        recordManager.stopPlay();
+        hasActivePlayback = false;
+      }
+    } catch (Throwable t) {
+      android.util.Log.e("RECORD_DEBUG", "FunSDKRecordView - stopPlay error: " + t.getMessage());
+    }
   }
 
   public void destroyPlay() {
