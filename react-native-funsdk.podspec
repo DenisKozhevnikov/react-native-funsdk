@@ -18,13 +18,14 @@ Pod::Spec.new do |s|
 
   s.dependency "React-Core"
   s.dependency "ZXingObjC"
+  s.dependency "FunSDK", "1.0.33"
   
   # frameworks и libraries которые нужны для работы FunSDK.framework
   s.frameworks = 'AudioToolbox', 'CoreMedia', 'OpenAL', 'VideoToolbox', 'AVKit', 'GLKit', 'MessageUI'
   s.libraries = 'bz2', 'iconv', 'resolv', 'z'
   # https://github.com/callstack/react-native-builder-bob/discussions/379
   # s.vendored_frameworks = "https://gitlab.xmcloud.io/demo/FunSDKDemo_iOS/-/tree/master/FunSDKDemo/XMFunSDKDemo/Supporting/library/FunSDK.framework"
-  s.vendored_frameworks = "ios/frameworks/FunSDK.framework", "ios/frameworks/XMNetInterface.framework", "ios/frameworks/Masonry.framework"
+  s.vendored_frameworks = "ios/frameworks/XMSecurity.framework", "ios/frameworks/XMNetInterface.framework", "ios/frameworks/Masonry.framework"
 
   s.vendored_libraries = 'ios/libs/libfisheye.a', 'ios/libs/libFSCalendar.a'
 

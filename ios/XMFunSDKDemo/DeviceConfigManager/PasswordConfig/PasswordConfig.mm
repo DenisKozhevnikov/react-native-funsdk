@@ -8,6 +8,7 @@
 
 #import "PasswordConfig.h"
 #import "ModifyPassword.h"
+#import "XMSecurity/Security.h"
 
 @interface PasswordConfig()
 {
@@ -46,5 +47,4 @@
         }
     }
 }
-void MD5Encrypt(signed char *strOutput, unsigned char *strInput);
 @end

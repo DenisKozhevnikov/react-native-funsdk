@@ -689,7 +689,7 @@ RCT_EXPORT_METHOD(batchDevAlarmMsgQuery:(NSDictionary *)params
   
   self.resolvers[key] = @{@"resolve": resolve, @"reject": reject};
   
-  MC_BatchDevAlarmMsgQuery(self.msgHandle, szDevSNs, &queryParams, [key intValue]);
+  MC_BatchDevAlarmMsgQuery(self.msgHandle, szDevSNs, &queryParams, "", [key intValue]);
 }
 
 #pragma mark - Запрос сообщений тревоги для одного устройства
@@ -728,7 +728,7 @@ RCT_EXPORT_METHOD(devAlarmMsgQuery:(NSDictionary *)params
   
   self.resolvers[key] = @{@"resolve": resolve, @"reject": reject};
   
-  MC_DevAlarmMsgQuery(self.msgHandle, &queryParams, [key intValue]);
+  MC_DevAlarmMsgQuery(self.msgHandle, &queryParams, "", [key intValue]);
 }
 
 #pragma - mark Удаление тревожного сообщения
