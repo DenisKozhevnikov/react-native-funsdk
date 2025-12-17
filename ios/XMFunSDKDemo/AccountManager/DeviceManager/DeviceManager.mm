@@ -493,8 +493,11 @@
             strncpy(devInfo.loginPsw, CSTR(devObject.loginPsw), 64);
             devInfo.nType = devObject.nType;
             
-            Fun_AddDevInfoToDataCenter(&devInfo, 0, 0, "");
-            
+            int result = Fun_AddDevInfoToDataCenterAsync(self.msgHandle, &devInfo, 0, 0, "",10000,0);
+            if (result < 0) {
+              return;
+            }
+          
             [[DeviceControl getInstance] addDevice:devObject];
         }
     }];
@@ -547,7 +550,7 @@
     strncpy(devInfo.loginPsw, "", 64);
     devInfo.nType = devObject.nType;
     
-    Fun_AddDevInfoToDataCenter(&devInfo, 0, 0, "");
+    Fun_AddDevInfoToDataCenterAsync(&devInfo, 0, 0, "");
     
     //取出本地密码
     char szPassword[80] = {0};

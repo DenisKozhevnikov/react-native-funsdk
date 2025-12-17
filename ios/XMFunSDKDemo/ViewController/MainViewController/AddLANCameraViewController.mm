@@ -13,6 +13,7 @@
 #import "DeviceRandomPwdManager.h"
 #import "DeviceManager.h"
 #import "SystemInfoManager.h"
+#import "XMSecurity/Security.h"
 
 @interface AddLANCameraViewController ()<UITableViewDelegate,UITableViewDataSource, DeviceManagerDelegate>
 
@@ -467,8 +468,6 @@
     }
     return _tipLab;
 }
-
-void MD5Encrypt(signed char *strOutput, unsigned char *strInput);
 
 -(UILabel *)lbNewPwdTips{
     if (!_lbNewPwdTips) {

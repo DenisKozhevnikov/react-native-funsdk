@@ -1,7 +1,7 @@
 #pragma once
 #import "FunSDK/JObject.h"
+#import "XMSecurity/Security.h"
 #define JK_ModifyPassword "ModifyPassword"
-void MD5Encrypt(signed char *strOutput, unsigned char *strInput);
 class ModifyPassword : public JObject   //修改密码相关
 {
 public:
